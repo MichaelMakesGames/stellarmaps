@@ -70,12 +70,17 @@
 	<svg viewBox="-500 -500 1000 1000" width={500} height={500}>
 		<rect x={-500} y={-500} width={1000} height={1000} fill="#111" />
 		{#if data}
-			{#each data.systems as system}
-				<path d={system.path} fill={system.color} />
+			{#each data.borders as border}
+				<path d={border.path} fill={border.color} stroke="white" stroke-width={2} />
 			{/each}
 		{/if}
 		{#each Object.values(gameState.galactic_object) as galacticObject}
-			<circle cx={galacticObject.coordinate.x} cy={galacticObject.coordinate.y} r={1} fill="#FFF" />
+			<circle
+				cx={-galacticObject.coordinate.x}
+				cy={galacticObject.coordinate.y}
+				r={1}
+				fill="#FFF"
+			/>
 		{/each}
 	</svg>
 {/if}

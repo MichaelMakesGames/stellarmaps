@@ -18,6 +18,8 @@
 		"@sveltejs/kit": "^1.20.4",
 		"@tauri-apps/cli": "^1.4.0",
 		"@types/d3-delaunay": "^6.0.1",
+		"@types/d3-path": "^3.0.0",
+		"@types/d3-shape": "^3.1.1",
 		"@typescript-eslint/eslint-plugin": "^5.45.0",
 		"@typescript-eslint/parser": "^5.45.0",
 		"eslint": "^8.28.0",
@@ -34,7 +36,11 @@
 	"type": "module",
 	"dependencies": {
 		"@tauri-apps/api": "^1.4.0",
+		"@turf/helpers": "^6.5.0",
+		"@turf/union": "^6.5.0",
 		"@zip.js/zip.js": "^2.7.24",
-		"d3-delaunay": "^6.0.4"
+		"d3-delaunay": "^6.0.4",
+		"d3-path": "^3.1.0",
+		"d3-shape": "^3.2.0"
 	}
 }
