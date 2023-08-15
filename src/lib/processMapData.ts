@@ -11,7 +11,7 @@ export default function processMapData(gameState: GameState) {
 		go.coordinate.x,
 		go.coordinate.y
 	]);
-	const minDistanceSquared = 30 ** 2;
+	const minDistanceSquared = 35 ** 2;
 	const extraPoints: [number, number][] = [];
 	for (let x = -500; x <= 500; x += 5) {
 		for (let y = -500; y <= 500; y += 5) {
@@ -53,10 +53,10 @@ export default function processMapData(gameState: GameState) {
 	});
 	const borders = Object.entries(countryToSystemPolygon).map(([countryId, polygons]) => {
 		const country = gameState.country[parseInt(countryId)];
-		const color =
-			country.flag.colors.find((c) => c !== 'black' && c !== 'null')?.replaceAll('_', '') ??
-			'black';
+		const color = country.flag.colors.find((c) => c !== 'black' && c !== 'null') ?? 'black';
 		if (color === 'black') console.warn('black country?', country);
+		const primaryColor = country.flag.colors[0];
+		const secondaryColor = country.flag.colors[1];
 		if (polygons.length > 1) {
 			const unioned = union(
 				helpers.polygon([polygons[0].map((point) => [point[0] / 10, point[1] / 10])]),
@@ -85,9 +85,9 @@ export default function processMapData(gameState: GameState) {
 						return pathContext.toString();
 					})
 					.join(' ');
-				return { color, path };
+				return { primaryColor, secondaryColor, path };
 			} else {
-				return { color, path: '' };
+				return { primaryColor, secondaryColor, path: '' };
 			}
 		} else {
 			const pathContext = d3Path();
@@ -98,7 +98,7 @@ export default function processMapData(gameState: GameState) {
 			}
 			curve.lineEnd();
 			const path = pathContext.toString();
-			return { path, color };
+			return { path, primaryColor, secondaryColor };
 		}
 	});
 	console.timeEnd('processing');

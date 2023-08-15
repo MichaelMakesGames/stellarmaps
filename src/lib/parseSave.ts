@@ -18,7 +18,7 @@ export default async function parseSave(blob: Blob): Promise<GameState> {
 	return state;
 }
 
-function tokenize(gameState: string): string[] {
+export function tokenize(gameState: string): string[] {
 	const tokens: string[] = [];
 	let token: string | null = null;
 	let quoteOpen = false;
@@ -53,7 +53,7 @@ function tokenize(gameState: string): string[] {
 
 const ARRAY_KEY = '___array___';
 
-function jsonify(tokens: string[]): Record<string, any> {
+export function jsonify(tokens: string[]): Record<string, any> {
 	const gameState: Record<string, any> = {};
 	const stack: Record<string, any>[] = [];
 	let current = gameState;
