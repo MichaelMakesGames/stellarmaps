@@ -33,6 +33,8 @@
 					<path d={border.outerPath} fill={colors[border.secondaryColor]} />
 					<path d={border.innerPath} fill={colors[border.primaryColor]} />
 				{/each}
+				<path d={data.hyperlanesPath} stroke="white" stroke-width={1} opacity={0.2} />
+				<path d={data.relayHyperlanesPath} stroke="white" stroke-width={3} opacity={0.2} />
 			{/if}
 			{#each Object.values(gameState.galactic_object) as galacticObject}
 				<circle

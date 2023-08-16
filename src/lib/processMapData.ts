@@ -5,7 +5,7 @@ import * as helpers from '@turf/helpers';
 import { Delaunay } from 'd3-delaunay';
 import { path as d3Path } from 'd3-path';
 import { curveBasisClosed } from 'd3-shape';
-import type { GameState } from './GameState';
+import type { Bypass, GameState } from './GameState';
 
 const SCALE = 100;
 
@@ -71,9 +71,47 @@ export default function processMapData(gameState: GameState) {
 		const innerPath = multiPolygonToPath(inner);
 		return { primaryColor, secondaryColor, outerPath, innerPath };
 	});
+
+	const relayMegastructures = new Set(
+		Object.values(gameState.bypasses)
+			.filter(
+				(bypass): bypass is Bypass & Required<Pick<Bypass, 'owner'>> =>
+					bypass.type === 'relay_bypass' && bypass.owner?.type === 6
+			)
+			.map((bypass) => bypass.owner.id)
+	);
+	const hyperlanes = new Set<string>();
+	const relayHyperlanes = new Set<string>();
+	Object.entries(gameState.galactic_object).forEach(([goId, go]) => {
+		for (const hyperlane of go.hyperlane ?? []) {
+			const isRelay =
+				go.megastructures?.some((id) => relayMegastructures.has(id)) &&
+				gameState.galactic_object[hyperlane.to].megastructures?.some((id) =>
+					relayMegastructures.has(id)
+				);
+			const key = [goId, hyperlane.to].sort().join(',');
+			if (isRelay) {
+				relayHyperlanes.add(key);
+			} else {
+				hyperlanes.add(key);
+			}
+		}
+	});
+	const hyperlanesPath = Array.from(hyperlanes.values())
+		.map((key) => {
+			const [a, b] = key.split(',').map((id) => gameState.galactic_object[parseInt(id)]);
+			return `M ${-a.coordinate.x} ${a.coordinate.y} L ${-b.coordinate.x} ${b.coordinate.y}`;
+		})
+		.join(' ');
+	const relayHyperlanesPath = Array.from(relayHyperlanes.values())
+		.map((key) => {
+			const [a, b] = key.split(',').map((id) => gameState.galactic_object[parseInt(id)]);
+			return `M ${-a.coordinate.x} ${a.coordinate.y} L ${-b.coordinate.x} ${b.coordinate.y}`;
+		})
+		.join(' ');
 	console.timeEnd('processing');
 
-	return { borders };
+	return { borders, hyperlanesPath, relayHyperlanesPath };
 }
 
 function multiPolygonToPath(

@@ -4,11 +4,24 @@ export interface GameState {
 	ships: Record<number, Ship>;
 	fleet: Record<number, Fleet>;
 	starbase_mgr: { starbases: Record<number, Starbase> };
+	bypasses: Record<number, Bypass>;
+	megastructures: Record<number, Megastructure>;
 }
 
 export interface GalacticObject {
 	coordinate: { x: number; y: number; origin: number; randomized: boolean };
 	starbases: number[];
+	hyperlane?: { to: number; length: number }[];
+	megastructures?: number[];
+}
+
+export interface Bypass {
+	type: string;
+	owner?: { type: number; id: number };
+}
+
+export interface Megastructure {
+	type: string;
 }
 
 export interface Country {
