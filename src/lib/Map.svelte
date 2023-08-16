@@ -30,12 +30,8 @@
 			<rect x={-500} y={-500} width={1000} height={1000} fill="#111" />
 			{#if data}
 				{#each data.borders as border}
-					<path
-						d={border.path}
-						fill={colors[border.primaryColor]}
-						stroke="white"
-						stroke-width={2}
-					/>
+					<path d={border.outerPath} fill={colors[border.secondaryColor]} />
+					<path d={border.innerPath} fill={colors[border.primaryColor]} />
 				{/each}
 			{/if}
 			{#each Object.values(gameState.galactic_object) as galacticObject}

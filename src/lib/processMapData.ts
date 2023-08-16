@@ -1,9 +1,13 @@
-import * as helpers from '@turf/helpers';
+import buffer from '@turf/buffer';
 import union from '@turf/union';
+import polygonSmooth from '@turf/polygon-smooth';
+import * as helpers from '@turf/helpers';
 import { Delaunay } from 'd3-delaunay';
 import { path as d3Path } from 'd3-path';
 import { curveBasisClosed } from 'd3-shape';
 import type { GameState } from './GameState';
+
+const SCALE = 100;
 
 export default function processMapData(gameState: GameState) {
 	console.time('generating voronoi');
@@ -53,55 +57,48 @@ export default function processMapData(gameState: GameState) {
 	});
 	const borders = Object.entries(countryToSystemPolygon).map(([countryId, polygons]) => {
 		const country = gameState.country[parseInt(countryId)];
-		const color = country.flag.colors.find((c) => c !== 'black' && c !== 'null') ?? 'black';
-		if (color === 'black') console.warn('black country?', country);
 		const primaryColor = country.flag.colors[0];
 		const secondaryColor = country.flag.colors[1];
-		if (polygons.length > 1) {
-			const unioned = union(
-				helpers.polygon([polygons[0].map((point) => [point[0] / 10, point[1] / 10])]),
-				helpers.multiPolygon(
-					polygons
-						.slice(1)
-						.map((polygon) => [polygon.map((point) => [point[0] / 10, point[1] / 10])])
-				)
-			);
-			if (unioned) {
-				const coordinates =
-					unioned.geometry.type === 'Polygon'
-						? [unioned.geometry.coordinates]
-						: unioned.geometry.coordinates;
-				const path = coordinates
-					.flat()
-					.map((points) => points.map<[number, number]>((point) => [point[0] * 10, point[1] * 10]))
-					.map((points) => {
-						const pathContext = d3Path();
-						const curve = curveBasisClosed(pathContext);
-						curve.lineStart();
-						for (const point of points) {
-							curve.point(-point[0], point[1]);
-						}
-						curve.lineEnd();
-						return pathContext.toString();
-					})
-					.join(' ');
-				return { primaryColor, secondaryColor, path };
-			} else {
-				return { primaryColor, secondaryColor, path: '' };
-			}
-		} else {
-			const pathContext = d3Path();
-			const curve = curveBasisClosed(pathContext);
-			curve.lineStart();
-			for (const point of polygons[0]) {
-				curve.point(-point[0], point[1]);
-			}
-			curve.lineEnd();
-			const path = pathContext.toString();
-			return { path, primaryColor, secondaryColor };
-		}
+		const multiPolygon = helpers.multiPolygon(
+			polygons.map((polygon) => [polygon.map((point) => [point[0] / SCALE, point[1] / SCALE])])
+		);
+		const outer = polygonSmooth(
+			union(multiPolygon, multiPolygon) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
+			{ iterations: 5 }
+		);
+		const inner = buffer(outer, -2, { units: 'miles' });
+		const outerPath = multiPolygonToPath(outer);
+		const innerPath = multiPolygonToPath(inner);
+		return { primaryColor, secondaryColor, outerPath, innerPath };
 	});
 	console.timeEnd('processing');
 
 	return { borders };
+}
+
+function multiPolygonToPath(
+	featureCollection: helpers.FeatureCollection<
+		helpers.MultiPolygon | helpers.Polygon,
+		helpers.Properties
+	>
+) {
+	const coordinates = featureCollection.features.flatMap((feature) =>
+		feature.geometry.type === 'MultiPolygon'
+			? feature.geometry.coordinates
+			: [feature.geometry.coordinates]
+	);
+	return coordinates
+		.flat()
+		.map((points) => points.map<[number, number]>((point) => [point[0] * SCALE, point[1] * SCALE]))
+		.map((points) => {
+			const pathContext = d3Path();
+			const curve = curveBasisClosed(pathContext);
+			curve.lineStart();
+			for (const point of points) {
+				curve.point(-point[0], point[1]);
+			}
+			curve.lineEnd();
+			return pathContext.toString();
+		})
+		.join(' ');
 }
