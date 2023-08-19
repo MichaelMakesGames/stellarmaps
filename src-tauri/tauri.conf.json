@@ -13,10 +13,6 @@
   "tauri": {
     "allowlist": {
       "all": false,
-      "fs": {
-        "scope": ["$HOME/.steam/root/steamapps/common/Stellaris/common/named_colors/*"],
-        "readFile": true
-      },
       "os": {
         "all": true
       },
@@ -39,7 +35,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "games.michaelmakes.stellarmaps",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
