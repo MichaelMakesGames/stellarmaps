@@ -66,10 +66,13 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 768,
         "resizable": true,
-        "title": "stellarmaps",
-        "width": 800
+        "maximizable": true,
+        "minimizable": true,
+        "maximized": true,
+        "title": "StellarMaps",
+        "width": 1366
       }
     ]
   }

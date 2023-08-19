@@ -3,13 +3,16 @@ import union from '@turf/union';
 import polygonSmooth from '@turf/polygon-smooth';
 import * as helpers from '@turf/helpers';
 import { Delaunay } from 'd3-delaunay';
-import { path as d3Path } from 'd3-path';
-import { curveBasisClosed } from 'd3-shape';
+// eslint-disable-next-line
+// @ts-ignore
+import { pathRound } from 'd3-path';
+import { curveBasisClosed, curveLinearClosed } from 'd3-shape';
 import type { Bypass, GameState } from './GameState';
+import type { MapSettings } from './mapSettings';
 
 const SCALE = 100;
 
-export default function processMapData(gameState: GameState) {
+export default function processMapData(gameState: GameState, settings: MapSettings) {
 	console.time('generating voronoi');
 	const points = Object.values(gameState.galactic_object).map<[number, number]>((go) => [
 		go.coordinate.x,
@@ -17,8 +20,8 @@ export default function processMapData(gameState: GameState) {
 	]);
 	const minDistanceSquared = 35 ** 2;
 	const extraPoints: [number, number][] = [];
-	for (let x = -500; x <= 500; x += 5) {
-		for (let y = -500; y <= 500; y += 5) {
+	for (let x = -500; x <= 500; x += 10) {
+		for (let y = -500; y <= 500; y += 10) {
 			if (
 				points.some(
 					([otherX, otherY]) => (otherX - x) ** 2 + (otherY - y) ** 2 < minDistanceSquared
@@ -62,13 +65,20 @@ export default function processMapData(gameState: GameState) {
 		const multiPolygon = helpers.multiPolygon(
 			polygons.map((polygon) => [polygon.map((point) => [point[0] / SCALE, point[1] / SCALE])])
 		);
-		const outer = polygonSmooth(
-			union(multiPolygon, multiPolygon) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
-			{ iterations: 5 }
-		);
-		const inner = buffer(outer, -2, { units: 'miles' });
-		const outerPath = multiPolygonToPath(outer);
-		const innerPath = multiPolygonToPath(inner);
+		let outer = helpers.featureCollection([
+			union(multiPolygon, multiPolygon) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>
+		]);
+		if (settings.borderSmoothing) {
+			outer = polygonSmooth(
+				union(multiPolygon, multiPolygon) as helpers.Feature<
+					helpers.MultiPolygon | helpers.Polygon
+				>,
+				{ iterations: 2 }
+			);
+		}
+		const inner = buffer(outer, -settings.borderWidth, { units: 'miles' });
+		const outerPath = multiPolygonToPath(outer, settings);
+		const innerPath = multiPolygonToPath(inner, settings);
 		return { primaryColor, secondaryColor, outerPath, innerPath };
 	});
 
@@ -118,7 +128,8 @@ function multiPolygonToPath(
 	featureCollection: helpers.FeatureCollection<
 		helpers.MultiPolygon | helpers.Polygon,
 		helpers.Properties
-	>
+	>,
+	settings: MapSettings
 ) {
 	const coordinates = featureCollection.features.flatMap((feature) =>
 		feature.geometry.type === 'MultiPolygon'
@@ -129,8 +140,10 @@ function multiPolygonToPath(
 		.flat()
 		.map((points) => points.map<[number, number]>((point) => [point[0] * SCALE, point[1] * SCALE]))
 		.map((points) => {
-			const pathContext = d3Path();
-			const curve = curveBasisClosed(pathContext);
+			const pathContext = pathRound(3);
+			const curve = settings.borderSmoothing
+				? curveBasisClosed(pathContext)
+				: curveLinearClosed(pathContext);
 			curve.lineStart();
 			for (const point of points) {
 				curve.point(-point[0], point[1]);

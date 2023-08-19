@@ -1,3 +1,10 @@
+import { writable } from 'svelte/store';
+
+export const gameState = writable<GameState | null>(null);
+gameState.subscribe(() => {
+	(window as any).gameState = gameState; // eslint-disable-line
+});
+
 export interface GameState {
 	galactic_object: Record<number, GalacticObject>;
 	country: Record<number, Country>;

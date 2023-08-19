@@ -1,8 +1,11 @@
 {
   "editor.formatOnSave": true,
   "cSpell.words": [
+    "hyperlane",
+    "hyperlanes",
     "Starbase",
     "starbases",
+    "steamapps",
     "stellaris",
     "tauri"
   ]
