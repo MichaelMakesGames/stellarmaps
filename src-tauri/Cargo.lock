@@ -63,16 +63,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b13c32d80ecc7ab747b80c3784bce54ee8a7a0cc4fbda9bf4cda2cf6fe90854"
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
-]
-
-[[package]]
 name = "atk"
 version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2419,6 +2409,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbe866e1e51e8260c9eed836a042a5e7f6726bb2b411dffeaa712e19c388f23b"
 dependencies = [
  "loom",
+]
+
+[[package]]
+name = "stellarmaps"
+version = "0.1.1"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
 ]
 
 [[package]]

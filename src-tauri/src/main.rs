@@ -31,7 +31,7 @@ fn get_stellaris_dir() -> PathBuf {
       return Path::new(home_dir.as_str()).join("Library/Application Support/Steam/steamapps/common/Stellaris");
     }
     "windows" => {
-      return Path::new("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Stellaris\\common\\Stellaris").to_path_buf();
+      return Path::new("C:\\Program Files (x86)\\Steam\\steamapps\\common\\Stellaris").to_path_buf();
     }
     _ => panic!("unsupported OS")
   }
