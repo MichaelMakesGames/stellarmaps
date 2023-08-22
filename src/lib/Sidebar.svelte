@@ -1,19 +1,24 @@
 <script lang="ts">
-	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+	import { Accordion, AccordionItem, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import MapSettingControl from './MapSettingControl.svelte';
-	import { gameState } from './GameState';
+	import { gameStatePromise } from './GameState';
 	import { mapSettingConfig, reprocessMap } from './mapSettings';
 	import parseSave from './parseSave';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
 	import ReprocessButton from './ReprocessButton.svelte';
+	import { loadSave, loadSaveMetadata, type StellarisSaveMetadata } from './tauriCommands';
+	import { toastError, wait } from './utils';
 
-	let files: null | FileList = null;
-
-	async function parse() {
-		let file = files?.item(0);
-		if (!file) return;
-		gameState.set(await parseSave(file));
-	}
+	const toastStore = getToastStore();
+	const savesPromise = loadSaveMetadata().catch(
+		toastError({
+			title: 'Failed to load Stellaris saves',
+			defaultValue: [] as StellarisSaveMetadata[][],
+			toastStore,
+		}),
+	);
+	let selectedSave: StellarisSaveMetadata | null = null;
+	let loadedSave: StellarisSaveMetadata | null = null;
 </script>
 
 <form
@@ -22,17 +27,61 @@
 	on:submit|preventDefault={reprocessMap}
 	novalidate
 >
-	<div class="form-group p-4">
-		<label for="saveFileInput">Save File</label>
-		<input
-			id="saveFileInput"
-			class="input"
-			type="file"
-			accept=".sav"
-			bind:files
-			on:change={parse}
-		/>
-	</div>
+	<form
+		class="p-4"
+		on:submit|preventDefault={() => {
+			loadedSave = selectedSave;
+			if (selectedSave) {
+				const { path } = selectedSave;
+				const promise = wait(500)
+					.then(() => loadSave(path))
+					.then(parseSave);
+				gameStatePromise.set(promise);
+				promise.catch(
+					toastError({
+						title: `Failed to load ${selectedSave.path}`,
+						defaultValue: null,
+						toastStore,
+					}),
+				);
+			}
+		}}
+	>
+		<div class="flex justify-between">
+			<h2 class="label">Save Game</h2>
+			<small class="text-surface-300">
+				{#if selectedSave}
+					{selectedSave.name}
+				{/if}
+			</small>
+		</div>
+		<select class="select mb-1" bind:value={selectedSave}>
+			{#if selectedSave == null}
+				<option value={null} disabled hidden />
+			{/if}
+			{#await savesPromise then saves}
+				{#each saves as saveGroup}
+					<optgroup label={saveGroup[0].name}>
+						{#each saveGroup as save}
+							<option value={save}>
+								{save.path.split(/[/\\]/).reverse()[0].split('.sav')[0]}
+							</option>
+						{/each}
+					</optgroup>
+				{/each}
+			{/await}
+		</select>
+		<button
+			type="submit"
+			class="btn variant-filled-primary w-full"
+			disabled={!selectedSave}
+			class:variant-filled-primary={selectedSave !== loadedSave}
+			class:variant-filled-surface={selectedSave === loadedSave}
+		>
+			Load Save
+		</button>
+	</form>
+
 	<h2 class="h3 p-4 pb-1">Map Settings</h2>
 	<div class="px-4 pb-2 flex align-middle text-sm">
 		<ReprocessMapBadge /><span class="ms-1"> = requires reprocessing </span>

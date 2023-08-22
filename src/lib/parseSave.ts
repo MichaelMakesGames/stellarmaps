@@ -1,14 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { GameState } from './GameState';
-import { ZipReader, BlobReader, TextWriter } from '@zip.js/zip.js';
 
-export default async function parseSave(blob: Blob): Promise<GameState> {
-	console.time('unzipping');
-	const zipReader = new ZipReader(new BlobReader(blob));
-	const entries = await zipReader.getEntries();
-	const gameStateEntry = entries.find((entry) => entry.filename === 'gamestate');
-	const rawGameState = await gameStateEntry?.getData?.(new TextWriter());
-	console.timeEnd('unzipping');
+export default async function parseSave(rawGameState: string): Promise<GameState> {
 	console.time('tokenizing');
 	const tokens = tokenize(rawGameState ?? '');
 	console.timeEnd('tokenizing');
