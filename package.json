@@ -24,6 +24,7 @@
 		"@types/d3-path": "^3.0.0",
 		"@types/d3-shape": "^3.1.1",
 		"@types/node": "^20.5.0",
+		"@types/polylabel": "^1.1.0",
 		"@typescript-eslint/eslint-plugin": "^5.45.0",
 		"@typescript-eslint/parser": "^5.45.0",
 		"autoprefixer": "^10.4.14",
@@ -45,12 +46,14 @@
 	"type": "module",
 	"dependencies": {
 		"@tauri-apps/api": "^1.4.0",
+		"@turf/boolean-contains": "^6.5.0",
 		"@turf/buffer": "^6.5.0",
 		"@turf/helpers": "^6.5.0",
 		"@turf/polygon-smooth": "^6.5.0",
 		"@turf/union": "^6.5.0",
 		"d3-delaunay": "^6.0.4",
 		"d3-path": "^3.1.0",
-		"d3-shape": "^3.2.0"
+		"d3-shape": "^3.2.0",
+		"polylabel": "^1.1.0"
 	}
 }

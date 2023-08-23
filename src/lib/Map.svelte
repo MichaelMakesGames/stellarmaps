@@ -8,7 +8,7 @@
 
 	$: mapDataPromise =
 		$gameStatePromise?.then((gs) => processMapData(gs, $lastProcessedMapSettings)) ??
-		new Promise<ReturnType<typeof processMapData>>(() => {});
+		new Promise<Awaited<ReturnType<typeof processMapData>>>(() => {});
 
 	const toastStore = getToastStore();
 	let colorsPromise = loadColors().catch(
@@ -20,7 +20,7 @@
 	);
 
 	function getBorderColor(
-		border: ReturnType<typeof processMapData>['borders'][number],
+		border: Awaited<ReturnType<typeof processMapData>>['borders'][number],
 		setting: string,
 	): string {
 		if (setting === 'primary') return border.primaryColor;
@@ -69,6 +69,46 @@
 						stroke-width={$mapSettings.hyperRelayWidth}
 						opacity={$mapSettings.hyperRelayOpacity}
 					/>
+					{#each data.borders as border}
+						{#each border.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
+							<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />
+							{#if emblemWidth && emblemHeight}
+								<rect
+									stroke-width={1}
+									stroke="#F0F"
+									x={point[0] - emblemWidth / 2}
+									y={point[1] - (textHeight ? emblemHeight + textHeight / 2 : emblemHeight / 2)}
+									width={emblemWidth}
+									height={emblemHeight}
+									fill="transparent"
+								/>
+							{/if}
+							{#if textWidth && textHeight}
+								<rect
+									stroke-width={1}
+									stroke="#F0F"
+									x={point[0] - textWidth / 2}
+									y={point[1] - textHeight / 2}
+									width={textWidth}
+									height={textHeight}
+									fill="transparent"
+								/>
+							{/if}
+							{#if textWidth && textHeight && border.name}
+								<text
+									stroke-width={1}
+									x={point[0]}
+									y={point[1]}
+									text-anchor="middle"
+									dominant-baseline="middle"
+									font-size={textHeight}
+									fill="white"
+								>
+									{border.name}
+								</text>
+							{/if}
+						{/each}
+					{/each}
 				{/if}
 				{#each Object.values(gameState.galactic_object) as galacticObject}
 					<circle

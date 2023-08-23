@@ -32,3 +32,7 @@ export async function loadSaveMetadata() {
 export function loadSave(path: string) {
 	return invoke('get_stellaris_save_cmd', { path }) as Promise<string>;
 }
+
+export function loadLoc() {
+	return invoke('get_stellaris_loc_cmd') as Promise<Record<string, string>>;
+}

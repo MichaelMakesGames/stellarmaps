@@ -5,6 +5,7 @@ use std::env;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
+use std::collections::HashMap;
 use std::time::UNIX_EPOCH;
 use std::io;
 use zip;
@@ -17,6 +18,7 @@ fn main() {
 		.invoke_handler(
 			tauri::generate_handler![
 				get_stellaris_colors_cmd,
+				get_stellaris_loc_cmd,
 				get_stellaris_save_metadata_cmd,
 				get_stellaris_save_cmd
 			]
@@ -35,8 +37,13 @@ fn get_stellaris_colors_cmd() -> Result<String, String> {
 }
 
 #[tauri::command]
+async fn get_stellaris_loc_cmd() -> Result<HashMap<String, String>, String> {
+	return get_stellaris_loc().map_err(|err| err.to_string());
+}
+
+#[tauri::command]
 fn get_stellaris_save_metadata_cmd() -> Result<Vec<Vec<StellarisSave>>, String> {
-	get_stellaris_saves().map_err(|err| err.to_string())
+	get_stellaris_save_metadata().map_err(|err| err.to_string())
 }
 
 #[tauri::command]
@@ -100,15 +107,24 @@ fn get_sub_dirs(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
 	Ok(sub_dirs)
 }
 
-fn get_files_of_extension(path: &PathBuf, extension: &str) -> anyhow::Result<Vec<PathBuf>> {
+fn get_files_of_extension(
+	path: &PathBuf,
+	extension: &str,
+	depth: u8
+) -> anyhow::Result<Vec<PathBuf>> {
 	let mut files: Vec<PathBuf> = Vec::new();
 	if path.is_dir() {
 		for entry in fs::read_dir(path)? {
 			let entry = entry?;
 			let path = entry.path();
-			match path.extension() {
-				Some(ext) if ext == extension => files.push(path),
-				_ => (),
+			if path.is_dir() && (depth > 1 || depth == 0) {
+				let mut sub_dir_files = get_files_of_extension(&path, extension, depth - 1)?;
+				files.append(&mut sub_dir_files);
+			} else {
+				match path.extension() {
+					Some(ext) if ext == extension => files.push(path),
+					_ => (),
+				}
 			}
 		}
 	}
@@ -167,7 +183,7 @@ impl StellarisSave {
 	}
 }
 
-fn get_stellaris_saves() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
+fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 	let saves: Vec<Vec<StellarisSave>> = get_steam_user_data_dirs()
 		.unwrap_or(Vec::new())
 		.iter()
@@ -176,7 +192,7 @@ fn get_stellaris_saves() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 		.flat_map(|path| get_sub_dirs(&path).unwrap_or_default())
 		.map(|path| {
 			let files = Vec::from_iter(
-				get_files_of_extension(&path, "sav")
+				get_files_of_extension(&path, "sav", 1)
 					.unwrap_or(Vec::new())
 					.iter()
 					.map(|path| StellarisSave::from_path_or_default(path))
@@ -185,4 +201,19 @@ fn get_stellaris_saves() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 		})
 		.collect();
 	return Ok(saves);
+}
+
+fn get_stellaris_loc() -> anyhow::Result<HashMap<String, String>> {
+	let install_dir = get_stellaris_install_dir();
+	let loc_dir = install_dir.join("localisation").join("english");
+	let loc_file_paths = get_files_of_extension(&loc_dir, "yml", 8)?;
+	let mut locs: HashMap<String, String> = HashMap::new();
+	for path in loc_file_paths {
+		let re = Regex::new(r#"(?m)^\s*([\w\.\-]+)\s*:\d*\s*"(.*)".*$"#).unwrap();
+		let raw_content = fs::read_to_string(path)?;
+		for (_, [key, value]) in re.captures_iter(&raw_content).map(|c| c.extract()) {
+			locs.insert(key.to_string(), value.to_string());
+		}
+	}
+	return Ok(locs);
 }

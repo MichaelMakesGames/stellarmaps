@@ -36,6 +36,7 @@ export interface Megastructure {
 }
 
 export interface Country {
+	name?: LocalizedText;
 	flag: { colors: string[] };
 	fleets_manager?: {
 		owned_fleets?: { fleet: number }[];
@@ -51,4 +52,12 @@ export interface Ship {
 
 export interface Fleet {
 	station: boolean;
+}
+
+export interface LocalizedText {
+	key: string;
+	variables?: {
+		key: string;
+		value: LocalizedText;
+	}[];
 }
