@@ -13,7 +13,7 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesMaxSize'
 	| 'countryNamesMinSize';
 
-export type StringMapSettings = 'borderFillColor' | 'borderColor';
+export type StringMapSettings = 'borderFillColor' | 'borderColor' | 'labelsAvoidHoles';
 
 export type BooleanMapSettings = 'borderSmoothing' | 'countryEmblems' | 'countryNames';
 export type MapSettings = Record<NumberMapSettings, number> &
@@ -165,6 +165,17 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				optional: true,
 				hideIf: (settings) => !settings.countryEmblems,
 			},
+			{
+				id: 'labelsAvoidHoles',
+				name: 'Avoid Holes in Border',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [
+					{ id: 'all', name: 'All' },
+					{ id: 'owned', name: 'Owned' },
+					{ id: 'none', name: 'None' },
+				],
+			},
 		],
 	},
 	{
@@ -220,6 +231,7 @@ export const defaultMapSettings: MapSettings = {
 	countryEmblems: true,
 	countryEmblemsMinSize: null,
 	countryEmblemsMaxSize: null,
+	labelsAvoidHoles: 'owned',
 };
 
 export const mapSettings = writable(defaultMapSettings);

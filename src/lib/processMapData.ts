@@ -53,11 +53,15 @@ export default async function processMapData(gameState: GameState, settings: Map
 		});
 	});
 	const countryToSystemPolygon: Record<string, Delaunay.Polygon[]> = {};
+	const ownedSystemPoints: helpers.Point[] = [];
 	Object.values(gameState?.galactic_object ?? {}).forEach((go, i) => {
 		const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
 		const ownerId = starbase ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
 		const owner = ownerId != null ? gameState.country[ownerId] : null;
 		if (ownerId != null && owner) {
+			ownedSystemPoints.push(
+				helpers.point(pointToGeoJSON([go.coordinate.x, go.coordinate.y])).geometry,
+			);
 			const polygon = voronoi.cellPolygon(i);
 			if (!countryToSystemPolygon[ownerId]) {
 				countryToSystemPolygon[ownerId] = [];
@@ -89,7 +93,21 @@ export default async function processMapData(gameState: GameState, settings: Map
 		}
 		const labelPoints = searchAspectRatio
 			? getPolygons(outer)
-					// .map((p) => helpers.polygon([p.coordinates[0]]).geometry) // TODO ignore holes setting (ignore only 'unowned' holes?)
+					.map((p) => {
+						if (settings.labelsAvoidHoles === 'all') return p;
+						if (settings.labelsAvoidHoles === 'none')
+							return helpers.polygon([p.coordinates[0]]).geometry;
+						// settings.labelsAvoidHoles === 'owned'
+						return helpers.polygon([
+							p.coordinates[0],
+							...p.coordinates.slice(1).filter((hole) => {
+								const holePolygon = helpers.polygon([hole.slice().reverse()]);
+								return ownedSystemPoints.some((ownedSystemPoint) =>
+									booleanContains(holePolygon, ownedSystemPoint),
+								);
+							}),
+						]).geometry;
+					})
 					.map<[helpers.Polygon, helpers.Position]>((polygon) => [
 						polygon,
 						aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
