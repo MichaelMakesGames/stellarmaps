@@ -175,6 +175,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 					{ id: 'owned', name: 'Owned' },
 					{ id: 'none', name: 'None' },
 				],
+				hideIf: (settings) => !settings.countryNames && !settings.countryEmblems,
 			},
 		],
 	},

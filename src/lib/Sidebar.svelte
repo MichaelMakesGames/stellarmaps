@@ -17,7 +17,14 @@
 			toastStore,
 		}),
 	);
+	let selectedSaveGroup: StellarisSaveMetadata[] | null = null;
 	let selectedSave: StellarisSaveMetadata | null = null;
+	$: if (
+		selectedSaveGroup != null &&
+		(selectedSave == null || !selectedSaveGroup.includes(selectedSave))
+	) {
+		selectedSave = selectedSaveGroup[0];
+	}
 	let loadedSave: StellarisSaveMetadata | null = null;
 </script>
 
@@ -51,32 +58,40 @@
 			<h2 class="label">Save Game</h2>
 			<small class="text-surface-300">
 				{#if selectedSave}
-					{selectedSave.name}
+					{selectedSave.date}
 				{/if}
 			</small>
 		</div>
-		<select class="select mb-1" bind:value={selectedSave}>
+		<select class="select mb-1" bind:value={selectedSaveGroup}>
+			{#if selectedSaveGroup == null}
+				<option value={null} disabled>Select a save...</option>
+			{/if}
+			{#await savesPromise then saves}
+				{#each saves as saveGroup}
+					<option value={saveGroup}>{saveGroup[0].name}</option>
+				{/each}
+			{/await}
+		</select>
+		<select class="select mb-1" bind:value={selectedSave} disabled={selectedSaveGroup == null}>
 			{#if selectedSave == null}
 				<option value={null} disabled hidden />
 			{/if}
 			{#await savesPromise then saves}
-				{#each saves as saveGroup}
-					<optgroup label={saveGroup[0].name}>
-						{#each saveGroup as save}
-							<option value={save}>
-								{save.path.split(/[/\\]/).reverse()[0].split('.sav')[0]}
-							</option>
-						{/each}
-					</optgroup>
-				{/each}
+				{#if selectedSaveGroup}
+					{#each selectedSaveGroup as save}
+						<option value={save}>
+							{save.path.split(/[/\\]/).reverse()[0].split('.sav')[0]}
+						</option>
+					{/each}
+				{/if}
 			{/await}
 		</select>
 		<button
 			type="submit"
 			class="btn variant-filled-primary w-full"
 			disabled={!selectedSave}
-			class:variant-filled-primary={selectedSave !== loadedSave}
-			class:variant-filled-surface={selectedSave === loadedSave}
+			class:variant-filled-primary={selectedSave && selectedSave !== loadedSave}
+			class:variant-filled-surface={!selectedSave || selectedSave === loadedSave}
 		>
 			Load Save
 		</button>
