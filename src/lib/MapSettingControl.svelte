@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { get } from 'svelte/store';
-	import { mapSettings, type MapSettingConfig } from './mapSettings';
+	import { mapSettings, type MapSettingConfig, type IdAndName } from './mapSettings';
 	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
 	import type { FormEventHandler } from 'svelte/elements';
 	import { slide } from 'svelte/transition';
+	import { onDestroy } from 'svelte';
 
 	export let config: MapSettingConfig;
 
@@ -28,6 +29,14 @@
 	};
 
 	$: hidden = config.hideIf?.($mapSettings);
+
+	let dynamicOptions: IdAndName[] = [];
+	if (config.type === 'select' && config.dynamicOptions) {
+		const unsubscribe = config.dynamicOptions.subscribe((options) => {
+			dynamicOptions = options;
+		});
+		onDestroy(unsubscribe);
+	}
 </script>
 
 {#if !hidden}
@@ -61,6 +70,9 @@
 		{:else if config.type === 'select'}
 			<select class="select" bind:value>
 				{#each config.options as option (option.id)}
+					<option value={option.id}>{option.name}</option>
+				{/each}
+				{#each dynamicOptions as option (option.id)}
 					<option value={option.id}>{option.name}</option>
 				{/each}
 			</select>

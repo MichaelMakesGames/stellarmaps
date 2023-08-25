@@ -21,6 +21,7 @@ tauri = { version = "1.4.0", features = [ "path-all", "os-all"] }
 zip = "0.6.6"
 regex = "1.9.3"
 anyhow = "1.0.75"
+font-kit = "0.11.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

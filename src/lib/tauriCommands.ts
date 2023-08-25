@@ -42,3 +42,7 @@ export function loadEmblem(category: string, file: string) {
 		Uint8Array.from(numbers),
 	);
 }
+
+export function loadFonts() {
+	return invoke<string[]>('get_fonts_cmd');
+}

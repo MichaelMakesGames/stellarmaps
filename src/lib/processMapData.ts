@@ -80,8 +80,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 		let outer = helpers.featureCollection([
 			union(multiPolygon, multiPolygon) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
 		]);
-		// TODO will need a better solution to support other languages (eg double width CJK chars)
-		const textAspectRatio = name && settings.countryNames ? (1 / name.length) * 2 : 0;
+		const textAspectRatio =
+			name && settings.countryNames ? getTextAspectRatio(name, settings.countryNamesFont) : 0;
 		const emblemAspectRatio = settings.countryEmblems ? 1 / 1 : 0;
 		let searchAspectRatio = 0;
 		if (settings.countryEmblems && settings.countryNames) {
@@ -120,6 +120,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 									relativePointType: emblemAspectRatio ? 'top' : 'middle',
 									ratio: textAspectRatio,
 									iterations: 8,
+									xBuffer: settings.borderWidth / SCALE,
 							  })
 							: null;
 						if (
@@ -176,7 +177,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 				{ iterations: 2 },
 			);
 		}
-		const inner = buffer(outer, -settings.borderWidth, { units: 'miles' });
+		const inner = buffer(outer, -settings.borderWidth / SCALE, { units: 'degrees' });
 		const outerPath = multiPolygonToPath(outer, settings);
 		const innerPath = multiPolygonToPath(inner, settings);
 		const emblemKey = country.flag?.icon
@@ -299,18 +300,25 @@ function findLargestContainedRect({
 	relativePointType,
 	ratio,
 	iterations,
+	xBuffer = 0,
 }: {
 	polygon: helpers.Polygon;
 	relativePoint: helpers.Position;
 	relativePointType: 'top' | 'bottom' | 'middle';
 	ratio: number;
 	iterations: number;
+	xBuffer?: number;
 }) {
 	let bestWidth: null | number = null;
 	let failedWidth = null;
 	let testWidth = 1;
 	for (let i = 0; i < iterations; i++) {
-		const testRect = makeRect(relativePoint, relativePointType, testWidth, testWidth * ratio);
+		const testRect = makeRect(
+			relativePoint,
+			relativePointType,
+			testWidth + xBuffer * 2,
+			testWidth * ratio,
+		);
 		if (contains(polygon, testRect)) {
 			bestWidth = testWidth;
 			if (!failedWidth) {
@@ -488,4 +496,12 @@ async function convertDds(key: string, content: Uint8Array) {
 	} else {
 		return Promise.reject('magick returned non-zero exit code');
 	}
+}
+
+const measureTextContext = document
+	.createElement('canvas')
+	.getContext('2d') as CanvasRenderingContext2D;
+function getTextAspectRatio(text: string, fontFamily: string) {
+	measureTextContext.font = `10px '${fontFamily}'`;
+	return 10 / measureTextContext.measureText(text).width;
 }

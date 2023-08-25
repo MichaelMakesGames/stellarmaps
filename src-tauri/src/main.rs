@@ -11,6 +11,7 @@ use std::io;
 use zip;
 use regex::Regex;
 use anyhow;
+use font_kit::source::SystemSource;
 
 fn main() {
 	tauri::Builder
@@ -21,7 +22,8 @@ fn main() {
 				get_stellaris_loc_cmd,
 				get_stellaris_save_metadata_cmd,
 				get_stellaris_save_cmd,
-				get_emblem_cmd
+				get_emblem_cmd,
+				get_fonts_cmd
 			]
 		)
 		.run(tauri::generate_context!())
@@ -55,6 +57,11 @@ async fn get_stellaris_save_cmd(path: String) -> Result<String, String> {
 #[tauri::command]
 async fn get_emblem_cmd(category: String, file: String) -> Result<Vec<u8>, String> {
 	return get_emblem(category, file).map_err(|err| err.to_string());
+}
+
+#[tauri::command]
+async fn get_fonts_cmd() -> Result<Vec<String>, String> {
+	return get_fonts().map_err(|err| err.to_string());
 }
 
 fn get_steam_dir() -> PathBuf {
@@ -227,4 +234,9 @@ fn get_stellaris_loc() -> anyhow::Result<HashMap<String, String>> {
 fn get_emblem(category: String, file: String) -> io::Result<Vec<u8>> {
 	let path = get_stellaris_install_dir().join("flags").join(category).join("map").join(file);
 	return fs::read(path);
+}
+
+fn get_fonts() -> anyhow::Result<Vec<String>> {
+	let fonts = SystemSource::new().all_families()?;
+	return Ok(fonts);
 }

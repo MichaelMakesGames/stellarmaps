@@ -119,6 +119,9 @@
 									dominant-baseline="middle"
 									font-size={textHeight}
 									fill="white"
+									font-family={$lastProcessedMapSettings.countryNamesFont}
+									textLength={textWidth}
+									lengthAdjust="spacingAndGlyphs"
 								>
 									{border.name}
 								</text>

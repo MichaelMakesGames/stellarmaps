@@ -1,4 +1,5 @@
-import { get, writable } from 'svelte/store';
+import { get, writable, type Readable, readable } from 'svelte/store';
+import { loadFonts } from './tauriCommands';
 
 export type NumberMapSettings =
 	| 'borderWidth'
@@ -13,7 +14,11 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesMaxSize'
 	| 'countryNamesMinSize';
 
-export type StringMapSettings = 'borderFillColor' | 'borderColor' | 'labelsAvoidHoles';
+export type StringMapSettings =
+	| 'borderFillColor'
+	| 'borderColor'
+	| 'labelsAvoidHoles'
+	| 'countryNamesFont';
 
 export type BooleanMapSettings = 'borderSmoothing' | 'countryEmblems' | 'countryNames';
 export type MapSettings = Record<NumberMapSettings, number> &
@@ -57,6 +62,7 @@ export interface MapSettingConfigSelect extends MapSettingConfigBase {
 	id: StringMapSettings;
 	type: 'select';
 	options: IdAndName[];
+	dynamicOptions?: Readable<IdAndName[]>;
 }
 
 export type MapSettingConfig =
@@ -68,6 +74,10 @@ export type MapSettingConfig =
 export interface MapSettingGroup extends IdAndName {
 	settings: MapSettingConfig[];
 }
+
+const fontOptions = readable<IdAndName[]>([], (set) => {
+	loadFonts().then((fonts) => set(fonts.map((f) => ({ id: f, name: f }))));
+});
 
 export const mapSettingConfig: MapSettingGroup[] = [
 	{
@@ -137,6 +147,15 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				min: 0,
 				step: 1,
 				optional: true,
+				hideIf: (settings) => !settings.countryNames,
+			},
+			{
+				id: 'countryNamesFont',
+				name: 'Font',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [{ id: 'system', name: 'system' }],
+				dynamicOptions: fontOptions,
 				hideIf: (settings) => !settings.countryNames,
 			},
 			{
@@ -220,7 +239,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 export const defaultMapSettings: MapSettings = {
 	borderFillColor: 'primary',
 	borderColor: 'secondary',
-	borderWidth: 2,
+	borderWidth: 4,
 	borderSmoothing: true,
 	hyperlaneWidth: 1,
 	hyperlaneOpacity: 0.2,
@@ -229,6 +248,7 @@ export const defaultMapSettings: MapSettings = {
 	countryNames: true,
 	countryNamesMinSize: 10,
 	countryNamesMaxSize: null,
+	countryNamesFont: 'system',
 	countryEmblems: true,
 	countryEmblemsMinSize: null,
 	countryEmblemsMaxSize: null,
