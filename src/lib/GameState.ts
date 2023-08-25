@@ -37,7 +37,13 @@ export interface Megastructure {
 
 export interface Country {
 	name?: LocalizedText;
-	flag: { colors: string[] };
+	flag?: {
+		colors: string[];
+		icon?: {
+			category: string;
+			file: string;
+		};
+	};
 	fleets_manager?: {
 		owned_fleets?: { fleet: number }[];
 	};

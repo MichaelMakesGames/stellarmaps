@@ -36,3 +36,9 @@ export function loadSave(path: string) {
 export function loadLoc() {
 	return invoke('get_stellaris_loc_cmd') as Promise<Record<string, string>>;
 }
+
+export function loadEmblem(category: string, file: string) {
+	return invoke<number[]>('get_emblem_cmd', { category, file }).then((numbers) =>
+		Uint8Array.from(numbers),
+	);
+}

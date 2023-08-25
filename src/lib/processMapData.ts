@@ -11,7 +11,7 @@ import { pathRound } from 'd3-path';
 import { curveBasisClosed, curveLinearClosed } from 'd3-shape';
 import type { Bypass, Country, GameState, LocalizedText } from './GameState';
 import type { MapSettings } from './mapSettings';
-import { loadLoc } from './tauriCommands';
+import { loadEmblem, loadLoc } from './tauriCommands';
 
 const SCALE = 100;
 
@@ -68,8 +68,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 	const borders = Object.entries(countryToSystemPolygon).map(([countryId, polygons]) => {
 		const name = countryNames[countryId] ?? '';
 		const country = gameState.country[parseInt(countryId)];
-		const primaryColor = country.flag.colors[0];
-		const secondaryColor = country.flag.colors[1];
+		const primaryColor = country.flag?.colors[0] ?? 'black';
+		const secondaryColor = country.flag?.colors[1] ?? 'black';
 		const multiPolygon = helpers.multiPolygon(
 			polygons.map((polygon) => [polygon.map(pointToGeoJSON)]),
 		);
@@ -77,48 +77,79 @@ export default async function processMapData(gameState: GameState, settings: Map
 			union(multiPolygon, multiPolygon) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
 		]);
 		// TODO will need a better solution to support other languages (eg double width CJK chars)
-		const textAspectRatio = name ? (1 / name.length) * 2 : 0;
-		const emblemAspectRatio = 1 / 1;
-		const labelPoints = getPolygons(outer)
-			.map<[helpers.Polygon, helpers.Position]>((polygon) => [
-				polygon,
-				aspectRatioSensitivePolylabel(
-					polygon.coordinates,
-					0.01,
-					Math.max(textAspectRatio, emblemAspectRatio),
-				),
-			])
-			.map(([polygon, point]) => {
-				let textWidth = textAspectRatio
-					? findLargestContainedRect({
-							polygon,
-							relativePoint: point,
-							relativePointType: 'middle',
-							ratio: textAspectRatio,
-							iterations: 8,
-					  })
-					: null;
-				const MIN_TEXT_HEIGHT = 8; // TODO expose a setting for this
-				if (textWidth && textWidth * textAspectRatio * SCALE < MIN_TEXT_HEIGHT) {
-					textWidth = null;
-				}
-				const emblemWidth = findLargestContainedRect({
-					polygon,
-					relativePoint: textWidth
-						? [point[0], point[1] - (textWidth * textAspectRatio) / 2]
-						: point,
-					relativePointType: textWidth ? 'bottom' : 'middle',
-					ratio: emblemAspectRatio,
-					iterations: 8,
-				});
-				return {
-					point: inverseX(pointFromGeoJSON(point)),
-					emblemWidth: emblemWidth ? emblemWidth * SCALE : null,
-					emblemHeight: emblemWidth ? emblemWidth * emblemAspectRatio * SCALE : null,
-					textWidth: textWidth ? textWidth * SCALE : null,
-					textHeight: textWidth ? textWidth * textAspectRatio * SCALE : null,
-				};
-			});
+		const textAspectRatio = name && settings.countryNames ? (1 / name.length) * 2 : 0;
+		const emblemAspectRatio = settings.countryEmblems ? 1 / 1 : 0;
+		let searchAspectRatio = 0;
+		if (settings.countryEmblems && settings.countryNames) {
+			searchAspectRatio = textAspectRatio + emblemAspectRatio / 2;
+		} else if (settings.countryEmblems) {
+			searchAspectRatio = emblemAspectRatio;
+		} else if (settings.countryNames) {
+			searchAspectRatio = textAspectRatio;
+		}
+		const labelPoints = searchAspectRatio
+			? getPolygons(outer)
+					// .map((p) => helpers.polygon([p.coordinates[0]]).geometry) // TODO ignore holes setting (ignore only 'unowned' holes?)
+					.map<[helpers.Polygon, helpers.Position]>((polygon) => [
+						polygon,
+						aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
+					])
+					.map(([polygon, point]) => {
+						let textWidth = textAspectRatio
+							? findLargestContainedRect({
+									polygon,
+									relativePoint: point,
+									relativePointType: emblemAspectRatio ? 'top' : 'middle',
+									ratio: textAspectRatio,
+									iterations: 8,
+							  })
+							: null;
+						if (
+							textWidth &&
+							settings.countryNamesMinSize &&
+							textWidth * textAspectRatio * SCALE < settings.countryNamesMinSize
+						) {
+							textWidth = null;
+						}
+						if (
+							textWidth &&
+							settings.countryNamesMaxSize &&
+							textWidth * textAspectRatio * SCALE > settings.countryNamesMaxSize
+						) {
+							textWidth = settings.countryNamesMaxSize / SCALE / textAspectRatio;
+						}
+						let emblemWidth = emblemAspectRatio
+							? findLargestContainedRect({
+									polygon,
+									relativePoint: point,
+									relativePointType: textWidth ? 'bottom' : 'middle',
+									ratio: emblemAspectRatio,
+									iterations: 8,
+							  })
+							: null;
+						if (
+							emblemWidth &&
+							settings.countryEmblemsMinSize &&
+							emblemWidth * SCALE < settings.countryEmblemsMinSize
+						) {
+							emblemWidth = null;
+						}
+						if (
+							emblemWidth &&
+							settings.countryEmblemsMaxSize &&
+							emblemWidth * SCALE > settings.countryEmblemsMaxSize
+						) {
+							emblemWidth = settings.countryEmblemsMaxSize / SCALE;
+						}
+						return {
+							point: inverseX(pointFromGeoJSON(point)),
+							emblemWidth: emblemWidth ? emblemWidth * SCALE : null,
+							emblemHeight: emblemWidth ? emblemWidth * emblemAspectRatio * SCALE : null,
+							textWidth: textWidth ? textWidth * SCALE : null,
+							textHeight: textWidth ? textWidth * textAspectRatio * SCALE : null,
+						};
+					})
+			: [];
 		if (settings.borderSmoothing) {
 			outer = polygonSmooth(
 				union(multiPolygon, multiPolygon) as helpers.Feature<
@@ -130,6 +161,9 @@ export default async function processMapData(gameState: GameState, settings: Map
 		const inner = buffer(outer, -settings.borderWidth, { units: 'miles' });
 		const outerPath = multiPolygonToPath(outer, settings);
 		const innerPath = multiPolygonToPath(inner, settings);
+		const emblemKey = country.flag?.icon
+			? `${country.flag.icon.category}/${country.flag.icon.file}`
+			: null;
 		return {
 			primaryColor,
 			secondaryColor,
@@ -137,6 +171,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 			innerPath,
 			labelPoints,
 			name,
+			emblemKey,
 		};
 	});
 
@@ -179,7 +214,11 @@ export default async function processMapData(gameState: GameState, settings: Map
 		.join(' ');
 	console.timeEnd('processing');
 
-	return { borders, hyperlanesPath, relayHyperlanesPath };
+	console.time('loading emblems');
+	const emblems = await loadCountryEmblems(Object.values(gameState.country));
+	console.timeEnd('loading emblems');
+
+	return { borders, hyperlanesPath, relayHyperlanesPath, emblems };
 }
 
 function multiPolygonToPath(
@@ -360,10 +399,10 @@ function aspectRatioSensitivePolylabel(
 	aspectRatio: number,
 ) {
 	const scaledPolygon = polygon.map((ring) =>
-		ring.map((point) => [point[0] / aspectRatio, point[1]]),
+		ring.map((point) => [point[0] * aspectRatio, point[1]]),
 	);
 	const point = polylabel(scaledPolygon, precision);
-	return [point[0] * aspectRatio, point[1]];
+	return [point[0] / aspectRatio, point[1]];
 }
 
 // The booleanContains function from turf doesn't seem to work with concave polygons
@@ -383,4 +422,52 @@ function contains(polygon: helpers.Polygon, rect: helpers.Polygon) {
 	return !polygon.coordinates.flat().some(([x, y]) => {
 		return x > minX && x < maxX && y > minY && y < maxY;
 	});
+}
+
+// const initializeImageMagickPromise = initializeImageMagick('@imagemagick/magick-wasm/magick.wasm');
+const emblems: Record<string, Promise<string>> = {};
+async function loadCountryEmblems(countries: Country[]) {
+	const promises: Promise<string>[] = [];
+	const keys: string[] = [];
+	countries.forEach((c) => {
+		if (c.flag?.icon) {
+			const key = `${c.flag.icon.category}/${c.flag.icon.file}`;
+			if (keys.includes(key)) {
+				// do nothing
+			} else {
+				keys.push(key);
+				if (!(key in emblems)) {
+					emblems[key] = loadEmblem(c.flag.icon.category, c.flag.icon.file).then((content) =>
+						convertDds(key.replace('/', '__'), content),
+					);
+				}
+				promises.push(emblems[key]);
+			}
+		}
+	});
+	const values = await Promise.all(promises);
+	return values.reduce<Record<string, string>>((acc, cur, i) => {
+		acc[keys[i]] = cur;
+		return acc;
+	}, {});
+}
+
+const magickImport = '/magickApi.js';
+async function convertDds(key: string, content: Uint8Array) {
+	const result = await (
+		await import(magickImport)
+	).execute({
+		inputFiles: [{ name: 'test.dds', content: content }],
+		commands: [`convert test.dds test.png`],
+	});
+	if (result.exitCode === 0) {
+		const reader = new FileReader();
+		const promise = new Promise<string>((resolve) => {
+			reader.addEventListener('loadend', () => resolve(reader.result as string), true);
+		});
+		reader.readAsDataURL(new Blob([result.outputFiles[0].buffer]));
+		return promise;
+	} else {
+		return Promise.reject('magick returned non-zero exit code');
+	}
 }

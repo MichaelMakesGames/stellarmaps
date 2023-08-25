@@ -3,6 +3,8 @@
 	import { mapSettings, type MapSettingConfig } from './mapSettings';
 	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
+	import type { FormEventHandler } from 'svelte/elements';
+	import { slide } from 'svelte/transition';
 
 	export let config: MapSettingConfig;
 
@@ -11,44 +13,65 @@
 	$: {
 		mapSettings.update((prev) => ({
 			...prev,
-			[config.id]: value
+			[config.id]: value,
 		}));
 	}
+
+	const handleNumberInput: FormEventHandler<HTMLInputElement> = (e) => {
+		const newValue = parseFloat((e.target as HTMLInputElement).value);
+		console.warn(newValue);
+		if (Number.isFinite(newValue)) {
+			value = newValue;
+		} else if (config.type === 'number' && config.optional) {
+			value = null;
+		}
+	};
+
+	$: hidden = config.hideIf?.($mapSettings);
 </script>
 
-<label class="label" for={config.id}>
-	<span>
-		{config.name}
-		{#if config.requiresReprocessing}
-			<span class="relative top-1">
-				<ReprocessMapBadge />
-			</span>
+{#if !hidden}
+	<label class="label" for={config.id} transition:slide>
+		<span>
+			{config.name}
+			{#if config.requiresReprocessing}
+				<span class="relative top-1">
+					<ReprocessMapBadge />
+				</span>
+			{/if}
+		</span>
+		{#if config.type === 'number'}
+			<input
+				class="input"
+				type="number"
+				value={value ?? ''}
+				on:input={handleNumberInput}
+				min={config.min}
+				max={config.max}
+				step={config.step}
+			/>
+		{:else if config.type === 'range'}
+			<RangeSlider
+				name={config.id}
+				bind:value
+				min={config.min}
+				max={config.max}
+				step={config.step}
+			/>
+		{:else if config.type === 'select'}
+			<select class="select" bind:value>
+				{#each config.options as option (option.id)}
+					<option value={option.id}>{option.name}</option>
+				{/each}
+			</select>
+		{:else if config.type === 'toggle'}
+			<div>
+				<SlideToggle name={config.id} bind:checked={value} active="bg-primary-500">
+					{value ? 'Enabled' : 'Disabled'}
+				</SlideToggle>
+			</div>
+		{:else}
+			<span>TODO</span>
 		{/if}
-	</span>
-	{#if config.type === 'number'}
-		<input
-			class="input"
-			type="number"
-			bind:value
-			min={config.min}
-			max={config.max}
-			step={config.step}
-		/>
-	{:else if config.type === 'range'}
-		<RangeSlider name={config.id} bind:value min={config.min} max={config.max} step={config.step} />
-	{:else if config.type === 'select'}
-		<select class="select" bind:value>
-			{#each config.options as option (option.id)}
-				<option value={option.id}>{option.name}</option>
-			{/each}
-		</select>
-	{:else if config.type === 'toggle'}
-		<div>
-			<SlideToggle name={config.id} bind:checked={value} active="bg-primary-500">
-				{value ? 'Enabled' : 'Disabled'}
-			</SlideToggle>
-		</div>
-	{:else}
-		<span>TODO</span>
-	{/if}
-</label>
+	</label>
+{/if}

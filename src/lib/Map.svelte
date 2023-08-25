@@ -5,6 +5,7 @@
 	import { lastProcessedMapSettings, mapSettings } from './mapSettings';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import { toastError } from './utils';
+	import { writable } from 'svelte/store';
 
 	$: mapDataPromise =
 		$gameStatePromise?.then((gs) => processMapData(gs, $lastProcessedMapSettings)) ??
@@ -27,6 +28,9 @@
 		if (setting === 'secondary') return border.secondaryColor;
 		return setting;
 	}
+
+	const debug = writable(false);
+	(window as any).debug = debug;
 </script>
 
 <div class="w-full h-full" style:background="#111">
@@ -44,8 +48,11 @@
 				</div>
 			</div>
 		{:then [colors, gameState, data]}
-			<svg viewBox="-500 -500 1000 1000" width={800} height={800} class="w-full h-full">
-				<rect x={-500} y={-500} width={1000} height={1000} fill="#111" />
+			<svg
+				viewBox="-500 -500 1000 1000"
+				class="w-full h-full"
+				style="background: #111; text-shadow: 0px 0px 3px black;"
+			>
 				{#if data}
 					{#each data.borders as border}
 						<path
@@ -71,24 +78,33 @@
 					/>
 					{#each data.borders as border}
 						{#each border.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
-							<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />
-							{#if emblemWidth && emblemHeight}
+							{#if $debug}<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />{/if}
+							{#if $debug && emblemWidth && emblemHeight}
 								<rect
 									stroke-width={1}
 									stroke="#F0F"
 									x={point[0] - emblemWidth / 2}
-									y={point[1] - (textHeight ? emblemHeight + textHeight / 2 : emblemHeight / 2)}
+									y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
 									width={emblemWidth}
 									height={emblemHeight}
 									fill="transparent"
 								/>
 							{/if}
-							{#if textWidth && textHeight}
+							{#if emblemWidth && emblemHeight && border.emblemKey && data.emblems[border.emblemKey]}
+								<image
+									x={point[0] - emblemWidth / 2}
+									y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
+									width={emblemWidth}
+									height={emblemHeight}
+									href={data.emblems[border.emblemKey]}
+								/>
+							{/if}
+							{#if $debug && textWidth && textHeight}
 								<rect
 									stroke-width={1}
 									stroke="#F0F"
 									x={point[0] - textWidth / 2}
-									y={point[1] - textHeight / 2}
+									y={point[1] - (emblemHeight ? 0 : textHeight / 2)}
 									width={textWidth}
 									height={textHeight}
 									fill="transparent"
@@ -98,7 +114,7 @@
 								<text
 									stroke-width={1}
 									x={point[0]}
-									y={point[1]}
+									y={point[1] + (emblemHeight ? textHeight / 2 : 0)}
 									text-anchor="middle"
 									dominant-baseline="middle"
 									font-size={textHeight}

@@ -7,10 +7,17 @@ export type NumberMapSettings =
 	| 'hyperRelayWidth'
 	| 'hyperRelayOpacity';
 
+export type NumberOptionalMapSettings =
+	| 'countryEmblemsMaxSize'
+	| 'countryEmblemsMinSize'
+	| 'countryNamesMaxSize'
+	| 'countryNamesMinSize';
+
 export type StringMapSettings = 'borderFillColor' | 'borderColor';
 
-export type BooleanMapSettings = 'borderSmoothing';
+export type BooleanMapSettings = 'borderSmoothing' | 'countryEmblems' | 'countryNames';
 export type MapSettings = Record<NumberMapSettings, number> &
+	Record<NumberOptionalMapSettings, number | null> &
 	Record<StringMapSettings, string> &
 	Record<BooleanMapSettings, boolean>;
 
@@ -21,6 +28,7 @@ export interface IdAndName {
 
 interface MapSettingConfigBase extends IdAndName {
 	requiresReprocessing?: boolean;
+	hideIf?: (settings: MapSettings) => boolean;
 }
 
 export interface MapSettingConfigToggle extends MapSettingConfigBase {
@@ -29,15 +37,16 @@ export interface MapSettingConfigToggle extends MapSettingConfigBase {
 }
 
 export interface MapSettingConfigNumber extends MapSettingConfigBase {
-	id: NumberMapSettings;
+	id: NumberMapSettings | NumberOptionalMapSettings;
 	type: 'number';
 	min?: number;
 	max?: number;
 	step: number;
+	optional?: boolean;
 }
 
 export interface MapSettingConfigRange extends MapSettingConfigBase {
-	id: NumberMapSettings;
+	id: NumberMapSettings | NumberOptionalMapSettings;
 	type: 'range';
 	min: number;
 	max: number;
@@ -71,8 +80,8 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'select',
 				options: [
 					{ id: 'primary', name: 'Primary' },
-					{ id: 'secondary', name: 'Secondary' }
-				]
+					{ id: 'secondary', name: 'Secondary' },
+				],
 			},
 			{
 				id: 'borderColor',
@@ -81,8 +90,8 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				options: [
 					{ id: 'primary', name: 'Primary' },
 					{ id: 'secondary', name: 'Secondary' },
-					{ id: 'white', name: 'White' }
-				]
+					{ id: 'white', name: 'White' },
+				],
 			},
 			{
 				id: 'borderWidth',
@@ -90,15 +99,73 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				requiresReprocessing: true,
 				type: 'number',
 				min: 0,
-				step: 0.5
+				step: 0.5,
 			},
 			{
 				id: 'borderSmoothing',
 				name: 'Border Smoothing',
 				requiresReprocessing: true,
-				type: 'toggle'
-			}
-		]
+				type: 'toggle',
+			},
+		],
+	},
+	{
+		id: 'countryLabels',
+		name: 'Country Labels',
+		settings: [
+			{
+				id: 'countryNames',
+				name: 'Names',
+				requiresReprocessing: true,
+				type: 'toggle',
+			},
+			{
+				id: 'countryNamesMinSize',
+				name: 'Name Min Size',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryNames,
+			},
+			{
+				id: 'countryNamesMaxSize',
+				name: 'Name Max Size',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryNames,
+			},
+			{
+				id: 'countryEmblems',
+				name: 'Emblems',
+				requiresReprocessing: true,
+				type: 'toggle',
+			},
+			{
+				id: 'countryEmblemsMinSize',
+				name: 'Emblem Min Size',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryEmblems,
+			},
+			{
+				id: 'countryEmblemsMaxSize',
+				name: 'Emblem Max Size',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryEmblems,
+			},
+		],
 	},
 	{
 		id: 'hyperlanes',
@@ -109,7 +176,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Hyperlane Width',
 				type: 'number',
 				min: 0,
-				step: 0.5
+				step: 0.5,
 			},
 			{
 				id: 'hyperlaneOpacity',
@@ -117,14 +184,14 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'range',
 				min: 0,
 				max: 1,
-				step: 0.05
+				step: 0.05,
 			},
 			{
 				id: 'hyperRelayWidth',
 				name: 'Hyper Relay Width',
 				type: 'number',
 				min: 0,
-				step: 0.5
+				step: 0.5,
 			},
 			{
 				id: 'hyperRelayOpacity',
@@ -132,10 +199,10 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'range',
 				min: 0,
 				max: 1,
-				step: 0.05
-			}
-		]
-	}
+				step: 0.05,
+			},
+		],
+	},
 ];
 
 export const defaultMapSettings: MapSettings = {
@@ -146,7 +213,13 @@ export const defaultMapSettings: MapSettings = {
 	hyperlaneWidth: 1,
 	hyperlaneOpacity: 0.2,
 	hyperRelayWidth: 3,
-	hyperRelayOpacity: 0.2
+	hyperRelayOpacity: 0.2,
+	countryNames: true,
+	countryNamesMinSize: 10,
+	countryNamesMaxSize: null,
+	countryEmblems: true,
+	countryEmblemsMinSize: null,
+	countryEmblemsMaxSize: null,
 };
 
 export const mapSettings = writable(defaultMapSettings);

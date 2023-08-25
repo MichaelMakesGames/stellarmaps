@@ -20,7 +20,8 @@ fn main() {
 				get_stellaris_colors_cmd,
 				get_stellaris_loc_cmd,
 				get_stellaris_save_metadata_cmd,
-				get_stellaris_save_cmd
+				get_stellaris_save_cmd,
+				get_emblem_cmd
 			]
 		)
 		.run(tauri::generate_context!())
@@ -28,7 +29,7 @@ fn main() {
 }
 
 #[tauri::command]
-fn get_stellaris_colors_cmd() -> Result<String, String> {
+async fn get_stellaris_colors_cmd() -> Result<String, String> {
 	let path = get_stellaris_install_dir()
 		.join("common")
 		.join("named_colors")
@@ -42,13 +43,18 @@ async fn get_stellaris_loc_cmd() -> Result<HashMap<String, String>, String> {
 }
 
 #[tauri::command]
-fn get_stellaris_save_metadata_cmd() -> Result<Vec<Vec<StellarisSave>>, String> {
+async fn get_stellaris_save_metadata_cmd() -> Result<Vec<Vec<StellarisSave>>, String> {
 	get_stellaris_save_metadata().map_err(|err| err.to_string())
 }
 
 #[tauri::command]
-fn get_stellaris_save_cmd(path: String) -> Result<String, String> {
+async fn get_stellaris_save_cmd(path: String) -> Result<String, String> {
 	return get_stellaris_save(path).map_err(|err| err.to_string());
+}
+
+#[tauri::command]
+async fn get_emblem_cmd(category: String, file: String) -> Result<Vec<u8>, String> {
+	return get_emblem(category, file).map_err(|err| err.to_string());
 }
 
 fn get_steam_dir() -> PathBuf {
@@ -216,4 +222,9 @@ fn get_stellaris_loc() -> anyhow::Result<HashMap<String, String>> {
 		}
 	}
 	return Ok(locs);
+}
+
+fn get_emblem(category: String, file: String) -> io::Result<Vec<u8>> {
+	let path = get_stellaris_install_dir().join("flags").join(category).join("map").join(file);
+	return fs::read(path);
 }
