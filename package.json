@@ -22,7 +22,9 @@
 		"@tauri-apps/cli": "^1.4.0",
 		"@types/d3-delaunay": "^6.0.1",
 		"@types/d3-path": "^3.0.0",
+		"@types/d3-selection": "^3.0.6",
 		"@types/d3-shape": "^3.1.1",
+		"@types/d3-zoom": "^3.0.4",
 		"@types/node": "^20.5.0",
 		"@types/polylabel": "^1.1.0",
 		"@typescript-eslint/eslint-plugin": "^5.45.0",
@@ -53,7 +55,9 @@
 		"@turf/union": "^6.5.0",
 		"d3-delaunay": "^6.0.4",
 		"d3-path": "^3.1.0",
+		"d3-selection": "^3.0.0",
 		"d3-shape": "^3.2.0",
+		"d3-zoom": "^3.0.0",
 		"polylabel": "^1.1.0"
 	}
 }
