@@ -1,11 +1,11 @@
 [package]
-name = "stellarmaps"
-version = "0.2.0"
+name = "StellarMaps"
+version = "0.2.1"
 description = "Stellaris map renderer"
 authors = ["Michael Moore"]
 license = ""
 repository = ""
-default-run = "stellarmaps"
+default-run = "StellarMaps"
 edition = "2021"
 rust-version = "1.60"
 

@@ -380,10 +380,10 @@ function localizeText(text: LocalizedText, loc: Record<string, string>): string 
 		try {
 			const var0 = text.variables?.[0];
 			const var1 = text.variables?.[1];
-			if (!var0 || !var1) throw new Error();
+			if (!var0) throw new Error();
 			return loc['adj_format']
 				.replace('adj', localizeText(var0.value, loc))
-				.replace('$1$', localizeText(var1.value, loc));
+				.replace('$1$', var1 ? localizeText(var1.value, loc) : '');
 		} catch {
 			console.warn(text);
 			return 'LOCALIZATION FAILED';
@@ -481,7 +481,7 @@ async function loadCountryEmblems(countries: Country[]) {
 const magickImport = '/magickApi.js';
 async function convertDds(key: string, content: Uint8Array) {
 	const result = await (
-		await import(magickImport)
+		await import(magickImport /* @vite-ignore */)
 	).execute({
 		inputFiles: [{ name: 'test.dds', content: content }],
 		commands: [`convert test.dds test.png`],

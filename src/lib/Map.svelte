@@ -142,6 +142,22 @@
 										height={emblemHeight}
 										href={data.emblems[border.emblemKey]}
 									/>
+									<!-- This lets the user right-click "Copy Image" to paste into an external program -->
+									<foreignObject
+										x={point[0] - emblemWidth / 2}
+										y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
+										width={emblemWidth}
+										height={emblemHeight}
+										href={data.emblems[border.emblemKey]}
+										opacity="0"
+									>
+										<img
+											width={emblemWidth}
+											height={emblemHeight}
+											src={data.emblems[border.emblemKey]}
+											alt="Country Emblem"
+										/>
+									</foreignObject>
 								{/if}
 								{#if $debug && textWidth && textHeight}
 									<rect
