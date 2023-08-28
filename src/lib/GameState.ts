@@ -17,6 +17,7 @@ export interface GameState {
 	starbase_mgr: { starbases: Record<number, Starbase> };
 	bypasses: Record<number, Bypass>;
 	megastructures: Record<number, Megastructure>;
+	sectors: Record<number, Sector>;
 }
 
 export interface GalacticObject {
@@ -66,4 +67,10 @@ export interface LocalizedText {
 		key: string;
 		value: LocalizedText;
 	}[];
+}
+
+export interface Sector {
+	owner?: number;
+	local_capital?: number;
+	systems: number[];
 }

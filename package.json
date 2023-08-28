@@ -50,6 +50,7 @@
 		"@tauri-apps/api": "^1.4.0",
 		"@turf/boolean-contains": "^6.5.0",
 		"@turf/buffer": "^6.5.0",
+		"@turf/explode": "^6.5.0",
 		"@turf/helpers": "^6.5.0",
 		"@turf/polygon-smooth": "^6.5.0",
 		"@turf/union": "^6.5.0",

@@ -8,10 +8,12 @@ export async function loadColors() {
 		{ color: [number, number, number, number] }
 	>;
 	return Object.fromEntries(
-		Object.entries(parsed).map(([key, value]) => [
-			key,
-			`rgba(${value.color[0]}, ${value.color[1]}, ${value.color[2]}, ${value.color[3] / 255})`,
-		]),
+		Object.entries(parsed)
+			.map(([key, value]) => [
+				key,
+				`rgba(${value.color[0]}, ${value.color[1]}, ${value.color[2]}, ${value.color[3] / 255})`,
+			])
+			.concat([['fallback', 'rgba(0, 0, 0, 0.5)']]),
 	);
 }
 

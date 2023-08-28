@@ -3,6 +3,7 @@ import { loadFonts } from './tauriCommands';
 
 export type NumberMapSettings =
 	| 'borderWidth'
+	| 'sectorBorderWidth'
 	| 'hyperlaneWidth'
 	| 'hyperlaneOpacity'
 	| 'hyperRelayWidth'
@@ -17,10 +18,18 @@ export type NumberOptionalMapSettings =
 export type StringMapSettings =
 	| 'borderFillColor'
 	| 'borderColor'
+	| 'sectorBorderColor'
+	| 'sectorBorderDashArray'
 	| 'labelsAvoidHoles'
 	| 'countryNamesFont';
 
-export type BooleanMapSettings = 'borderSmoothing' | 'countryEmblems' | 'countryNames';
+export type BooleanMapSettings =
+	| 'borderSmoothing'
+	| 'countryEmblems'
+	| 'countryNames'
+	| 'sectorBorders'
+	| 'sectorBorderSmoothing';
+
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
 	Record<StringMapSettings, string> &
@@ -65,7 +74,13 @@ export interface MapSettingConfigSelect extends MapSettingConfigBase {
 	dynamicOptions?: Readable<IdAndName[]>;
 }
 
+export interface MapSettingConfigText extends MapSettingConfigBase {
+	id: StringMapSettings;
+	type: 'text';
+}
+
 export type MapSettingConfig =
+	| MapSettingConfigText
 	| MapSettingConfigToggle
 	| MapSettingConfigNumber
 	| MapSettingConfigRange
@@ -199,6 +214,49 @@ export const mapSettingConfig: MapSettingGroup[] = [
 		],
 	},
 	{
+		id: 'sectorBorders',
+		name: 'Sector Borders',
+		settings: [
+			{
+				id: 'sectorBorders',
+				name: 'Sector Borders',
+				type: 'toggle',
+			},
+			{
+				id: 'sectorBorderColor',
+				name: 'Color',
+				type: 'select',
+				options: [
+					{ id: 'primary', name: 'primary' },
+					{ id: 'secondary', name: 'secondary' },
+					{ id: 'white', name: 'white' },
+				],
+				hideIf: (settings) => !settings.sectorBorders,
+			},
+			{
+				id: 'sectorBorderWidth',
+				name: 'Width',
+				type: 'number',
+				min: 0,
+				step: 0.5,
+				hideIf: (settings) => !settings.sectorBorders,
+			},
+			{
+				id: 'sectorBorderDashArray',
+				name: 'Dash Array',
+				type: 'text',
+				hideIf: (settings) => !settings.sectorBorders,
+			},
+			{
+				id: 'sectorBorderSmoothing',
+				name: 'Smoothing',
+				type: 'toggle',
+				requiresReprocessing: true,
+				hideIf: (settings) => !settings.sectorBorders,
+			},
+		],
+	},
+	{
 		id: 'hyperlanes',
 		name: 'Hyperlanes',
 		settings: [
@@ -242,9 +300,9 @@ export const defaultMapSettings: MapSettings = {
 	borderWidth: 4,
 	borderSmoothing: true,
 	hyperlaneWidth: 1,
-	hyperlaneOpacity: 0.2,
+	hyperlaneOpacity: 0.1,
 	hyperRelayWidth: 3,
-	hyperRelayOpacity: 0.2,
+	hyperRelayOpacity: 0.1,
 	countryNames: true,
 	countryNamesMinSize: 10,
 	countryNamesMaxSize: null,
@@ -253,6 +311,11 @@ export const defaultMapSettings: MapSettings = {
 	countryEmblemsMinSize: null,
 	countryEmblemsMaxSize: null,
 	labelsAvoidHoles: 'owned',
+	sectorBorders: true,
+	sectorBorderSmoothing: true,
+	sectorBorderWidth: 1,
+	sectorBorderColor: 'secondary',
+	sectorBorderDashArray: '2 1',
 };
 
 export const mapSettings = writable(defaultMapSettings);

@@ -26,10 +26,15 @@
 	function getBorderColor(
 		border: Awaited<ReturnType<typeof processMapData>>['borders'][number],
 		setting: string,
+		backgroundColorSetting?: string,
 	): string {
-		if (setting === 'primary') return border.primaryColor;
-		if (setting === 'secondary') return border.secondaryColor;
-		return setting;
+		let value = setting;
+		if (setting === 'primary') value = border.primaryColor;
+		if (setting === 'secondary') value = border.secondaryColor;
+		if (backgroundColorSetting && getBorderColor(border, backgroundColorSetting) === value) {
+			return 'fallback';
+		}
+		return value;
 	}
 
 	const debug = writable(false);
@@ -103,6 +108,23 @@
 								d={border.innerPath}
 								fill={colors[getBorderColor(border, $mapSettings.borderFillColor)]}
 							/>
+							{#if $mapSettings.sectorBorders}
+								{#each border.sectorBorders as sectorBorder}
+									<path
+										d={sectorBorder}
+										stroke-width={$mapSettings.sectorBorderWidth}
+										stroke={colors[
+											getBorderColor(
+												border,
+												$mapSettings.sectorBorderColor,
+												$mapSettings.borderFillColor,
+											)
+										]}
+										fill="none"
+										stroke-dasharray={$mapSettings.sectorBorderDashArray}
+									/>
+								{/each}
+							{/if}
 						{/each}
 						<path
 							d={data.hyperlanesPath}

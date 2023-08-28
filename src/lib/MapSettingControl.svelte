@@ -67,6 +67,8 @@
 				max={config.max}
 				step={config.step}
 			/>
+		{:else if config.type === 'text'}
+			<input class="input" type="text" bind:value />
 		{:else if config.type === 'select'}
 			<select class="select" bind:value>
 				{#each config.options as option (option.id)}
