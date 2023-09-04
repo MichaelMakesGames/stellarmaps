@@ -2,13 +2,24 @@
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import { select } from 'd3-selection';
 	import { zoom } from 'd3-zoom';
+	import {
+		symbol,
+		symbolCircle,
+		symbolCross,
+		symbolDiamond,
+		symbolSquare,
+		symbolStar,
+		symbolTriangle,
+		symbolWye,
+		type SymbolType,
+	} from 'd3-shape';
 	import { writable } from 'svelte/store';
 	import { fade } from 'svelte/transition';
 	import { gameStatePromise } from './GameState';
 	import { lastProcessedMapSettings, mapSettings, reprocessMap } from './mapSettings';
 	import processMapData from './processMapData';
 	import { loadColors } from './tauriCommands';
-	import { toastError } from './utils';
+	import { getLuminance, getLuminanceContrast, toastError } from './utils';
 
 	$: mapDataPromise =
 		$gameStatePromise?.then((gs) => processMapData(gs, $lastProcessedMapSettings)) ??
@@ -23,18 +34,27 @@
 		}),
 	);
 
-	function getBorderColor(
-		border: Awaited<ReturnType<typeof processMapData>>['borders'][number],
-		setting: string,
+	function resolveColor(
+		colors: Record<string, string>,
+		countryColors: { primaryColor: string; secondaryColor: string },
+		colorSetting: string,
 		backgroundColorSetting?: string,
+		minimumContrast?: number,
 	): string {
-		let value = setting;
-		if (setting === 'primary') value = border.primaryColor;
-		if (setting === 'secondary') value = border.secondaryColor;
-		if (backgroundColorSetting && getBorderColor(border, backgroundColorSetting) === value) {
-			return 'fallback';
+		let value = colorSetting;
+		if (colorSetting === 'primary') value = countryColors.primaryColor;
+		if (colorSetting === 'secondary') value = countryColors.secondaryColor;
+		value = colors[value];
+		if (!(backgroundColorSetting && minimumContrast)) {
+			return value;
+		} else {
+			const backgroundColor = resolveColor(colors, countryColors, backgroundColorSetting);
+			if (getLuminanceContrast(value, backgroundColor) < minimumContrast) {
+				return colors[getLuminance(backgroundColor) > 0.5 ? 'fallback_dark' : 'fallback_light'];
+			} else {
+				return value;
+			}
 		}
-		return value;
 	}
 
 	const debug = writable(false);
@@ -51,6 +71,35 @@
 		zoomed = false;
 		select(svg).call(zoomHandler);
 	}
+
+	const symbols: Record<string, SymbolType> = {
+		circle: symbolCircle,
+		cross: symbolCross,
+		diamond: symbolDiamond,
+		square: symbolSquare,
+		star: symbolStar,
+		triangle: symbolTriangle,
+		wye: symbolWye,
+	};
+	$: countryCapitalIconPath =
+		$mapSettings.countryCapitalIcon !== 'none'
+			? symbol(symbols[$mapSettings.countryCapitalIcon], $mapSettings.countryCapitalIconSize)()
+			: '';
+	$: sectorCapitalIconPath =
+		$mapSettings.sectorCapitalIcon !== 'none'
+			? symbol(symbols[$mapSettings.sectorCapitalIcon], $mapSettings.sectorCapitalIconSize)()
+			: '';
+	$: populatedSystemIconPath =
+		$mapSettings.populatedSystemIcon !== 'none'
+			? symbol(symbols[$mapSettings.populatedSystemIcon], $mapSettings.populatedSystemIconSize)()
+			: '';
+	$: unpopulatedSystemIconPath =
+		$mapSettings.unpopulatedSystemIcon !== 'none'
+			? symbol(
+					symbols[$mapSettings.unpopulatedSystemIcon],
+					$mapSettings.unpopulatedSystemIconSize,
+			  )()
+			: '';
 </script>
 
 <div class="w-full h-full relative" style:background="#111">
@@ -97,29 +146,44 @@
 				style="background: #111; text-shadow: 0px 0px 3px black;"
 				bind:this={svg}
 			>
+				<defs>
+					{#if data}
+						{#each data.borders as border}
+							<clipPath id="border-{border.countryId}-inner-clip-path">
+								<use href="#border-{border.countryId}-inner" />
+							</clipPath>
+						{/each}
+					{/if}
+				</defs>
 				<g bind:this={g}>
 					{#if data}
 						{#each data.borders as border}
 							<path
+								id="border-{border.countryId}-outer"
 								d={border.outerPath}
-								fill={colors[getBorderColor(border, $mapSettings.borderColor)]}
+								fill={resolveColor(colors, border, $mapSettings.borderColor)}
 							/>
 							<path
+								id="border-{border.countryId}-inner"
 								d={border.innerPath}
-								fill={colors[getBorderColor(border, $mapSettings.borderFillColor)]}
+								fill={resolveColor(colors, border, $mapSettings.borderFillColor)}
 							/>
 							{#if $mapSettings.sectorBorders}
 								{#each border.sectorBorders as sectorBorder}
 									<path
 										d={sectorBorder}
 										stroke-width={$mapSettings.sectorBorderWidth}
-										stroke={colors[
-											getBorderColor(
-												border,
-												$mapSettings.sectorBorderColor,
-												$mapSettings.borderFillColor,
-											)
-										]}
+										clip-path={resolveColor(colors, border, $mapSettings.borderFillColor) ===
+										resolveColor(colors, border, $mapSettings.borderColor)
+											? ''
+											: `url(#border-${border.countryId}-inner-clip-path)`}
+										stroke={resolveColor(
+											colors,
+											border,
+											$mapSettings.sectorBorderColor,
+											$mapSettings.borderFillColor,
+											$mapSettings.sectorBorderMinContrast,
+										)}
 										fill="none"
 										stroke-dasharray={$mapSettings.sectorBorderDashArray}
 									/>
@@ -142,6 +206,51 @@
 							stroke-width={$mapSettings.hyperRelayWidth}
 							opacity={$mapSettings.hyperRelayOpacity}
 						/>
+						{#each data.systems as system}
+							{#if system.isCountryCapital && $mapSettings.countryCapitalIcon !== 'none'}
+								<path
+									transform="translate({system.x},{system.y})"
+									d={countryCapitalIconPath}
+									fill={resolveColor(
+										colors,
+										system,
+										$mapSettings.populatedSystemIconColor,
+										$mapSettings.borderFillColor,
+										$mapSettings.populatedSystemIconMinContrast,
+									)}
+								/>
+							{:else if system.isSectorCapital && $mapSettings.sectorCapitalIcon !== 'none'}
+								<path
+									transform="translate({system.x},{system.y})"
+									d={sectorCapitalIconPath}
+									fill={resolveColor(
+										colors,
+										system,
+										$mapSettings.populatedSystemIconColor,
+										$mapSettings.borderFillColor,
+										$mapSettings.populatedSystemIconMinContrast,
+									)}
+								/>
+							{:else if system.isColonized && $mapSettings.populatedSystemIcon !== 'none'}
+								<path
+									transform="translate({system.x},{system.y})"
+									d={populatedSystemIconPath}
+									fill={resolveColor(
+										colors,
+										system,
+										$mapSettings.populatedSystemIconColor,
+										$mapSettings.borderFillColor,
+										$mapSettings.populatedSystemIconMinContrast,
+									)}
+								/>
+							{:else if $mapSettings.unpopulatedSystemIcon !== 'none'}
+								<path
+									transform="translate({system.x},{system.y})"
+									d={unpopulatedSystemIconPath}
+									fill="white"
+								/>
+							{/if}
+						{/each}
 						{#each data.borders as border}
 							{#each border.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
 								{#if $debug}<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />{/if}
@@ -211,14 +320,6 @@
 							{/each}
 						{/each}
 					{/if}
-					{#each Object.values(gameState.galactic_object) as galacticObject}
-						<circle
-							cx={-galacticObject.coordinate.x}
-							cy={galacticObject.coordinate.y}
-							r={1}
-							fill="#FFF"
-						/>
-					{/each}
 				</g>
 			</svg>
 		{/await}

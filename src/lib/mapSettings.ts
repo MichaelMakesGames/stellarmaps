@@ -7,7 +7,13 @@ export type NumberMapSettings =
 	| 'hyperlaneWidth'
 	| 'hyperlaneOpacity'
 	| 'hyperRelayWidth'
-	| 'hyperRelayOpacity';
+	| 'hyperRelayOpacity'
+	| 'sectorBorderMinContrast'
+	| 'countryCapitalIconSize'
+	| 'sectorCapitalIconSize'
+	| 'populatedSystemIconSize'
+	| 'populatedSystemIconMinContrast'
+	| 'unpopulatedSystemIconSize';
 
 export type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
@@ -21,7 +27,12 @@ export type StringMapSettings =
 	| 'sectorBorderColor'
 	| 'sectorBorderDashArray'
 	| 'labelsAvoidHoles'
-	| 'countryNamesFont';
+	| 'countryNamesFont'
+	| 'countryCapitalIcon'
+	| 'sectorCapitalIcon'
+	| 'populatedSystemIcon'
+	| 'populatedSystemIconColor'
+	| 'unpopulatedSystemIcon';
 
 export type BooleanMapSettings =
 	| 'borderSmoothing'
@@ -94,6 +105,23 @@ const fontOptions = readable<IdAndName[]>([], (set) => {
 	loadFonts().then((fonts) => set(fonts.map((f) => ({ id: f, name: f }))));
 });
 
+const iconOptions: IdAndName[] = [
+	{ id: 'none', name: 'None' },
+	{ id: 'circle', name: 'Circle' },
+	{ id: 'cross', name: 'Cross' },
+	{ id: 'diamond', name: 'Diamond' },
+	{ id: 'square', name: 'Square' },
+	{ id: 'star', name: 'Star' },
+	{ id: 'triangle', name: 'Triangle' },
+	{ id: 'wye', name: 'Y' },
+];
+
+const colorOptions: IdAndName[] = [
+	{ id: 'primary', name: 'Primary' },
+	{ id: 'secondary', name: 'Secondary' },
+	{ id: 'white', name: 'White' },
+];
+
 export const mapSettingConfig: MapSettingGroup[] = [
 	{
 		id: 'borders',
@@ -103,20 +131,13 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				id: 'borderFillColor',
 				name: 'Fill Color',
 				type: 'select',
-				options: [
-					{ id: 'primary', name: 'Primary' },
-					{ id: 'secondary', name: 'Secondary' },
-				],
+				options: colorOptions,
 			},
 			{
 				id: 'borderColor',
 				name: 'Border Color',
 				type: 'select',
-				options: [
-					{ id: 'primary', name: 'Primary' },
-					{ id: 'secondary', name: 'Secondary' },
-					{ id: 'white', name: 'White' },
-				],
+				options: colorOptions,
 			},
 			{
 				id: 'borderWidth',
@@ -226,11 +247,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				id: 'sectorBorderColor',
 				name: 'Color',
 				type: 'select',
-				options: [
-					{ id: 'primary', name: 'primary' },
-					{ id: 'secondary', name: 'secondary' },
-					{ id: 'white', name: 'white' },
-				],
+				options: colorOptions,
 				hideIf: (settings) => !settings.sectorBorders,
 			},
 			{
@@ -239,6 +256,15 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'number',
 				min: 0,
 				step: 0.5,
+				hideIf: (settings) => !settings.sectorBorders,
+			},
+			{
+				id: 'sectorBorderMinContrast',
+				name: 'Minimum Contrast',
+				type: 'range',
+				min: 0,
+				max: 1,
+				step: 0.05,
 				hideIf: (settings) => !settings.sectorBorders,
 			},
 			{
@@ -253,6 +279,96 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'toggle',
 				requiresReprocessing: true,
 				hideIf: (settings) => !settings.sectorBorders,
+			},
+		],
+	},
+	{
+		id: 'systemIcons',
+		name: 'System Icons',
+		settings: [
+			{
+				id: 'countryCapitalIcon',
+				name: 'Country Capital',
+				type: 'select',
+				options: iconOptions,
+			},
+			{
+				id: 'countryCapitalIconSize',
+				name: 'Country Capital Size',
+				type: 'number',
+				min: 0,
+				step: 1,
+				hideIf: (settings) => settings.countryCapitalIcon === 'none',
+			},
+			{
+				id: 'sectorCapitalIcon',
+				name: 'Sector Capital',
+				type: 'select',
+				options: iconOptions,
+			},
+			{
+				id: 'sectorCapitalIconSize',
+				name: 'Sector Capital Size',
+				type: 'number',
+				min: 0,
+				step: 1,
+				hideIf: (settings) => settings.sectorCapitalIcon === 'none',
+			},
+			{
+				id: 'populatedSystemIcon',
+				name: 'Populated System',
+				type: 'select',
+				options: iconOptions,
+			},
+			{
+				id: 'populatedSystemIconSize',
+				name: 'Populated System Size',
+				type: 'number',
+				min: 0,
+				step: 1,
+				hideIf: (settings) => settings.populatedSystemIcon === 'none',
+			},
+			{
+				id: 'populatedSystemIconColor',
+				name: 'Color',
+				type: 'select',
+				options: colorOptions,
+				hideIf: (settings) =>
+					settings.countryCapitalIcon === 'none' &&
+					settings.sectorCapitalIcon === 'none' &&
+					settings.populatedSystemIcon === 'none',
+			},
+			{
+				id: 'populatedSystemIconMinContrast',
+				name: 'Minimum Contrast',
+				type: 'range',
+				min: 0,
+				max: 1,
+				step: 0.05,
+				hideIf: (settings) =>
+					settings.countryCapitalIcon === 'none' &&
+					settings.sectorCapitalIcon === 'none' &&
+					settings.populatedSystemIcon === 'none',
+			},
+		],
+	},
+	{
+		id: 'starIcons',
+		name: 'Stars',
+		settings: [
+			{
+				id: 'unpopulatedSystemIcon',
+				name: 'Icon',
+				type: 'select',
+				options: iconOptions,
+			},
+			{
+				id: 'unpopulatedSystemIconSize',
+				name: 'Icon Size',
+				type: 'number',
+				min: 0,
+				step: 1,
+				hideIf: (settings) => settings.unpopulatedSystemIcon === 'none',
 			},
 		],
 	},
@@ -315,7 +431,18 @@ export const defaultMapSettings: MapSettings = {
 	sectorBorderSmoothing: true,
 	sectorBorderWidth: 1,
 	sectorBorderColor: 'secondary',
+	sectorBorderMinContrast: 0.1,
 	sectorBorderDashArray: '2 1',
+	countryCapitalIcon: 'diamond',
+	countryCapitalIconSize: 15,
+	sectorCapitalIcon: 'triangle',
+	sectorCapitalIconSize: 10,
+	populatedSystemIcon: 'square',
+	populatedSystemIconSize: 5,
+	populatedSystemIconColor: 'secondary',
+	populatedSystemIconMinContrast: 0.3,
+	unpopulatedSystemIcon: 'circle',
+	unpopulatedSystemIconSize: 1,
 };
 
 export const mapSettings = writable(defaultMapSettings);

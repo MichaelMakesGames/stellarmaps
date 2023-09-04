@@ -57,6 +57,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 	const countryToSystemPolygon: Record<string, Delaunay.Polygon[]> = {};
 	const ownedSystemPoints: helpers.Point[] = [];
 	const systemIdToPolygon: Record<string, Delaunay.Polygon> = {};
+	const systemIdToCountry: Record<string, number> = {};
 	Object.entries(gameState?.galactic_object ?? {}).forEach(([goId, go], i) => {
 		const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
 		const ownerId = starbase ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
@@ -67,6 +68,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 			);
 			const polygon = voronoi.cellPolygon(i);
 			systemIdToPolygon[goId] = polygon;
+			systemIdToCountry[parseInt(goId)] = ownerId;
 			if (!countryToSystemPolygon[ownerId]) {
 				countryToSystemPolygon[ownerId] = [];
 			}
@@ -214,8 +216,18 @@ export default async function processMapData(gameState: GameState, settings: Map
 		const sectorOuterPoints: Set<string>[] = sectorOuterPolygons.map(
 			(p) => new Set(explode(p).features.map((f) => positionToString(f.geometry.coordinates))),
 		);
+		// include all border lines in this, so we don't draw sectors border where there is already an external border
+		const addedSectorLines: Set<string> = new Set(
+			getAllPositionArrays(outer)
+				.map((positionArray) =>
+					positionArray.map((p, i) => {
+						const nextPosition = positionArray[(i + 1) % positionArray.length];
+						return [positionToString(p), positionToString(nextPosition)].sort().join(',');
+					}),
+				)
+				.flat(),
+		);
 		let sectorSegments: helpers.Position[][] = [];
-		const addedSectorLines: Set<string> = new Set();
 		sectorOuterPolygons.forEach((sectorPolygon, sectorIndex) => {
 			let currentSegment: helpers.Position[] = [];
 			const firstSegment = currentSegment;
@@ -234,7 +246,6 @@ export default async function processMapData(gameState: GameState, settings: Map
 				const nextPosIndex = (posIndex + 1) % posArray.length;
 				const nextPos = posArray[nextPosIndex];
 				const nextPosString = positionToString(nextPos);
-				const nextPosIsExternal = allBorderPoints.has(nextPosString);
 
 				const nextLineString = [posString, nextPosString].sort().join(',');
 
@@ -265,8 +276,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 
 				if (!currentSegment.length) {
 					// no current segment
-					// start a new segment, unless both pos and nextPos are on external boundary
-					if (!(posIsExternal && nextPosIsExternal) && !addedSectorLines.has(nextLineString)) {
+					// start a new segment, unless next segment already added
+					if (!addedSectorLines.has(nextLineString)) {
 						currentSegment.push(pos);
 					}
 				}
@@ -319,6 +330,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 			? `${country.flag.icon.category}/${country.flag.icon.file}`
 			: null;
 		return {
+			countryId,
 			primaryColor,
 			secondaryColor,
 			outerPath,
@@ -367,13 +379,40 @@ export default async function processMapData(gameState: GameState, settings: Map
 			return `M ${-a.coordinate.x} ${a.coordinate.y} L ${-b.coordinate.x} ${b.coordinate.y}`;
 		})
 		.join(' ');
+
+	const systems = Object.entries(gameState.galactic_object).map(([systemId, system]) => {
+		const countryId = systemIdToCountry[parseInt(systemId)];
+		const country = countryId != null ? gameState.country[countryId] : null;
+		const primaryColor = country?.flag?.colors[0] ?? 'black';
+		const secondaryColor = country?.flag?.colors[1] ?? 'black';
+
+		const isOwned = country != null;
+		const isColonized = isOwned && Boolean(system.colonies?.length);
+		const isSectorCapital = Object.values(gameState.sectors).some((sector) =>
+			system.colonies?.includes(sector.local_capital as number),
+		);
+		const isCountryCapital = system.colonies?.includes(country?.capital as number);
+		const x = -system.coordinate.x;
+		const y = system.coordinate.y;
+
+		return {
+			primaryColor,
+			secondaryColor,
+			isColonized,
+			isSectorCapital,
+			isCountryCapital,
+			isOwned,
+			x,
+			y,
+		};
+	});
 	console.timeEnd('processing');
 
 	console.time('loading emblems');
 	const emblems = await loadCountryEmblems(Object.values(gameState.country));
 	console.timeEnd('loading emblems');
 
-	return { borders, hyperlanesPath, relayHyperlanesPath, emblems };
+	return { borders, hyperlanesPath, relayHyperlanesPath, emblems, systems };
 }
 
 function multiPolygonToPath(
@@ -658,8 +697,7 @@ function positionToString(p: helpers.Position): string {
 	return `${p[0]},${p[1]}`;
 }
 
-function getSmoothedPosition(
-	position: helpers.Position,
+function getAllPositionArrays(
 	featureCollection: helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>,
 ) {
 	const allPositionArrays = featureCollection.features
@@ -672,6 +710,14 @@ function getSmoothedPosition(
 			}
 		})
 		.flat();
+	return allPositionArrays;
+}
+
+function getSmoothedPosition(
+	position: helpers.Position,
+	featureCollection: helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>,
+) {
+	const allPositionArrays = getAllPositionArrays(featureCollection);
 	const positionArray = allPositionArrays.find((array) =>
 		array.some((p) => p[0] === position[0] && p[1] === position[1]),
 	);

@@ -25,6 +25,7 @@ export interface GalacticObject {
 	starbases: number[];
 	hyperlane?: { to: number; length: number }[];
 	megastructures?: number[];
+	colonies?: number[];
 }
 
 export interface Bypass {
@@ -45,6 +46,7 @@ export interface Country {
 			file: string;
 		};
 	};
+	capital?: number;
 	fleets_manager?: {
 		owned_fleets?: { fleet: number }[];
 	};

@@ -13,7 +13,10 @@ export async function loadColors() {
 				key,
 				`rgba(${value.color[0]}, ${value.color[1]}, ${value.color[2]}, ${value.color[3] / 255})`,
 			])
-			.concat([['fallback', 'rgba(0, 0, 0, 0.5)']]),
+			.concat([
+				['fallback_dark', 'rgba(0, 0, 0, 0.75)'],
+				['fallback_light', 'rgba(255, 255, 255, 0.75)'],
+			]),
 	);
 }
 
