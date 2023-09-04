@@ -12,7 +12,8 @@ import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
 import type { Bypass, Country, GameState, LocalizedText, Sector } from './GameState';
 import type { MapSettings } from './mapSettings';
-import { loadEmblem, loadLoc } from './tauriCommands';
+import { get } from 'svelte/store';
+import { loadEmblem, stellarisDataPromiseStore } from './loadStellarisData';
 
 const SCALE = 100;
 
@@ -547,9 +548,8 @@ function makeRect(
 	return helpers.polygon([points]).geometry;
 }
 
-const locPromise = loadLoc();
 function localizeCountryNames(countries: Record<number, Country>) {
-	return locPromise.then((loc) => {
+	return get(stellarisDataPromiseStore).then(({ loc }) => {
 		return Object.fromEntries(
 			Object.entries(countries)
 				.map<[number, Country]>(([id, c]) => [parseInt(id), c])

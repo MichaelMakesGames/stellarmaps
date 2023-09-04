@@ -18,21 +18,41 @@
 	import { gameStatePromise } from './GameState';
 	import { lastProcessedMapSettings, mapSettings, reprocessMap } from './mapSettings';
 	import processMapData from './processMapData';
-	import { loadColors } from './tauriCommands';
 	import { getLuminance, getLuminanceContrast, toastError } from './utils';
+	import { loadStellarisData, stellarisDataPromiseStore } from './loadStellarisData';
+	import { dialog } from '@tauri-apps/api';
 
 	$: mapDataPromise =
 		$gameStatePromise?.then((gs) => processMapData(gs, $lastProcessedMapSettings)) ??
 		new Promise<Awaited<ReturnType<typeof processMapData>>>(() => {});
 
+	loadStellarisData();
 	const toastStore = getToastStore();
-	let colorsPromise = loadColors().catch(
+	$: $stellarisDataPromiseStore.catch(
 		toastError({
-			title: 'Failed to load Stellaris colors',
+			title: 'Failed to load Stellaris data',
+			description:
+				'Please try manually selecting your install location. This should be the fold that contains the <pre class="inline">common</pre>, <pre class="inline">flags</pre>, and <pre class="inline">localisation</pre> folders (among others).',
 			defaultValue: {} as Record<string, string>,
 			toastStore,
+			action: {
+				label: 'Select Install',
+				response: () =>
+					dialog
+						.open({
+							directory: true,
+							multiple: false,
+							title: 'Select Stellaris Install',
+						})
+						.then((result) => {
+							if (typeof result === 'string') {
+								loadStellarisData(result);
+							}
+						}),
+			},
 		}),
 	);
+	$: colorsPromise = $stellarisDataPromiseStore.then(({ colors }) => colors);
 
 	function resolveColor(
 		colors: Record<string, string>,

@@ -20,6 +20,7 @@ fn main() {
 			tauri::generate_handler![
 				get_stellaris_colors_cmd,
 				get_stellaris_loc_cmd,
+				get_stellaris_install_dir_cmd,
 				get_stellaris_save_metadata_cmd,
 				get_stellaris_save_cmd,
 				get_emblem_cmd,
@@ -31,17 +32,14 @@ fn main() {
 }
 
 #[tauri::command]
-async fn get_stellaris_colors_cmd() -> Result<String, String> {
-	let path = get_stellaris_install_dir()
-		.join("common")
-		.join("named_colors")
-		.join("00_basic_colors.txt");
+async fn get_stellaris_colors_cmd(path: String) -> Result<String, String> {
+	let path = Path::new(&path).join("common").join("named_colors").join("00_basic_colors.txt");
 	return fs::read_to_string(path).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
-async fn get_stellaris_loc_cmd() -> Result<HashMap<String, String>, String> {
-	return get_stellaris_loc().map_err(|err| err.to_string());
+async fn get_stellaris_loc_cmd(path: String) -> Result<HashMap<String, String>, String> {
+	return get_stellaris_loc(path).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
@@ -62,6 +60,11 @@ async fn get_emblem_cmd(category: String, file: String) -> Result<Vec<u8>, Strin
 #[tauri::command]
 async fn get_fonts_cmd() -> Result<Vec<String>, String> {
 	return get_fonts().map_err(|err| err.to_string());
+}
+
+#[tauri::command]
+async fn get_stellaris_install_dir_cmd() -> Result<String, String> {
+	return Ok(get_stellaris_install_dir().to_string_lossy().into_owned());
 }
 
 fn get_steam_dir() -> PathBuf {
@@ -216,9 +219,8 @@ fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 	return Ok(saves);
 }
 
-fn get_stellaris_loc() -> anyhow::Result<HashMap<String, String>> {
-	let install_dir = get_stellaris_install_dir();
-	let loc_dir = install_dir.join("localisation").join("english");
+fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
+	let loc_dir = Path::new(&path).join("localisation").join("english");
 	let loc_file_paths = get_files_of_extension(&loc_dir, "yml", 8)?;
 	let mut locs: HashMap<String, String> = HashMap::new();
 	for path in loc_file_paths {

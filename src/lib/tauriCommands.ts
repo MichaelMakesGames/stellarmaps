@@ -1,24 +1,4 @@
 import { invoke } from '@tauri-apps/api';
-import { jsonify, tokenize } from './parseSave';
-
-export async function loadColors() {
-	const rawContent = await invoke('get_stellaris_colors_cmd');
-	const parsed = jsonify(tokenize(rawContent as string)) as Record<
-		string,
-		{ color: [number, number, number, number] }
-	>;
-	return Object.fromEntries(
-		Object.entries(parsed)
-			.map(([key, value]) => [
-				key,
-				`rgba(${value.color[0]}, ${value.color[1]}, ${value.color[2]}, ${value.color[3] / 255})`,
-			])
-			.concat([
-				['fallback_dark', 'rgba(0, 0, 0, 0.75)'],
-				['fallback_light', 'rgba(255, 255, 255, 0.75)'],
-			]),
-	);
-}
 
 export interface StellarisSaveMetadata {
 	name: string;
@@ -36,16 +16,6 @@ export async function loadSaveMetadata() {
 
 export function loadSave(path: string) {
 	return invoke('get_stellaris_save_cmd', { path }) as Promise<string>;
-}
-
-export function loadLoc() {
-	return invoke('get_stellaris_loc_cmd') as Promise<Record<string, string>>;
-}
-
-export function loadEmblem(category: string, file: string) {
-	return invoke<number[]>('get_emblem_cmd', { category, file }).then((numbers) =>
-		Uint8Array.from(numbers),
-	);
 }
 
 export function loadFonts() {
