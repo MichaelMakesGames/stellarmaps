@@ -16,6 +16,7 @@ import { get } from 'svelte/store';
 import { loadEmblem, stellarisDataPromiseStore } from './loadStellarisData';
 
 const SCALE = 100;
+const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
 
 export default async function processMapData(gameState: GameState, settings: MapSettings) {
 	console.time('generating voronoi');
@@ -25,8 +26,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 	]);
 	const minDistanceSquared = 35 ** 2;
 	const extraPoints: [number, number][] = [];
-	for (let x = -500; x <= 500; x += 10) {
-		for (let y = -500; y <= 500; y += 10) {
+	for (let x = -MAX_BORDER_DISTANCE; x <= MAX_BORDER_DISTANCE; x += 10) {
+		for (let y = -MAX_BORDER_DISTANCE; y <= MAX_BORDER_DISTANCE; y += 10) {
 			if (
 				points.some(
 					([otherX, otherY]) => (otherX - x) ** 2 + (otherY - y) ** 2 < minDistanceSquared,
@@ -40,7 +41,12 @@ export default async function processMapData(gameState: GameState, settings: Map
 	}
 	points.push(...extraPoints);
 	const delaunay = Delaunay.from(points);
-	const voronoi = delaunay.voronoi([-500, -500, 500, 500]);
+	const voronoi = delaunay.voronoi([
+		-MAX_BORDER_DISTANCE,
+		-MAX_BORDER_DISTANCE,
+		MAX_BORDER_DISTANCE,
+		MAX_BORDER_DISTANCE,
+	]);
 	console.timeEnd('generating voronoi');
 
 	console.time('localizing country names');
@@ -67,18 +73,22 @@ export default async function processMapData(gameState: GameState, settings: Map
 			ownedSystemPoints.push(
 				helpers.point(pointToGeoJSON([go.coordinate.x, go.coordinate.y])).geometry,
 			);
-			const polygon = voronoi.cellPolygon(i);
-			systemIdToPolygon[goId] = polygon;
-			systemIdToCountry[parseInt(goId)] = ownerId;
-			if (!countryToSystemPolygon[ownerId]) {
-				countryToSystemPolygon[ownerId] = [];
-			}
-			countryToSystemPolygon[ownerId].push(polygon);
-
 			if (!countryToOwnedSystemIds[ownerId]) {
 				countryToOwnedSystemIds[ownerId] = [];
 			}
 			countryToOwnedSystemIds[ownerId].push(parseInt(goId));
+			systemIdToCountry[parseInt(goId)] = ownerId;
+
+			const polygon = voronoi.cellPolygon(i);
+			if (polygon == null) {
+				console.warn(`null polygon for system at ${go.coordinate.x},${go.coordinate.y}`);
+			} else {
+				systemIdToPolygon[goId] = polygon;
+				if (!countryToSystemPolygon[ownerId]) {
+					countryToSystemPolygon[ownerId] = [];
+				}
+				countryToSystemPolygon[ownerId].push(polygon);
+			}
 		}
 	});
 	const borders = Object.entries(countryToSystemPolygon).map(([countryId, polygons]) => {
@@ -195,7 +205,10 @@ export default async function processMapData(gameState: GameState, settings: Map
 			countrySectors.push(frontierSector);
 		}
 		const sectorOuterPolygons = countrySectors.flatMap((sector) => {
-			const systemPolygons = sector.systems.map((systemId) => systemIdToPolygon[systemId]);
+			const systemPolygons = sector.systems
+				.map((systemId) => systemIdToPolygon[systemId])
+				.filter((polygon) => polygon != null);
+			if (systemPolygons.length === 0) return [];
 			let sectorMultiPolygon: helpers.Feature<helpers.MultiPolygon | helpers.Polygon> =
 				helpers.multiPolygon(systemPolygons.map((polygon) => [polygon.map(pointToGeoJSON)]));
 			sectorMultiPolygon = union(sectorMultiPolygon, sectorMultiPolygon) as helpers.Feature<
