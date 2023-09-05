@@ -658,9 +658,13 @@ async function loadCountryEmblems(countries: Country[]) {
 			}
 		}
 	});
-	const values = await Promise.all(promises);
-	return values.reduce<Record<string, string>>((acc, cur, i) => {
-		acc[keys[i]] = cur;
+	const results = await Promise.allSettled(promises);
+	return results.reduce<Record<string, string>>((acc, cur, i) => {
+		if (cur.status === 'fulfilled') {
+			acc[keys[i]] = cur.value;
+		} else {
+			console.warn('failed to load emblem', keys[i]);
+		}
 		return acc;
 	}, {});
 }
