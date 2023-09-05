@@ -592,7 +592,7 @@ function localizeText(text: LocalizedText, loc: Record<string, string>): string 
 		try {
 			const var0 = text.variables?.[0];
 			if (!var0 || !var0.value.variables) throw new Error();
-			const adj = loc[var0.value.key];
+			const adj = loc[var0.value.key] ?? var0.value.key;
 			if (adj.includes('$1$')) {
 				return localizeText(var0.value, loc);
 			} else {
@@ -711,7 +711,7 @@ function getTextAspectRatio(text: string, fontFamily: string) {
 }
 
 function positionToString(p: helpers.Position): string {
-	return `${p[0]},${p[1]}`;
+	return `${p[0].toFixed(3)},${p[1].toFixed(3)}`;
 }
 
 function getAllPositionArrays(
