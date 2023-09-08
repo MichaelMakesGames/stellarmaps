@@ -1,6 +1,5 @@
 import buffer from '@turf/buffer';
 import union from '@turf/union';
-import polygonSmooth from '@turf/polygon-smooth';
 import explode from '@turf/explode';
 import * as helpers from '@turf/helpers';
 import booleanContains from '@turf/boolean-contains';
@@ -53,7 +52,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 	const countryNames = await localizeCountryNames(gameState.country);
 	console.timeEnd('localizing country names');
 
-	console.time('processing');
+	console.time('processing system ownership');
 	const fleetToCountry: Record<string, number> = {};
 	Object.entries(gameState.country).forEach(([countryId, country]) => {
 		country.fleets_manager?.owned_fleets?.forEach((owned_fleet) => {
@@ -61,10 +60,12 @@ export default async function processMapData(gameState: GameState, settings: Map
 		});
 	});
 	const countryToOwnedSystemIds: Record<string, number[]> = {};
-	const countryToSystemPolygon: Record<string, Delaunay.Polygon[]> = {};
+	const countryToSystemPolygons: Record<string, Delaunay.Polygon[]> = {};
+	const unionLeaderToSystemPolygons: Record<string, Delaunay.Polygon[]> = {};
+	const unionLeaderToUnionMembers: Record<number, Set<number>> = {};
 	const ownedSystemPoints: helpers.Point[] = [];
 	const systemIdToPolygon: Record<string, Delaunay.Polygon> = {};
-	const systemIdToCountry: Record<string, number> = {};
+	const systemIdToCountry: Record<string, number | undefined> = {};
 	Object.entries(gameState?.galactic_object ?? {}).forEach(([goId, go], i) => {
 		const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
 		const ownerId = starbase ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
@@ -84,22 +85,32 @@ export default async function processMapData(gameState: GameState, settings: Map
 				console.warn(`null polygon for system at ${go.coordinate.x},${go.coordinate.y}`);
 			} else {
 				systemIdToPolygon[goId] = polygon;
-				if (!countryToSystemPolygon[ownerId]) {
-					countryToSystemPolygon[ownerId] = [];
+				if (!countryToSystemPolygons[ownerId]) {
+					countryToSystemPolygons[ownerId] = [];
 				}
-				countryToSystemPolygon[ownerId].push(polygon);
+				countryToSystemPolygons[ownerId].push(polygon);
+				const unionLeaderId = getUnionLeaderId(ownerId, gameState, settings);
+				if (!unionLeaderToSystemPolygons[unionLeaderId]) {
+					unionLeaderToSystemPolygons[unionLeaderId] = [];
+				}
+				unionLeaderToSystemPolygons[unionLeaderId].push(polygon);
+				if (!unionLeaderToUnionMembers[unionLeaderId]) {
+					unionLeaderToUnionMembers[unionLeaderId] = new Set();
+				}
+				unionLeaderToUnionMembers[unionLeaderId].add(ownerId);
 			}
 		}
 	});
-	const borders = Object.entries(countryToSystemPolygon).map(([countryId, polygons]) => {
+	console.timeEnd('processing system ownership');
+
+	console.time('processing labels');
+	const labels = Object.entries(countryToSystemPolygons).map(([countryId, polygons]) => {
 		const name = countryNames[countryId] ?? '';
 		const country = gameState.country[parseInt(countryId)];
-		const primaryColor = country.flag?.colors[0] ?? 'black';
-		const secondaryColor = country.flag?.colors[1] ?? 'black';
 		const multiPolygon = helpers.multiPolygon(
 			polygons.map((polygon) => [polygon.map(pointToGeoJSON)]),
 		);
-		let outer = helpers.featureCollection([
+		const outer = helpers.featureCollection([
 			union(multiPolygon, multiPolygon) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
 		]);
 		const textAspectRatio =
@@ -191,18 +202,55 @@ export default async function processMapData(gameState: GameState, settings: Map
 						};
 					})
 			: [];
+		const emblemKey = country.flag?.icon
+			? `${country.flag.icon.category}/${country.flag.icon.file}`
+			: null;
+		return {
+			labelPoints,
+			name,
+			emblemKey,
+			isUnionLeader: isUnionLeader(parseInt(countryId), gameState, settings),
+		};
+	});
+	console.timeEnd('processing labels');
+
+	console.time('processing borders');
+	const borders = Object.entries(unionLeaderToSystemPolygons).map(([countryId, polygons]) => {
+		const colors = getCountryColors(parseInt(countryId), gameState, settings);
+		const primaryColor = colors?.[0] ?? 'black';
+		const secondaryColor = colors?.[1] ?? 'black';
+		const multiPolygon = helpers.multiPolygon(
+			polygons.map((polygon) => [polygon.map(pointToGeoJSON)]),
+		);
+		const selfUnion = union(multiPolygon, multiPolygon);
+		if (!selfUnion) {
+			console.warn('selfUnion failed');
+			return {
+				countryId,
+				primaryColor,
+				secondaryColor,
+				outerPath: '',
+				innerPath: '',
+				sectorBorders: [],
+			};
+		}
+		let outer = helpers.featureCollection([selfUnion]);
 
 		const countrySectors = Object.values(gameState.sectors).filter(
-			(sector) => sector.owner?.toString() === countryId,
+			(sector) =>
+				sector.owner != null &&
+				getUnionLeaderId(sector.owner, gameState, settings) === parseInt(countryId),
 		);
-		const frontierSector: Sector = {
-			systems: Object.values(countryToOwnedSystemIds[countryId]).filter((systemId) =>
-				countrySectors.every((s) => !s.systems.includes(systemId)),
-			),
-			owner: parseInt(countryId),
-		};
-		if (frontierSector.systems.length) {
-			countrySectors.push(frontierSector);
+		for (const unionMemberId of unionLeaderToUnionMembers[parseInt(countryId)].values()) {
+			const frontierSector: Sector = {
+				systems: Object.values(countryToOwnedSystemIds[unionMemberId]).filter((systemId) =>
+					countrySectors.every((s) => !s.systems.includes(systemId)),
+				),
+				owner: unionMemberId,
+			};
+			if (frontierSector.systems.length) {
+				countrySectors.push(frontierSector);
+			}
 		}
 		const sectorOuterPolygons = countrySectors.flatMap((sector) => {
 			const systemPolygons = sector.systems
@@ -224,6 +272,48 @@ export default async function processMapData(gameState: GameState, settings: Map
 				return [];
 			}
 		});
+
+		const unionMemberOuterPolygons = Array.from(
+			unionLeaderToUnionMembers[parseInt(countryId)].values(),
+		)
+			.map((unionMemberId) => {
+				const systemPolygons = countryToOwnedSystemIds[unionMemberId]
+					.map((systemId) => systemIdToPolygon[systemId])
+					.filter((polygon) => polygon != null);
+				if (systemPolygons.length === 0) return [];
+				let unionMemberMultiPolygon: helpers.Feature<helpers.MultiPolygon | helpers.Polygon> =
+					helpers.multiPolygon(systemPolygons.map((polygon) => [polygon.map(pointToGeoJSON)]));
+				unionMemberMultiPolygon = union(
+					unionMemberMultiPolygon,
+					unionMemberMultiPolygon,
+				) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>;
+				if (unionMemberMultiPolygon && unionMemberMultiPolygon.geometry.type === 'Polygon') {
+					return [helpers.polygon([unionMemberMultiPolygon.geometry.coordinates[0]]).geometry];
+				} else if (
+					unionMemberMultiPolygon &&
+					unionMemberMultiPolygon.geometry.type === 'MultiPolygon'
+				) {
+					return unionMemberMultiPolygon.geometry.coordinates.map(
+						(singlePolygon) => helpers.polygon([singlePolygon[0]]).geometry,
+					);
+				} else {
+					return [];
+				}
+			})
+			.flat();
+
+		const unionMemberBorderLines: Set<string> = new Set();
+		getAllPositionArrays(
+			helpers.featureCollection(unionMemberOuterPolygons.map((poly) => helpers.feature(poly))),
+		).forEach((positionArray) =>
+			positionArray.forEach((p, i) => {
+				const nextPosition = positionArray[(i + 1) % positionArray.length];
+				unionMemberBorderLines.add(
+					[positionToString(p), positionToString(nextPosition)].sort().join(','),
+				);
+			}),
+		);
+
 		const allBorderPoints: Set<string> = new Set(
 			explode(outer).features.map((f) => positionToString(f.geometry.coordinates)),
 		);
@@ -317,6 +407,13 @@ export default async function processMapData(gameState: GameState, settings: Map
 		});
 		// make sure there are no 0 or 1 length segments
 		sectorSegments = sectorSegments.filter((segment) => segment.length > 1);
+		// check for union border segments
+		const unionBorderSegments = sectorSegments.filter((segment) => {
+			const firstLineString = [positionToString(segment[0]), positionToString(segment[1])]
+				.sort()
+				.join(',');
+			return unionMemberBorderLines.has(firstLineString);
+		});
 		// extend segments at border, so they reach the border (border can shift from smoothing in next step)
 		if (settings.borderSmoothing) {
 			sectorSegments.forEach((segment) => {
@@ -330,32 +427,26 @@ export default async function processMapData(gameState: GameState, settings: Map
 		}
 
 		if (settings.borderSmoothing) {
-			outer = polygonSmooth(
-				union(multiPolygon, multiPolygon) as helpers.Feature<
-					helpers.MultiPolygon | helpers.Polygon
-				>,
-				{ iterations: 2 },
-			);
+			outer = smoothGeojson(outer, 2);
 		}
 		const inner = buffer(outer, -settings.borderWidth / SCALE, { units: 'degrees' });
 		const outerPath = multiPolygonToPath(outer, settings);
 		const innerPath = multiPolygonToPath(inner, settings);
-		const emblemKey = country.flag?.icon
-			? `${country.flag.icon.category}/${country.flag.icon.file}`
-			: null;
 		return {
 			countryId,
 			primaryColor,
 			secondaryColor,
 			outerPath,
 			innerPath,
-			labelPoints,
-			name,
-			emblemKey,
-			sectorBorders: sectorSegments.map((segment) => segmentToPath(segment, settings)),
+			sectorBorders: sectorSegments.map((segment) => ({
+				path: segmentToPath(segment, settings),
+				isUnionBorder: unionBorderSegments.includes(segment),
+			})),
 		};
 	});
+	console.timeEnd('processing borders');
 
+	console.time('processing hyperlanes');
 	const relayMegastructures = new Set(
 		Object.values(gameState.bypasses)
 			.filter(
@@ -393,12 +484,15 @@ export default async function processMapData(gameState: GameState, settings: Map
 			return `M ${-a.coordinate.x} ${a.coordinate.y} L ${-b.coordinate.x} ${b.coordinate.y}`;
 		})
 		.join(' ');
+	console.timeEnd('processing hyperlanes');
 
+	console.time('processing system icons');
 	const systems = Object.entries(gameState.galactic_object).map(([systemId, system]) => {
 		const countryId = systemIdToCountry[parseInt(systemId)];
 		const country = countryId != null ? gameState.country[countryId] : null;
-		const primaryColor = country?.flag?.colors[0] ?? 'black';
-		const secondaryColor = country?.flag?.colors[1] ?? 'black';
+		const colors = countryId != null ? getCountryColors(countryId, gameState, settings) : null;
+		const primaryColor = colors?.[0] ?? 'black';
+		const secondaryColor = colors?.[1] ?? 'black';
 
 		const isOwned = country != null;
 		const isColonized = isOwned && Boolean(system.colonies?.length);
@@ -420,13 +514,13 @@ export default async function processMapData(gameState: GameState, settings: Map
 			y,
 		};
 	});
-	console.timeEnd('processing');
+	console.timeEnd('processing system icons');
 
 	console.time('loading emblems');
 	const emblems = await loadCountryEmblems(Object.values(gameState.country));
 	console.timeEnd('loading emblems');
 
-	return { borders, hyperlanesPath, relayHyperlanesPath, emblems, systems };
+	return { borders, hyperlanesPath, relayHyperlanesPath, emblems, systems, labels };
 }
 
 function multiPolygonToPath(
@@ -766,4 +860,166 @@ function getSmoothedPosition(
 		console.warn('getSmoothedPosition failed: could not find position in geojson');
 		return position;
 	}
+}
+
+function isUnionLeader(countryId: number, gameState: GameState, settings: MapSettings) {
+	const country = gameState.country[countryId];
+	const federation = country.federation != null ? gameState.federation[country.federation] : null;
+	if (settings.unionFederations !== 'off' && settings.unionSubjects !== 'off') {
+		if (federation) {
+			return federation.leader === countryId;
+		} else {
+			return Boolean(country.subjects?.length);
+		}
+	} else if (settings.unionFederations !== 'off' && federation) {
+		return federation.leader === countryId;
+	} else if (settings.unionSubjects !== 'off') {
+		return Boolean(country.subjects?.length);
+	} else {
+		return false;
+	}
+}
+
+function getUnionLeaderId(countryId: number, gameState: GameState, settings: MapSettings): number {
+	const country = gameState.country[countryId];
+	const overlordId = country.overlord;
+	const overlord = overlordId != null ? gameState.country[overlordId] : null;
+	const federation = country.federation != null ? gameState.federation[country.federation] : null;
+	const overlordFederation =
+		overlord?.federation != null ? gameState.federation[overlord?.federation] : null;
+	if (
+		settings.unionFederations === 'joinedBorders' &&
+		settings.unionSubjects === 'joinedBorders' &&
+		overlordFederation
+	) {
+		return overlordFederation.leader;
+	} else if (settings.unionFederations === 'joinedBorders' && federation) {
+		return federation.leader;
+	} else if (settings.unionSubjects === 'joinedBorders' && overlord && overlordId != null) {
+		return overlordId;
+	} else {
+		return countryId;
+	}
+}
+
+function getCountryColors(countryId: number, gameState: GameState, settings: MapSettings) {
+	const country = gameState.country[countryId];
+	const overlordId = country.overlord;
+	const overlord = overlordId != null ? gameState.country[overlordId] : null;
+	const federation = country.federation != null ? gameState.federation[country.federation] : null;
+	const overlordFederation =
+		overlord?.federation != null ? gameState.federation[overlord?.federation] : null;
+	if (
+		settings.unionFederations !== 'off' &&
+		settings.unionSubjects !== 'off' &&
+		overlordFederation
+	) {
+		return gameState.country[overlordFederation.leader].flag?.colors;
+	} else if (settings.unionFederations !== 'off' && federation) {
+		return gameState.country[federation.leader].flag?.colors;
+	} else if (settings.unionSubjects !== 'off' && overlord) {
+		return overlord.flag?.colors;
+	} else {
+		return country.flag?.colors;
+	}
+}
+
+function smoothGeojson<T extends GeoJSON.GeoJSON>(geojson: T, iterations: number): T {
+	if (geojson.type === 'FeatureCollection') {
+		return {
+			...geojson,
+			features: geojson.features.map((f) => smoothGeojson(f, iterations)),
+		};
+	} else if (geojson.type === 'Feature') {
+		return {
+			...geojson,
+			geometry: smoothGeojson(geojson.geometry, iterations),
+		};
+	} else if (geojson.type === 'GeometryCollection') {
+		return {
+			...geojson,
+			geometries: geojson.geometries.map((g) => smoothGeojson(g, iterations)),
+		};
+	} else if (geojson.type === 'Point' || geojson.type === 'MultiPoint') {
+		return geojson;
+	} else if (geojson.type === 'LineString') {
+		return {
+			...geojson,
+			coordinates: smoothPositionArray(geojson.coordinates, iterations, false),
+		};
+	} else if (geojson.type === 'MultiLineString') {
+		return {
+			...geojson,
+			coordinates: geojson.coordinates.map((lineString) =>
+				smoothPositionArray(lineString, iterations, false),
+			),
+		};
+	} else if (geojson.type === 'Polygon') {
+		return {
+			...geojson,
+			coordinates: geojson.coordinates.map((ring) => smoothPositionArray(ring, iterations, true)),
+		};
+	} else if (geojson.type === 'MultiPolygon') {
+		return {
+			...geojson,
+			coordinates: geojson.coordinates.map((polygon) =>
+				polygon.map((ring) => smoothPositionArray(ring, iterations, true)),
+			),
+		};
+	}
+	return geojson;
+}
+
+function smoothPositionArray(
+	positionArray: helpers.Position[],
+	iterations: number,
+	loops: boolean,
+): helpers.Position[] {
+	let copy = positionArray.slice();
+	if (
+		loops &&
+		(copy[0][0] !== copy[copy.length - 1][0] || copy[0][1] !== copy[copy.length - 1][1])
+	) {
+		copy.push(copy[0]);
+	}
+	for (let i = 0; i < iterations; i++) {
+		copy = smoothPositionArrayIteration(copy, loops);
+	}
+	return copy;
+}
+
+function smoothPositionArrayIteration(
+	positionArray: helpers.Position[],
+	loops: boolean,
+): helpers.Position[] {
+	const smoothed = positionArray.flatMap((position, index) => {
+		if ((index === 0 || index === positionArray.length - 1) && !loops) {
+			return [position];
+		} else {
+			const nextIndex = (index + 1) % positionArray.length;
+			const next = positionArray[nextIndex];
+			const nextDx = next[0] - position[0];
+			const nextDy = next[1] - position[1];
+
+			const prevIndex = (index + positionArray.length - 1) % positionArray.length;
+			const prev = positionArray[prevIndex];
+			const prevDx = prev[0] - position[0];
+			const prevDy = prev[1] - position[1];
+
+			const smoothedSegment: helpers.Position[] = [
+				[position[0] + prevDx * 0.25, position[1] + prevDy * 0.25],
+				[position[0] + nextDx * 0.25, position[1] + nextDy * 0.25],
+			];
+			if (index === positionArray.length - 1) {
+				return [smoothedSegment[0]];
+			} else {
+				return smoothedSegment;
+			}
+		}
+	});
+	if (loops) {
+		// fix floating point errors for properly closing ring
+		smoothed[smoothed.length - 1] = smoothed[0];
+	}
+	return smoothed;
 }

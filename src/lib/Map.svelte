@@ -62,8 +62,9 @@
 		minimumContrast?: number,
 	): string {
 		let value = colorSetting;
-		if (colorSetting === 'primary') value = countryColors.primaryColor;
-		if (colorSetting === 'secondary') value = countryColors.secondaryColor;
+		if (value === 'border') value = $mapSettings.borderColor;
+		if (value === 'primary') value = countryColors.primaryColor;
+		if (value === 'secondary') value = countryColors.secondaryColor;
 		value = colors[value];
 		if (!(backgroundColorSetting && minimumContrast)) {
 			return value;
@@ -120,6 +121,8 @@
 					$mapSettings.unpopulatedSystemIconSize,
 			  )()
 			: '';
+	$: unionLeaderIconPath =
+		$mapSettings.countryCapitalIcon !== 'none' ? symbol(symbols.star, 30)() : '';
 </script>
 
 <div class="w-full h-full relative" style:background="#111">
@@ -172,6 +175,9 @@
 							<clipPath id="border-{border.countryId}-inner-clip-path">
 								<use href="#border-{border.countryId}-inner" />
 							</clipPath>
+							<clipPath id="border-{border.countryId}-outer-clip-path">
+								<use href="#border-{border.countryId}-outer" />
+							</clipPath>
 						{/each}
 					{/if}
 				</defs>
@@ -191,11 +197,13 @@
 							{#if $mapSettings.sectorBorders}
 								{#each border.sectorBorders as sectorBorder}
 									<path
-										d={sectorBorder}
-										stroke-width={$mapSettings.sectorBorderWidth}
+										d={sectorBorder.path}
+										stroke-width={sectorBorder.isUnionBorder
+											? $mapSettings.unionBorderWidth
+											: $mapSettings.sectorBorderWidth}
 										clip-path={resolveColor(colors, border, $mapSettings.borderFillColor) ===
 										resolveColor(colors, border, $mapSettings.borderColor)
-											? ''
+											? `url(#border-${border.countryId}-outer-clip-path)`
 											: `url(#border-${border.countryId}-inner-clip-path)`}
 										stroke={resolveColor(
 											colors,
@@ -204,8 +212,18 @@
 											$mapSettings.borderFillColor,
 											$mapSettings.sectorBorderMinContrast,
 										)}
+										stroke-linecap={sectorBorder.isUnionBorder ||
+										!$mapSettings.sectorBorderDashArray
+											? 'round'
+											: null}
+										stroke-linejoin={sectorBorder.isUnionBorder ||
+										!$mapSettings.sectorBorderDashArray
+											? 'round'
+											: null}
 										fill="none"
-										stroke-dasharray={$mapSettings.sectorBorderDashArray}
+										stroke-dasharray={sectorBorder.isUnionBorder
+											? ''
+											: $mapSettings.sectorBorderDashArray}
 									/>
 								{/each}
 							{/if}
@@ -271,8 +289,8 @@
 								/>
 							{/if}
 						{/each}
-						{#each data.borders as border}
-							{#each border.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
+						{#each data.labels as label}
+							{#each label.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
 								{#if $debug}<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />{/if}
 								{#if $debug && emblemWidth && emblemHeight}
 									<rect
@@ -285,13 +303,13 @@
 										fill="transparent"
 									/>
 								{/if}
-								{#if emblemWidth && emblemHeight && border.emblemKey && data.emblems[border.emblemKey]}
+								{#if emblemWidth && emblemHeight && label.emblemKey && data.emblems[label.emblemKey]}
 									<image
 										x={point[0] - emblemWidth / 2}
 										y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
 										width={emblemWidth}
 										height={emblemHeight}
-										href={data.emblems[border.emblemKey]}
+										href={data.emblems[label.emblemKey]}
 									/>
 									<!-- This lets the user right-click "Copy Image" to paste into an external program -->
 									<foreignObject
@@ -299,16 +317,28 @@
 										y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
 										width={emblemWidth}
 										height={emblemHeight}
-										href={data.emblems[border.emblemKey]}
+										href={data.emblems[label.emblemKey]}
 										opacity="0"
 									>
 										<img
 											width={emblemWidth}
 											height={emblemHeight}
-											src={data.emblems[border.emblemKey]}
+											src={data.emblems[label.emblemKey]}
 											alt="Country Emblem"
 										/>
 									</foreignObject>
+									{#if label.isUnionLeader}
+										<text
+											transform="translate({point[0]},{point[1] -
+												(textHeight ? emblemHeight : emblemHeight / 2)})"
+											fill="white"
+											text-anchor="middle"
+											dominant-baseline="bottom"
+											font-size={emblemHeight * $mapSettings.unionLeaderSymbolSize}
+										>
+											{$mapSettings.unionLeaderSymbol}
+										</text>
+									{/if}
 								{/if}
 								{#if $debug && textWidth && textHeight}
 									<rect
@@ -321,9 +351,8 @@
 										fill="transparent"
 									/>
 								{/if}
-								{#if textWidth && textHeight && border.name}
+								{#if textWidth && textHeight && label.name}
 									<text
-										stroke-width={1}
 										x={point[0]}
 										y={point[1] + (emblemHeight ? textHeight / 2 : 0)}
 										text-anchor="middle"
@@ -333,8 +362,11 @@
 										font-family={$lastProcessedMapSettings.countryNamesFont}
 										textLength={textWidth}
 										lengthAdjust="spacingAndGlyphs"
+										text-decoration={label.isUnionLeader && $mapSettings.unionLeaderUnderline
+											? 'underline'
+											: ''}
 									>
-										{border.name}
+										{label.name}
 									</text>
 								{/if}
 							{/each}

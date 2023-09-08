@@ -13,7 +13,9 @@ export type NumberMapSettings =
 	| 'sectorCapitalIconSize'
 	| 'populatedSystemIconSize'
 	| 'populatedSystemIconMinContrast'
-	| 'unpopulatedSystemIconSize';
+	| 'unpopulatedSystemIconSize'
+	| 'unionBorderWidth'
+	| 'unionLeaderSymbolSize';
 
 export type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
@@ -32,14 +34,18 @@ export type StringMapSettings =
 	| 'sectorCapitalIcon'
 	| 'populatedSystemIcon'
 	| 'populatedSystemIconColor'
-	| 'unpopulatedSystemIcon';
+	| 'unpopulatedSystemIcon'
+	| 'unionFederations'
+	| 'unionSubjects'
+	| 'unionLeaderSymbol';
 
 export type BooleanMapSettings =
 	| 'borderSmoothing'
 	| 'countryEmblems'
 	| 'countryNames'
 	| 'sectorBorders'
-	| 'sectorBorderSmoothing';
+	| 'sectorBorderSmoothing'
+	| 'unionLeaderUnderline';
 
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
@@ -116,10 +122,30 @@ const iconOptions: IdAndName[] = [
 	{ id: 'wye', name: 'Y' },
 ];
 
+const textIconOptions: IdAndName[] = [
+	{ id: 'none', name: 'None' },
+	{ id: '✦', name: '✦ 4-Pointed Star' },
+	{ id: '✧', name: '✧ 4-Pointed Star (outline)' },
+	{ id: '★', name: '★ 5-Pointed Star' },
+	{ id: '☆', name: '☆ 5-Pointed Star (outline)' },
+	{ id: '✪', name: '✪ 5-Pointed Star (circled)' },
+	{ id: '✯', name: '✯ 5-Pointed Star (pinwheel)' },
+	{ id: '✶', name: '✶ 6-Pointed Star' },
+	{ id: '✴', name: '✴ 8-Pointed Star' },
+];
+
 const colorOptions: IdAndName[] = [
 	{ id: 'primary', name: 'Primary' },
 	{ id: 'secondary', name: 'Secondary' },
 	{ id: 'white', name: 'White' },
+];
+
+const colorOptionsWithBorder: IdAndName[] = [{ id: 'border', name: 'Border' }, ...colorOptions];
+
+const unionOptions: IdAndName[] = [
+	{ id: 'off', name: 'Off' },
+	{ id: 'separateBorders', name: 'Shared Colors, Separate Borders' },
+	{ id: 'joinedBorders', name: 'Shared Colors, Joined Borders' },
 ];
 
 export const mapSettingConfig: MapSettingGroup[] = [
@@ -152,6 +178,65 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Border Smoothing',
 				requiresReprocessing: true,
 				type: 'toggle',
+			},
+		],
+	},
+	{
+		id: 'unions',
+		name: 'Unions Mode',
+		settings: [
+			{
+				id: 'unionFederations',
+				name: 'Federations',
+				requiresReprocessing: true,
+				type: 'select',
+				options: unionOptions,
+			},
+			{
+				id: 'unionSubjects',
+				name: 'Subjects',
+				requiresReprocessing: true,
+				type: 'select',
+				options: unionOptions,
+			},
+			{
+				id: 'unionBorderWidth',
+				name: 'Union Internal Border Width',
+				type: 'number',
+				min: 0,
+				step: 0.5,
+				hideIf: (settings) =>
+					settings.unionFederations !== 'joinedBorders' &&
+					settings.unionSubjects !== 'joinedBorders',
+			},
+			{
+				id: 'unionLeaderSymbol',
+				name: 'Union Leader Symbol',
+				type: 'select',
+				options: textIconOptions,
+				hideIf: (settings) =>
+					(settings.unionFederations === 'off' && settings.unionSubjects === 'off') ||
+					!settings.countryEmblems,
+			},
+			{
+				id: 'unionLeaderSymbolSize',
+				name: 'Union Leader Symbol Size',
+				type: 'range',
+				min: 0.05,
+				max: 1,
+				step: 0.05,
+				hideIf: (settings) =>
+					(settings.unionFederations === 'off' && settings.unionSubjects === 'off') ||
+					!settings.countryEmblems ||
+					settings.unionLeaderSymbol === 'none',
+			},
+			{
+				id: 'unionLeaderUnderline',
+				name: 'Underline Union Leader Name',
+				type: 'toggle',
+				hideIf: (settings) =>
+					(settings.unionFederations === 'off' && settings.unionSubjects === 'off') ||
+					!settings.countryNames,
 			},
 		],
 	},
@@ -247,7 +332,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				id: 'sectorBorderColor',
 				name: 'Color',
 				type: 'select',
-				options: colorOptions,
+				options: colorOptionsWithBorder,
 				hideIf: (settings) => !settings.sectorBorders,
 			},
 			{
@@ -332,7 +417,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				id: 'populatedSystemIconColor',
 				name: 'Color',
 				type: 'select',
-				options: colorOptions,
+				options: colorOptionsWithBorder,
 				hideIf: (settings) =>
 					settings.countryCapitalIcon === 'none' &&
 					settings.sectorCapitalIcon === 'none' &&
@@ -430,7 +515,7 @@ export const defaultMapSettings: MapSettings = {
 	sectorBorders: true,
 	sectorBorderSmoothing: true,
 	sectorBorderWidth: 1,
-	sectorBorderColor: 'secondary',
+	sectorBorderColor: 'border',
 	sectorBorderMinContrast: 0.1,
 	sectorBorderDashArray: '2 1',
 	countryCapitalIcon: 'diamond',
@@ -439,10 +524,16 @@ export const defaultMapSettings: MapSettings = {
 	sectorCapitalIconSize: 10,
 	populatedSystemIcon: 'square',
 	populatedSystemIconSize: 5,
-	populatedSystemIconColor: 'secondary',
+	populatedSystemIconColor: 'border',
 	populatedSystemIconMinContrast: 0.3,
 	unpopulatedSystemIcon: 'circle',
 	unpopulatedSystemIconSize: 1,
+	unionFederations: 'off',
+	unionSubjects: 'off',
+	unionLeaderSymbol: '★',
+	unionLeaderSymbolSize: 0.3,
+	unionLeaderUnderline: true,
+	unionBorderWidth: 3,
 };
 
 export const mapSettings = writable(defaultMapSettings);

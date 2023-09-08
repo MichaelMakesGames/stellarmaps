@@ -18,6 +18,7 @@ export interface GameState {
 	bypasses: Record<number, Bypass>;
 	megastructures: Record<number, Megastructure>;
 	sectors: Record<number, Sector>;
+	federation: Record<number, Federation>;
 }
 
 export interface GalacticObject {
@@ -47,6 +48,9 @@ export interface Country {
 		};
 	};
 	capital?: number;
+	subjects?: number[];
+	overlord?: number;
+	federation?: number;
 	fleets_manager?: {
 		owned_fleets?: { fleet: number }[];
 	};
@@ -75,4 +79,10 @@ export interface Sector {
 	owner?: number;
 	local_capital?: number;
 	systems: number[];
+}
+
+export interface Federation {
+	leader: number;
+	members: number[];
+	name: LocalizedText;
 }
