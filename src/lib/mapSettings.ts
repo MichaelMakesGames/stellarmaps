@@ -15,7 +15,8 @@ export type NumberMapSettings =
 	| 'populatedSystemIconMinContrast'
 	| 'unpopulatedSystemIconSize'
 	| 'unionBorderWidth'
-	| 'unionLeaderSymbolSize';
+	| 'unionLeaderSymbolSize'
+	| 'terraIncognitaBrightness';
 
 export type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
@@ -37,7 +38,9 @@ export type StringMapSettings =
 	| 'unpopulatedSystemIcon'
 	| 'unionFederations'
 	| 'unionSubjects'
-	| 'unionLeaderSymbol';
+	| 'unionLeaderSymbol'
+	| 'terraIncognitaPerspectiveCountry'
+	| 'terraIncognitaStyle';
 
 export type BooleanMapSettings =
 	| 'borderSmoothing'
@@ -45,7 +48,8 @@ export type BooleanMapSettings =
 	| 'countryNames'
 	| 'sectorBorders'
 	| 'sectorBorderSmoothing'
-	| 'unionLeaderUnderline';
+	| 'unionLeaderUnderline'
+	| 'terraIncognita';
 
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
@@ -110,6 +114,8 @@ export interface MapSettingGroup extends IdAndName {
 const fontOptions = readable<IdAndName[]>([], (set) => {
 	loadFonts().then((fonts) => set(fonts.map((f) => ({ id: f, name: f }))));
 });
+
+export const countryOptions = writable<IdAndName[]>([]);
 
 const iconOptions: IdAndName[] = [
 	{ id: 'none', name: 'None' },
@@ -493,6 +499,46 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			},
 		],
 	},
+	{
+		id: 'terraIncognita',
+		name: 'Terra Incognita',
+		settings: [
+			{
+				id: 'terraIncognita',
+				name: 'Terra Incognita',
+				type: 'toggle',
+			},
+			{
+				id: 'terraIncognitaPerspectiveCountry',
+				name: 'Perspective Country',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [{ id: 'player', name: 'Player' }],
+				dynamicOptions: countryOptions,
+				hideIf: (settings) => !settings.terraIncognita,
+			},
+			{
+				id: 'terraIncognitaStyle',
+				name: 'Style',
+				type: 'select',
+				options: [
+					{ id: 'flat', name: 'Flat' },
+					{ id: 'striped', name: 'Striped' },
+					{ id: 'cloudy', name: 'Cloudy' },
+				],
+				hideIf: (settings) => !settings.terraIncognita,
+			},
+			{
+				id: 'terraIncognitaBrightness',
+				name: 'Brightness',
+				type: 'range',
+				min: 0,
+				max: 255,
+				step: 5,
+				hideIf: (settings) => !settings.terraIncognita,
+			},
+		],
+	},
 ];
 
 export const defaultMapSettings: MapSettings = {
@@ -534,6 +580,10 @@ export const defaultMapSettings: MapSettings = {
 	unionLeaderSymbolSize: 0.3,
 	unionLeaderUnderline: true,
 	unionBorderWidth: 3,
+	terraIncognita: true,
+	terraIncognitaPerspectiveCountry: 'player',
+	terraIncognitaStyle: 'striped',
+	terraIncognitaBrightness: 50,
 };
 
 export const mapSettings = writable(defaultMapSettings);

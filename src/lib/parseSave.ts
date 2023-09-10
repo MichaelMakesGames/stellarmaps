@@ -57,7 +57,15 @@ export function jsonify(tokens: string[]): Record<string, any> {
 			if (assigning) {
 				if (key) {
 					const newObject = {};
-					current[stripQuotes(key)] = newObject;
+					const strippedKey = stripQuotes(key);
+					if (current[strippedKey] != undefined) {
+						if (!Array.isArray(current[strippedKey])) {
+							current[strippedKey] = [current[strippedKey]];
+						}
+						current[strippedKey].push(newObject);
+					} else {
+						current[strippedKey] = newObject;
+					}
 					stack.push(current);
 					current = newObject;
 					key = null;
@@ -107,7 +115,15 @@ export function jsonify(tokens: string[]): Record<string, any> {
 			}
 		} else {
 			if (assigning && key) {
-				current[stripQuotes(key)] = parseValue(token);
+				const strippedKey = stripQuotes(key);
+				if (current[strippedKey] != undefined) {
+					if (!Array.isArray(current[strippedKey])) {
+						current[strippedKey] = [current[strippedKey]];
+					}
+					current[strippedKey].push(parseValue(token));
+				} else {
+					current[strippedKey] = parseValue(token);
+				}
 				key = null;
 				assigning = false;
 			} else if (key) {

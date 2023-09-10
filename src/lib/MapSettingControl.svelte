@@ -9,8 +9,10 @@
 
 	export let config: MapSettingConfig;
 
-	let values = get(mapSettings);
-	let value: any = values[config.id];
+	let value: any = get(mapSettings)[config.id];
+	mapSettings.subscribe((values) => {
+		value = values[config.id];
+	});
 	$: {
 		mapSettings.update((prev) => ({
 			...prev,

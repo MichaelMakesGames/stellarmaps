@@ -10,7 +10,7 @@ import polylabel from 'polylabel';
 import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
 import type { Bypass, Country, GameState, LocalizedText, Sector } from './GameState';
-import type { MapSettings } from './mapSettings';
+import { countryOptions, type MapSettings } from './mapSettings';
 import { get } from 'svelte/store';
 import { loadEmblem, stellarisDataPromiseStore } from './loadStellarisData';
 
@@ -50,6 +50,11 @@ export default async function processMapData(gameState: GameState, settings: Map
 
 	console.time('localizing country names');
 	const countryNames = await localizeCountryNames(gameState.country);
+	countryOptions.set(
+		Object.entries(countryNames)
+			.map(([id, name]) => ({ id, name }))
+			.filter(({ id }) => gameState.country[parseInt(id)]?.type === 'default'),
+	);
 	console.timeEnd('localizing country names');
 
 	console.time('processing system ownership');
@@ -70,6 +75,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 		const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
 		const ownerId = starbase ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
 		const owner = ownerId != null ? gameState.country[ownerId] : null;
+		const polygon = voronoi.cellPolygon(i);
+		systemIdToPolygon[goId] = polygon;
 		if (ownerId != null && owner) {
 			ownedSystemPoints.push(
 				helpers.point(pointToGeoJSON([go.coordinate.x, go.coordinate.y])).geometry,
@@ -80,11 +87,9 @@ export default async function processMapData(gameState: GameState, settings: Map
 			countryToOwnedSystemIds[ownerId].push(parseInt(goId));
 			systemIdToCountry[parseInt(goId)] = ownerId;
 
-			const polygon = voronoi.cellPolygon(i);
 			if (polygon == null) {
 				console.warn(`null polygon for system at ${go.coordinate.x},${go.coordinate.y}`);
 			} else {
-				systemIdToPolygon[goId] = polygon;
 				if (!countryToSystemPolygons[ownerId]) {
 					countryToSystemPolygons[ownerId] = [];
 				}
@@ -102,6 +107,47 @@ export default async function processMapData(gameState: GameState, settings: Map
 		}
 	});
 	console.timeEnd('processing system ownership');
+
+	console.time('processing terra incognita');
+	const terraIncognitaPerspectiveCountryId =
+		settings.terraIncognitaPerspectiveCountry === 'player'
+			? gameState.player?.filter((p) => gameState.country[p?.country])[0]?.country
+			: parseInt(settings.terraIncognitaPerspectiveCountry);
+	const terraIncognitaPerspectiveCountry =
+		terraIncognitaPerspectiveCountryId != null
+			? gameState.country[terraIncognitaPerspectiveCountryId]
+			: null;
+	const knownSystems = new Set(
+		terraIncognitaPerspectiveCountry?.terra_incognita?.systems ??
+			Object.keys(gameState.galactic_object).map((id) => parseInt(id)),
+	);
+	const unknownSystems = Object.keys(gameState.galactic_object)
+		.map((key) => parseInt(key))
+		.filter((id) => !knownSystems.has(id));
+	const knownCounties = new Set(
+		getGameStateValueAsArray(terraIncognitaPerspectiveCountry?.relations_manager?.relation)
+			.filter((relation) => relation.communications)
+			.map((relation) => relation.country),
+	);
+	if (terraIncognitaPerspectiveCountryId != null)
+		knownCounties.add(terraIncognitaPerspectiveCountryId);
+	const terraIncognitaMultiPolygon =
+		unknownSystems.length > 0
+			? helpers.multiPolygon(
+					unknownSystems
+						.map((systemId) => systemIdToPolygon[systemId])
+						.filter((polygon) => polygon != null)
+						.map((polygon) => [polygon.map(pointToGeoJSON)]),
+			  )
+			: null;
+	const terraIncognitaUnion = terraIncognitaMultiPolygon
+		? union(terraIncognitaMultiPolygon, terraIncognitaMultiPolygon)
+		: null;
+	const terraIncognitaPath =
+		terraIncognitaUnion == null
+			? ''
+			: multiPolygonToPath(helpers.featureCollection([terraIncognitaUnion]), settings);
+	console.timeEnd('processing terra incognita');
 
 	console.time('processing labels');
 	const labels = Object.entries(countryToSystemPolygons).map(([countryId, polygons]) => {
@@ -210,6 +256,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 			name,
 			emblemKey,
 			isUnionLeader: isUnionLeader(parseInt(countryId), gameState, settings),
+			isKnown: knownCounties.has(parseInt(countryId)),
 		};
 	});
 	console.timeEnd('processing labels');
@@ -442,6 +489,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 				path: segmentToPath(segment, settings),
 				isUnionBorder: unionBorderSegments.includes(segment),
 			})),
+			isKnown: knownCounties.has(parseInt(countryId)),
 		};
 	});
 	console.timeEnd('processing borders');
@@ -503,6 +551,9 @@ export default async function processMapData(gameState: GameState, settings: Map
 		const x = -system.coordinate.x;
 		const y = system.coordinate.y;
 
+		const ownerIsKnown = countryId != null && knownCounties.has(countryId);
+		const systemIsKnown = knownSystems.has(parseInt(systemId));
+
 		return {
 			primaryColor,
 			secondaryColor,
@@ -510,6 +561,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 			isSectorCapital,
 			isCountryCapital,
 			isOwned,
+			ownerIsKnown,
+			systemIsKnown,
 			x,
 			y,
 		};
@@ -520,7 +573,15 @@ export default async function processMapData(gameState: GameState, settings: Map
 	const emblems = await loadCountryEmblems(Object.values(gameState.country));
 	console.timeEnd('loading emblems');
 
-	return { borders, hyperlanesPath, relayHyperlanesPath, emblems, systems, labels };
+	return {
+		borders,
+		hyperlanesPath,
+		relayHyperlanesPath,
+		emblems,
+		systems,
+		labels,
+		terraIncognitaPath,
+	};
 }
 
 function multiPolygonToPath(
@@ -1022,4 +1083,10 @@ function smoothPositionArrayIteration(
 		smoothed[smoothed.length - 1] = smoothed[0];
 	}
 	return smoothed;
+}
+
+function getGameStateValueAsArray<T>(value: null | undefined | T | T[]): T[] {
+	if (value == null) return [];
+	if (Array.isArray(value)) return value;
+	return [value];
 }

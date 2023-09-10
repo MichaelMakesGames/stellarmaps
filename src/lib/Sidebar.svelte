@@ -2,7 +2,12 @@
 	import { Accordion, AccordionItem, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import MapSettingControl from './MapSettingControl.svelte';
 	import { gameStatePromise } from './GameState';
-	import { mapSettingConfig, reprocessMap } from './mapSettings';
+	import {
+		lastProcessedMapSettings,
+		mapSettingConfig,
+		mapSettings,
+		reprocessMap,
+	} from './mapSettings';
 	import parseSave from './parseSave';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
 	import ReprocessButton from './ReprocessButton.svelte';
@@ -44,6 +49,17 @@
 					.then(() => loadSave(path))
 					.then(parseSave);
 				gameStatePromise.set(promise);
+
+				// update settings that depend on save-specific options
+				mapSettings.update((prev) => ({
+					...prev,
+					terraIncognitaPerspectiveCountry: 'player',
+				}));
+				lastProcessedMapSettings.update((prev) => ({
+					...prev,
+					terraIncognitaPerspectiveCountry: 'player',
+				}));
+
 				promise.catch(
 					toastError({
 						title: `Failed to load ${selectedSave.path}`,

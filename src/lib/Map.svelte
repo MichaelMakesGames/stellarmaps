@@ -32,7 +32,7 @@
 		toastError({
 			title: 'Failed to load Stellaris data',
 			description:
-				'Please try manually selecting your install location. This should be the fold that contains the <pre class="inline">common</pre>, <pre class="inline">flags</pre>, and <pre class="inline">localisation</pre> folders (among others).',
+				'Please try manually selecting your install location. This should be the folder that contains the <pre class="inline">common</pre>, <pre class="inline">flags</pre>, and <pre class="inline">localisation</pre> folders (among others).',
 			defaultValue: {} as Record<string, string>,
 			toastStore,
 			action: {
@@ -121,8 +121,22 @@
 					$mapSettings.unpopulatedSystemIconSize,
 			  )()
 			: '';
-	$: unionLeaderIconPath =
-		$mapSettings.countryCapitalIcon !== 'none' ? symbol(symbols.star, 30)() : '';
+
+	$: terraIncognitaColor = `rgba(${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness})`;
+	$: terraIncognitaLightStripeColor = `rgba(${Math.min(
+		255,
+		$mapSettings.terraIncognitaBrightness + 10,
+	)},${Math.min(255, $mapSettings.terraIncognitaBrightness + 10)},${Math.min(
+		255,
+		$mapSettings.terraIncognitaBrightness + 10,
+	)})`;
+	$: terraIncognitaDarkStripeColor = `rgba(${Math.max(
+		0,
+		$mapSettings.terraIncognitaBrightness - 10,
+	)},${Math.max(0, $mapSettings.terraIncognitaBrightness - 10)},${Math.max(
+		0,
+		$mapSettings.terraIncognitaBrightness - 10,
+	)})`;
 </script>
 
 <div class="w-full h-full relative" style:background="#111">
@@ -171,19 +185,56 @@
 			>
 				<defs>
 					{#if data}
-						{#each data.borders as border}
+						{#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
 							<clipPath id="border-{border.countryId}-inner-clip-path">
 								<use href="#border-{border.countryId}-inner" />
 							</clipPath>
 							<clipPath id="border-{border.countryId}-outer-clip-path">
 								<use href="#border-{border.countryId}-outer" />
 							</clipPath>
+							{#if $mapSettings.terraIncognita && $mapSettings.terraIncognitaStyle === 'striped'}
+								<pattern
+									id="dark-stripes"
+									viewBox="0,0,10,10"
+									preserveAspectRatio="none"
+									width="100%"
+									height="10"
+									patternUnits="userSpaceOnUse"
+									patternTransform="rotate(-45)"
+								>
+									<rect fill={terraIncognitaLightStripeColor} width="10" height="6" />
+									<rect fill={terraIncognitaDarkStripeColor} width="10" height="6" y="5" />
+								</pattern>
+							{/if}
+							{#if $mapSettings.terraIncognita && $mapSettings.terraIncognitaStyle === 'cloudy'}
+								<filter id="terra-incognita-filter">
+									<feGaussianBlur in="SourceGraphic" result="blurred" stdDeviation="2" />
+									<feTurbulence
+										type="turbulence"
+										numOctaves="4"
+										baseFrequency="0.02"
+										result="turbulence"
+									/>
+									<feColorMatrix
+										type="matrix"
+										in="turbulence"
+										result="grayturb"
+										values="
+										0.2126 0.7152 0.0722 0 0
+										0.2126 0.7152 0.0722 0 0
+										0.2126 0.7152 0.0722 0 0
+										0 0 0 1 0"
+									/>
+									<feBlend in2="blurred" in="grayturb" result="cloudy" mode="multiply" />
+									<feComposite in="cloudy" in2="blurred" operator="in" />
+								</filter>
+							{/if}
 						{/each}
 					{/if}
 				</defs>
 				<g bind:this={g}>
 					{#if data}
-						{#each data.borders as border}
+						{#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
 							<path
 								id="border-{border.countryId}-outer"
 								d={border.outerPath}
@@ -244,8 +295,27 @@
 							stroke-width={$mapSettings.hyperRelayWidth}
 							opacity={$mapSettings.hyperRelayOpacity}
 						/>
+						{#if $mapSettings.terraIncognita}
+							<!-- filtered and patterned path disappears at some zoom levels -->
+							<!-- always draw a flat terra incognita underneath as a fallback -->
+							<path
+								id="terra-incognita-fallback"
+								d={data.terraIncognitaPath}
+								fill={terraIncognitaColor}
+							/>
+							<path
+								id="terra-incognita"
+								d={data.terraIncognitaPath}
+								fill={$mapSettings.terraIncognitaStyle === 'striped'
+									? 'url(#dark-stripes)'
+									: terraIncognitaColor}
+								filter={$mapSettings.terraIncognitaStyle === 'cloudy'
+									? 'url(#terra-incognita-filter)'
+									: ''}
+							/>
+						{/if}
 						{#each data.systems as system}
-							{#if system.isCountryCapital && $mapSettings.countryCapitalIcon !== 'none'}
+							{#if system.isCountryCapital && $mapSettings.countryCapitalIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
 								<path
 									transform="translate({system.x},{system.y})"
 									d={countryCapitalIconPath}
@@ -257,7 +327,7 @@
 										$mapSettings.populatedSystemIconMinContrast,
 									)}
 								/>
-							{:else if system.isSectorCapital && $mapSettings.sectorCapitalIcon !== 'none'}
+							{:else if system.isSectorCapital && $mapSettings.sectorCapitalIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
 								<path
 									transform="translate({system.x},{system.y})"
 									d={sectorCapitalIconPath}
@@ -269,7 +339,7 @@
 										$mapSettings.populatedSystemIconMinContrast,
 									)}
 								/>
-							{:else if system.isColonized && $mapSettings.populatedSystemIcon !== 'none'}
+							{:else if system.isColonized && $mapSettings.populatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
 								<path
 									transform="translate({system.x},{system.y})"
 									d={populatedSystemIconPath}
@@ -281,7 +351,7 @@
 										$mapSettings.populatedSystemIconMinContrast,
 									)}
 								/>
-							{:else if $mapSettings.unpopulatedSystemIcon !== 'none'}
+							{:else if $mapSettings.unpopulatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || system.systemIsKnown)}
 								<path
 									transform="translate({system.x},{system.y})"
 									d={unpopulatedSystemIconPath}
@@ -289,7 +359,7 @@
 								/>
 							{/if}
 						{/each}
-						{#each data.labels as label}
+						{#each data.labels.filter((label) => label.isKnown || !$mapSettings.terraIncognita) as label}
 							{#each label.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
 								{#if $debug}<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />{/if}
 								{#if $debug && emblemWidth && emblemHeight}

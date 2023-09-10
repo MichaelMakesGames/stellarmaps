@@ -19,6 +19,7 @@ export interface GameState {
 	megastructures: Record<number, Megastructure>;
 	sectors: Record<number, Sector>;
 	federation: Record<number, Federation>;
+	player?: { name: string; country: number }[];
 }
 
 export interface GalacticObject {
@@ -39,6 +40,7 @@ export interface Megastructure {
 }
 
 export interface Country {
+	type: string;
 	name?: LocalizedText;
 	flag?: {
 		colors: string[];
@@ -54,7 +56,20 @@ export interface Country {
 	fleets_manager?: {
 		owned_fleets?: { fleet: number }[];
 	};
+	terra_incognita?: {
+		systems?: number[]; // these are explored systems
+	};
+	relations_manager?: {
+		relation?: Relation | Relation[];
+	};
 }
+
+export interface Relation {
+	owner: number;
+	country: number;
+	communications?: boolean;
+}
+
 export interface Starbase {
 	station: number;
 }
