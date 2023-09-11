@@ -65,7 +65,7 @@
 		if (value === 'border') value = $mapSettings.borderColor;
 		if (value === 'primary') value = countryColors.primaryColor;
 		if (value === 'secondary') value = countryColors.secondaryColor;
-		value = colors[value];
+		value = colors[value] ?? colors['black'];
 		if (!(backgroundColorSetting && minimumContrast)) {
 			return value;
 		} else {
@@ -441,6 +441,24 @@
 								{/if}
 							{/each}
 						{/each}
+						{#if $debug}
+							{#each data.galaxyBorderCircles as circle}
+								<circle
+									cx={-circle.cx}
+									cy={circle.cy}
+									r={circle.r}
+									stroke-width={['outer-padded', 'inner-padded', 'outlier'].includes(circle.type)
+										? 2
+										: 1}
+									stroke={circle.type === 'outlier'
+										? 'green'
+										: circle.type.startsWith('outer')
+										? 'blue'
+										: 'red'}
+									fill="transparent"
+								/>
+							{/each}
+						{/if}
 					{/if}
 				</g>
 			</svg>

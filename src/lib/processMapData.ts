@@ -1,4 +1,7 @@
 import buffer from '@turf/buffer';
+import turfCircle from '@turf/circle';
+import difference from '@turf/difference';
+import intersect from '@turf/intersect';
 import union from '@turf/union';
 import explode from '@turf/explode';
 import * as helpers from '@turf/helpers';
@@ -13,6 +16,7 @@ import type { Bypass, Country, GameState, LocalizedText, Sector } from './GameSt
 import { countryOptions, type MapSettings } from './mapSettings';
 import { get } from 'svelte/store';
 import { loadEmblem, stellarisDataPromiseStore } from './loadStellarisData';
+import { isDefined, parseNumberEntry } from './utils';
 
 const SCALE = 100;
 const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
@@ -38,7 +42,9 @@ export default async function processMapData(gameState: GameState, settings: Map
 			}
 		}
 	}
-	points.push(...extraPoints);
+	if (!settings.circularGalaxyBorders) {
+		points.push(...extraPoints);
+	}
 	const delaunay = Delaunay.from(points);
 	const voronoi = delaunay.voronoi([
 		-MAX_BORDER_DISTANCE,
@@ -108,6 +114,13 @@ export default async function processMapData(gameState: GameState, settings: Map
 	});
 	console.timeEnd('processing system ownership');
 
+	console.time('processing circular galaxy borders');
+	const { galaxyBorderCircles, galaxyBorderCirclesGeoJSON } = processCircularGalaxyBorders(
+		gameState,
+		settings,
+	);
+	console.timeEnd('processing circular galaxy borders');
+
 	console.time('processing terra incognita');
 	const terraIncognitaPerspectiveCountryId =
 		settings.terraIncognitaPerspectiveCountry === 'player'
@@ -131,34 +144,22 @@ export default async function processMapData(gameState: GameState, settings: Map
 	);
 	if (terraIncognitaPerspectiveCountryId != null)
 		knownCounties.add(terraIncognitaPerspectiveCountryId);
-	const terraIncognitaMultiPolygon =
-		unknownSystems.length > 0
-			? helpers.multiPolygon(
-					unknownSystems
-						.map((systemId) => systemIdToPolygon[systemId])
-						.filter((polygon) => polygon != null)
-						.map((polygon) => [polygon.map(pointToGeoJSON)]),
-			  )
-			: null;
-	const terraIncognitaUnion = terraIncognitaMultiPolygon
-		? union(terraIncognitaMultiPolygon, terraIncognitaMultiPolygon)
-		: null;
+	const terraIncognitaGeoJSON = joinSystemPolygons(
+		unknownSystems.map((systemId) => systemIdToPolygon[systemId]),
+		galaxyBorderCirclesGeoJSON,
+	);
 	const terraIncognitaPath =
-		terraIncognitaUnion == null
+		terraIncognitaGeoJSON == null
 			? ''
-			: multiPolygonToPath(helpers.featureCollection([terraIncognitaUnion]), settings);
+			: multiPolygonToPath(helpers.featureCollection([terraIncognitaGeoJSON]), settings);
 	console.timeEnd('processing terra incognita');
 
 	console.time('processing labels');
-	const labels = Object.entries(countryToSystemPolygons).map(([countryId, polygons]) => {
+	const labels = Object.entries(countryToSystemPolygons).map(([countryId, systemPolygons]) => {
 		const name = countryNames[countryId] ?? '';
 		const country = gameState.country[parseInt(countryId)];
-		const multiPolygon = helpers.multiPolygon(
-			polygons.map((polygon) => [polygon.map(pointToGeoJSON)]),
-		);
-		const outer = helpers.featureCollection([
-			union(multiPolygon, multiPolygon) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
-		]);
+		const labelSearchAreaGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
+
 		const textAspectRatio =
 			name && settings.countryNames ? getTextAspectRatio(name, settings.countryNamesFont) : 0;
 		const emblemAspectRatio = settings.countryEmblems ? 1 / 1 : 0;
@@ -170,84 +171,85 @@ export default async function processMapData(gameState: GameState, settings: Map
 		} else if (settings.countryNames) {
 			searchAspectRatio = textAspectRatio;
 		}
-		const labelPoints = searchAspectRatio
-			? getPolygons(outer)
-					.map((p) => {
-						if (settings.labelsAvoidHoles === 'all') return p;
-						if (settings.labelsAvoidHoles === 'none')
-							return helpers.polygon([p.coordinates[0]]).geometry;
-						// settings.labelsAvoidHoles === 'owned'
-						return helpers.polygon([
-							p.coordinates[0],
-							...p.coordinates.slice(1).filter((hole) => {
-								const holePolygon = helpers.polygon([hole.slice().reverse()]);
-								return ownedSystemPoints.some((ownedSystemPoint) =>
-									booleanContains(holePolygon, ownedSystemPoint),
-								);
-							}),
-						]).geometry;
-					})
-					.map<[helpers.Polygon, helpers.Position]>((polygon) => [
-						polygon,
-						aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
-					])
-					.map(([polygon, point]) => {
-						let textWidth = textAspectRatio
-							? findLargestContainedRect({
-									polygon,
-									relativePoint: point,
-									relativePointType: emblemAspectRatio ? 'top' : 'middle',
-									ratio: textAspectRatio,
-									iterations: 8,
-									xBuffer: settings.borderWidth / SCALE,
-							  })
-							: null;
-						if (
-							textWidth &&
-							settings.countryNamesMinSize &&
-							textWidth * textAspectRatio * SCALE < settings.countryNamesMinSize
-						) {
-							textWidth = null;
-						}
-						if (
-							textWidth &&
-							settings.countryNamesMaxSize &&
-							textWidth * textAspectRatio * SCALE > settings.countryNamesMaxSize
-						) {
-							textWidth = settings.countryNamesMaxSize / SCALE / textAspectRatio;
-						}
-						let emblemWidth = emblemAspectRatio
-							? findLargestContainedRect({
-									polygon,
-									relativePoint: point,
-									relativePointType: textWidth ? 'bottom' : 'middle',
-									ratio: emblemAspectRatio,
-									iterations: 8,
-							  })
-							: null;
-						if (
-							emblemWidth &&
-							settings.countryEmblemsMinSize &&
-							emblemWidth * SCALE < settings.countryEmblemsMinSize
-						) {
-							emblemWidth = null;
-						}
-						if (
-							emblemWidth &&
-							settings.countryEmblemsMaxSize &&
-							emblemWidth * SCALE > settings.countryEmblemsMaxSize
-						) {
-							emblemWidth = settings.countryEmblemsMaxSize / SCALE;
-						}
-						return {
-							point: inverseX(pointFromGeoJSON(point)),
-							emblemWidth: emblemWidth ? emblemWidth * SCALE : null,
-							emblemHeight: emblemWidth ? emblemWidth * emblemAspectRatio * SCALE : null,
-							textWidth: textWidth ? textWidth * SCALE : null,
-							textHeight: textWidth ? textWidth * textAspectRatio * SCALE : null,
-						};
-					})
-			: [];
+		const labelPoints =
+			searchAspectRatio && labelSearchAreaGeoJSON != null
+				? getPolygons(labelSearchAreaGeoJSON)
+						.map((p) => {
+							if (settings.labelsAvoidHoles === 'all') return p;
+							if (settings.labelsAvoidHoles === 'none')
+								return helpers.polygon([p.coordinates[0]]).geometry;
+							// settings.labelsAvoidHoles === 'owned'
+							return helpers.polygon([
+								p.coordinates[0],
+								...p.coordinates.slice(1).filter((hole) => {
+									const holePolygon = helpers.polygon([hole.slice().reverse()]);
+									return ownedSystemPoints.some((ownedSystemPoint) =>
+										booleanContains(holePolygon, ownedSystemPoint),
+									);
+								}),
+							]).geometry;
+						})
+						.map<[helpers.Polygon, helpers.Position]>((polygon) => [
+							polygon,
+							aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
+						])
+						.map(([polygon, point]) => {
+							let textWidth = textAspectRatio
+								? findLargestContainedRect({
+										polygon,
+										relativePoint: point,
+										relativePointType: emblemAspectRatio ? 'top' : 'middle',
+										ratio: textAspectRatio,
+										iterations: 8,
+										xBuffer: settings.borderWidth / SCALE,
+								  })
+								: null;
+							if (
+								textWidth &&
+								settings.countryNamesMinSize &&
+								textWidth * textAspectRatio * SCALE < settings.countryNamesMinSize
+							) {
+								textWidth = null;
+							}
+							if (
+								textWidth &&
+								settings.countryNamesMaxSize &&
+								textWidth * textAspectRatio * SCALE > settings.countryNamesMaxSize
+							) {
+								textWidth = settings.countryNamesMaxSize / SCALE / textAspectRatio;
+							}
+							let emblemWidth = emblemAspectRatio
+								? findLargestContainedRect({
+										polygon,
+										relativePoint: point,
+										relativePointType: textWidth ? 'bottom' : 'middle',
+										ratio: emblemAspectRatio,
+										iterations: 8,
+								  })
+								: null;
+							if (
+								emblemWidth &&
+								settings.countryEmblemsMinSize &&
+								emblemWidth * SCALE < settings.countryEmblemsMinSize
+							) {
+								emblemWidth = null;
+							}
+							if (
+								emblemWidth &&
+								settings.countryEmblemsMaxSize &&
+								emblemWidth * SCALE > settings.countryEmblemsMaxSize
+							) {
+								emblemWidth = settings.countryEmblemsMaxSize / SCALE;
+							}
+							return {
+								point: inverseX(pointFromGeoJSON(point)),
+								emblemWidth: emblemWidth ? emblemWidth * SCALE : null,
+								emblemHeight: emblemWidth ? emblemWidth * emblemAspectRatio * SCALE : null,
+								textWidth: textWidth ? textWidth * SCALE : null,
+								textHeight: textWidth ? textWidth * textAspectRatio * SCALE : null,
+							};
+						})
+				: [];
 		const emblemKey = country.flag?.icon
 			? `${country.flag.icon.category}/${country.flag.icon.file}`
 			: null;
@@ -262,16 +264,13 @@ export default async function processMapData(gameState: GameState, settings: Map
 	console.timeEnd('processing labels');
 
 	console.time('processing borders');
-	const borders = Object.entries(unionLeaderToSystemPolygons).map(([countryId, polygons]) => {
+	const borders = Object.entries(unionLeaderToSystemPolygons).map(([countryId, systemPolygons]) => {
 		const colors = getCountryColors(parseInt(countryId), gameState, settings);
 		const primaryColor = colors?.[0] ?? 'black';
 		const secondaryColor = colors?.[1] ?? 'black';
-		const multiPolygon = helpers.multiPolygon(
-			polygons.map((polygon) => [polygon.map(pointToGeoJSON)]),
-		);
-		const selfUnion = union(multiPolygon, multiPolygon);
-		if (!selfUnion) {
-			console.warn('selfUnion failed');
+		const outerBorderGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
+		if (!outerBorderGeoJSON) {
+			console.warn('outerBorderGeoJSON failed');
 			return {
 				countryId,
 				primaryColor,
@@ -281,7 +280,6 @@ export default async function processMapData(gameState: GameState, settings: Map
 				sectorBorders: [],
 			};
 		}
-		let outer = helpers.featureCollection([selfUnion]);
 
 		const countrySectors = Object.values(gameState.sectors).filter(
 			(sector) =>
@@ -303,16 +301,11 @@ export default async function processMapData(gameState: GameState, settings: Map
 			const systemPolygons = sector.systems
 				.map((systemId) => systemIdToPolygon[systemId])
 				.filter((polygon) => polygon != null);
-			if (systemPolygons.length === 0) return [];
-			let sectorMultiPolygon: helpers.Feature<helpers.MultiPolygon | helpers.Polygon> =
-				helpers.multiPolygon(systemPolygons.map((polygon) => [polygon.map(pointToGeoJSON)]));
-			sectorMultiPolygon = union(sectorMultiPolygon, sectorMultiPolygon) as helpers.Feature<
-				helpers.MultiPolygon | helpers.Polygon
-			>;
-			if (sectorMultiPolygon && sectorMultiPolygon.geometry.type === 'Polygon') {
-				return [helpers.polygon([sectorMultiPolygon.geometry.coordinates[0]]).geometry];
-			} else if (sectorMultiPolygon && sectorMultiPolygon.geometry.type === 'MultiPolygon') {
-				return sectorMultiPolygon.geometry.coordinates.map(
+			const sectorGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
+			if (sectorGeoJSON && sectorGeoJSON.geometry.type === 'Polygon') {
+				return [helpers.polygon([sectorGeoJSON.geometry.coordinates[0]]).geometry];
+			} else if (sectorGeoJSON && sectorGeoJSON.geometry.type === 'MultiPolygon') {
+				return sectorGeoJSON.geometry.coordinates.map(
 					(singlePolygon) => helpers.polygon([singlePolygon[0]]).geometry,
 				);
 			} else {
@@ -327,20 +320,11 @@ export default async function processMapData(gameState: GameState, settings: Map
 				const systemPolygons = countryToOwnedSystemIds[unionMemberId]
 					.map((systemId) => systemIdToPolygon[systemId])
 					.filter((polygon) => polygon != null);
-				if (systemPolygons.length === 0) return [];
-				let unionMemberMultiPolygon: helpers.Feature<helpers.MultiPolygon | helpers.Polygon> =
-					helpers.multiPolygon(systemPolygons.map((polygon) => [polygon.map(pointToGeoJSON)]));
-				unionMemberMultiPolygon = union(
-					unionMemberMultiPolygon,
-					unionMemberMultiPolygon,
-				) as helpers.Feature<helpers.MultiPolygon | helpers.Polygon>;
-				if (unionMemberMultiPolygon && unionMemberMultiPolygon.geometry.type === 'Polygon') {
-					return [helpers.polygon([unionMemberMultiPolygon.geometry.coordinates[0]]).geometry];
-				} else if (
-					unionMemberMultiPolygon &&
-					unionMemberMultiPolygon.geometry.type === 'MultiPolygon'
-				) {
-					return unionMemberMultiPolygon.geometry.coordinates.map(
+				const unionMemberGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
+				if (unionMemberGeoJSON && unionMemberGeoJSON.geometry.type === 'Polygon') {
+					return [helpers.polygon([unionMemberGeoJSON.geometry.coordinates[0]]).geometry];
+				} else if (unionMemberGeoJSON && unionMemberGeoJSON.geometry.type === 'MultiPolygon') {
+					return unionMemberGeoJSON.geometry.coordinates.map(
 						(singlePolygon) => helpers.polygon([singlePolygon[0]]).geometry,
 					);
 				} else {
@@ -362,14 +346,14 @@ export default async function processMapData(gameState: GameState, settings: Map
 		);
 
 		const allBorderPoints: Set<string> = new Set(
-			explode(outer).features.map((f) => positionToString(f.geometry.coordinates)),
+			explode(outerBorderGeoJSON).features.map((f) => positionToString(f.geometry.coordinates)),
 		);
 		const sectorOuterPoints: Set<string>[] = sectorOuterPolygons.map(
 			(p) => new Set(explode(p).features.map((f) => positionToString(f.geometry.coordinates))),
 		);
 		// include all border lines in this, so we don't draw sectors border where there is already an external border
 		const addedSectorLines: Set<string> = new Set(
-			getAllPositionArrays(outer)
+			getAllPositionArrays(outerBorderGeoJSON)
 				.map((positionArray) =>
 					positionArray.map((p, i) => {
 						const nextPosition = positionArray[(i + 1) % positionArray.length];
@@ -465,20 +449,28 @@ export default async function processMapData(gameState: GameState, settings: Map
 		if (settings.borderSmoothing) {
 			sectorSegments.forEach((segment) => {
 				if (allBorderPoints.has(positionToString(segment[0]))) {
-					segment[0] = getSmoothedPosition(segment[0], outer);
+					segment[0] = getSmoothedPosition(segment[0], outerBorderGeoJSON);
 				}
 				if (allBorderPoints.has(positionToString(segment[segment.length - 1]))) {
-					segment[segment.length - 1] = getSmoothedPosition(segment[segment.length - 1], outer);
+					segment[segment.length - 1] = getSmoothedPosition(
+						segment[segment.length - 1],
+						outerBorderGeoJSON,
+					);
 				}
 			});
 		}
 
+		let smoothedOuterBorderGeoJSON = outerBorderGeoJSON;
 		if (settings.borderSmoothing) {
-			outer = smoothGeojson(outer, 2);
+			smoothedOuterBorderGeoJSON = smoothGeojson(outerBorderGeoJSON, 2);
 		}
-		const inner = buffer(outer, -settings.borderWidth / SCALE, { units: 'degrees' });
-		const outerPath = multiPolygonToPath(outer, settings);
-		const innerPath = multiPolygonToPath(inner, settings);
+		const smoothedInnerBorderGeoJSON = buffer(
+			smoothedOuterBorderGeoJSON,
+			-settings.borderWidth / SCALE,
+			{ units: 'degrees' },
+		);
+		const outerPath = multiPolygonToPath(smoothedOuterBorderGeoJSON, settings);
+		const innerPath = multiPolygonToPath(smoothedInnerBorderGeoJSON, settings);
 		return {
 			countryId,
 			primaryColor,
@@ -581,17 +573,18 @@ export default async function processMapData(gameState: GameState, settings: Map
 		systems,
 		labels,
 		terraIncognitaPath,
+		galaxyBorderCircles,
 	};
 }
 
 function multiPolygonToPath(
-	featureCollection: helpers.FeatureCollection<
-		helpers.MultiPolygon | helpers.Polygon,
-		helpers.Properties
-	>,
+	geoJSON:
+		| helpers.FeatureCollection<helpers.MultiPolygon | helpers.Polygon, helpers.Properties>
+		| helpers.Feature<helpers.MultiPolygon | helpers.Polygon, helpers.Properties>,
 	settings: MapSettings,
 ) {
-	const coordinates = featureCollection.features.flatMap((feature) =>
+	const features = geoJSON.type === 'FeatureCollection' ? geoJSON.features : [geoJSON];
+	const coordinates = features.flatMap((feature) =>
 		feature.geometry.type === 'MultiPolygon'
 			? feature.geometry.coordinates
 			: [feature.geometry.coordinates],
@@ -627,9 +620,12 @@ function segmentToPath(segment: helpers.Position[], settings: MapSettings): stri
 }
 
 function getPolygons(
-	geojson: helpers.FeatureCollection<helpers.MultiPolygon | helpers.Polygon>,
+	geojson:
+		| helpers.FeatureCollection<helpers.MultiPolygon | helpers.Polygon>
+		| helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
 ): helpers.Polygon[] {
-	return geojson.features.flatMap((feature) => {
+	const features = geojson.type === 'FeatureCollection' ? geojson.features : [geojson];
+	return features.flatMap((feature) => {
 		if (feature.geometry.type === 'Polygon') {
 			return [feature.geometry];
 		} else {
@@ -870,9 +866,12 @@ function positionToString(p: helpers.Position): string {
 }
 
 function getAllPositionArrays(
-	featureCollection: helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>,
+	geoJSON:
+		| helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>
+		| helpers.Feature<helpers.Polygon | helpers.MultiPolygon>,
 ) {
-	const allPositionArrays = featureCollection.features
+	const features = geoJSON.type === 'FeatureCollection' ? geoJSON.features : [geoJSON];
+	const allPositionArrays = features
 		.map<helpers.Position[][]>((f) => {
 			const geometry = f.geometry;
 			if (geometry.type === 'Polygon') {
@@ -887,9 +886,11 @@ function getAllPositionArrays(
 
 function getSmoothedPosition(
 	position: helpers.Position,
-	featureCollection: helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>,
+	geoJSON:
+		| helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>
+		| helpers.Feature<helpers.Polygon | helpers.MultiPolygon>,
 ) {
-	const allPositionArrays = getAllPositionArrays(featureCollection);
+	const allPositionArrays = getAllPositionArrays(geoJSON);
 	const positionArray = allPositionArrays.find((array) =>
 		array.some((p) => p[0] === position[0] && p[1] === position[1]),
 	);
@@ -1089,4 +1090,160 @@ function getGameStateValueAsArray<T>(value: null | undefined | T | T[]): T[] {
 	if (value == null) return [];
 	if (Array.isArray(value)) return value;
 	return [value];
+}
+
+function processCircularGalaxyBorders(gameState: GameState, settings: MapSettings) {
+	if (!settings.circularGalaxyBorders) {
+		return {
+			galaxyBorderCircles: [],
+			galaxyBorderCirclesGeoJSON: null,
+		};
+	}
+	const CIRCLE_OUTER_PADDING = 20;
+	const CIRCLE_INNER_PADDING = 10;
+	const OUTLIER_DISTANCE = 30;
+	const OUTLIER_RADIUS = 15;
+	const clusters: {
+		systems: Set<number>;
+		outliers: Set<number>;
+		bBox: { xMin: number; xMax: number; yMin: number; yMax: number };
+	}[] = [];
+	for (const [goId, go] of Object.entries(gameState.galactic_object).map(parseNumberEntry)) {
+		if (clusters.some((cluster) => cluster.systems.has(goId))) continue;
+		const cluster: (typeof clusters)[0] = {
+			systems: new Set<number>([goId]),
+			outliers: new Set<number>(),
+			bBox: {
+				xMin: go.coordinate.x,
+				xMax: go.coordinate.x,
+				yMin: go.coordinate.y,
+				yMax: go.coordinate.y,
+			},
+		};
+		const edge = go.hyperlane?.map((hyperlane) => hyperlane.to) ?? [];
+		const edgeSet = new Set(edge);
+		while (edge.length > 0) {
+			const nextId = edge.pop();
+			if (nextId == null) break; // this shouldn't be possible, here for type inference
+			edgeSet.delete(nextId);
+			const next = gameState.galactic_object[nextId];
+			if (next && !cluster.systems.has(nextId)) {
+				cluster.systems.add(nextId);
+				const isOutlier =
+					next.hyperlane?.length === 1 && next.hyperlane[0].length > OUTLIER_DISTANCE;
+				if (isOutlier) {
+					cluster.outliers.add(nextId);
+				} else {
+					if (next.coordinate.x < cluster.bBox.xMin) cluster.bBox.xMin = next.coordinate.x;
+					if (next.coordinate.x > cluster.bBox.xMax) cluster.bBox.xMax = next.coordinate.x;
+					if (next.coordinate.y < cluster.bBox.yMin) cluster.bBox.yMin = next.coordinate.y;
+					if (next.coordinate.y > cluster.bBox.yMax) cluster.bBox.yMax = next.coordinate.y;
+				}
+				for (const hyperlane of next.hyperlane ?? []) {
+					if (!cluster.systems.has(hyperlane.to) && !edgeSet.has(hyperlane.to)) {
+						edge.push(hyperlane.to);
+						edgeSet.add(hyperlane.to);
+					}
+				}
+			}
+		}
+		clusters.push(cluster);
+	}
+	const galaxyBorderCircles = clusters.flatMap((cluster) => {
+		const cx = (cluster.bBox.xMin + cluster.bBox.xMax) / 2;
+		const cy = (cluster.bBox.yMin + cluster.bBox.yMax) / 2;
+		const sortedRadiusesSquared = Array.from(cluster.systems)
+			.filter((id) => !cluster.outliers.has(id))
+			.map((id) => {
+				const system = gameState.galactic_object[id];
+				return (cx - system.coordinate.x) ** 2 + (cy - system.coordinate.y) ** 2;
+			})
+			.sort((a, b) => a - b);
+		const clusterCircles = [
+			{
+				cx,
+				cy,
+				r: Math.sqrt(sortedRadiusesSquared[sortedRadiusesSquared.length - 1]),
+				type: 'outer',
+			},
+			{
+				cx,
+				cy,
+				r:
+					Math.sqrt(sortedRadiusesSquared[sortedRadiusesSquared.length - 1]) + CIRCLE_OUTER_PADDING,
+				type: 'outer-padded',
+			},
+		];
+		if (sortedRadiusesSquared[0] > 0) {
+			clusterCircles.push({ cx, cy, r: Math.sqrt(sortedRadiusesSquared[0]), type: 'inner' });
+		}
+		if (sortedRadiusesSquared[0] > CIRCLE_OUTER_PADDING ** 2) {
+			clusterCircles.push({
+				cx,
+				cy,
+				r: Math.sqrt(sortedRadiusesSquared[0]) - CIRCLE_INNER_PADDING,
+				type: 'inner-padded',
+			});
+		}
+		clusterCircles.push(
+			...Array.from(cluster.outliers).map((outlierId) => ({
+				cx: gameState.galactic_object[outlierId].coordinate.x,
+				cy: gameState.galactic_object[outlierId].coordinate.y,
+				r: OUTLIER_RADIUS,
+				type: 'outlier',
+			})),
+		);
+		return clusterCircles;
+	});
+	let galaxyBorderCirclesGeoJSON: null | helpers.Feature<helpers.Polygon | helpers.MultiPolygon> =
+		null;
+	for (const circle of galaxyBorderCircles.filter((circle) => circle.type === 'outer-padded')) {
+		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
+			units: 'degrees',
+			steps: Math.ceil(circle.r),
+		});
+		if (galaxyBorderCirclesGeoJSON == null) {
+			galaxyBorderCirclesGeoJSON = polygon;
+		} else {
+			galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
+		}
+	}
+	for (const circle of galaxyBorderCircles.filter((circle) => circle.type === 'inner-padded')) {
+		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
+			units: 'degrees',
+			steps: Math.ceil(circle.r),
+		});
+		if (galaxyBorderCirclesGeoJSON != null) {
+			galaxyBorderCirclesGeoJSON = difference(galaxyBorderCirclesGeoJSON, polygon);
+		}
+	}
+	for (const circle of galaxyBorderCircles.filter((circle) => circle.type === 'outlier')) {
+		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
+			units: 'degrees',
+			steps: Math.ceil(circle.r),
+		});
+		if (galaxyBorderCirclesGeoJSON == null) {
+			galaxyBorderCirclesGeoJSON = polygon;
+		} else {
+			galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
+		}
+	}
+	return { galaxyBorderCircles, galaxyBorderCirclesGeoJSON };
+}
+
+function joinSystemPolygons(
+	systemPolygons: (Delaunay.Polygon | null | undefined)[],
+	galaxyBorderCirclesGeoJSON: null | helpers.Feature<helpers.Polygon | helpers.MultiPolygon>,
+) {
+	const nonNullishPolygons = systemPolygons.filter(isDefined);
+	if (!nonNullishPolygons.length) return null;
+	const invalidMultiPolygon = helpers.multiPolygon(
+		nonNullishPolygons.map((polygon) => [polygon.map(pointToGeoJSON)]),
+	);
+	const polygonOrMultiPolygon = union(invalidMultiPolygon, invalidMultiPolygon);
+	if (polygonOrMultiPolygon && galaxyBorderCirclesGeoJSON) {
+		return intersect(polygonOrMultiPolygon, galaxyBorderCirclesGeoJSON);
+	} else {
+		return polygonOrMultiPolygon;
+	}
 }

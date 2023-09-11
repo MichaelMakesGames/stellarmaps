@@ -49,3 +49,11 @@ export function getLuminanceContrast(color1: string, color2: string): number {
 			: (color1Luminance + 0.05) / (color2Luminance + 0.05);
 	return 1 - ratio;
 }
+
+export function parseNumberEntry<T>(entry: [string, T]): [number, T] {
+	return [parseInt(entry[0]), entry[1]];
+}
+
+export function isDefined<T>(value: T | null | undefined): value is T {
+	return value != null;
+}

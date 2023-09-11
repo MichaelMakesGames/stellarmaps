@@ -49,7 +49,8 @@ export type BooleanMapSettings =
 	| 'sectorBorders'
 	| 'sectorBorderSmoothing'
 	| 'unionLeaderUnderline'
-	| 'terraIncognita';
+	| 'terraIncognita'
+	| 'circularGalaxyBorders';
 
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
@@ -539,6 +540,18 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			},
 		],
 	},
+	{
+		id: 'experimental',
+		name: 'Experimental',
+		settings: [
+			{
+				id: 'circularGalaxyBorders',
+				name: 'Circular Galaxy Borders',
+				requiresReprocessing: true,
+				type: 'toggle',
+			},
+		],
+	},
 ];
 
 export const defaultMapSettings: MapSettings = {
@@ -584,6 +597,7 @@ export const defaultMapSettings: MapSettings = {
 	terraIncognitaPerspectiveCountry: 'player',
 	terraIncognitaStyle: 'striped',
 	terraIncognitaBrightness: 50,
+	circularGalaxyBorders: false,
 };
 
 export const mapSettings = writable(defaultMapSettings);
