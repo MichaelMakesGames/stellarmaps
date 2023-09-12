@@ -9,11 +9,12 @@ Stylized and customizable Stellaris maps
 - Sector borders
 - Capital / sector capital / populated system icons
 - Hyperlanes and hyper relays
+- Unions mode
+- Terra incognita
 
 ## Planned
 
-- Unions mode
-- Terra incognita
+- PNG export
 - Modded emblem and name support
 - Nebulae
 - Gateways and wormholes
