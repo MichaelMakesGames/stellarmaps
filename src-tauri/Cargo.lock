@@ -3,20 +3,6 @@
 version = 3
 
 [[package]]
-name = "StellarMaps"
-version = "0.3.3"
-dependencies = [
- "anyhow",
- "font-kit",
- "regex",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "zip",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2741,6 +2727,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dbe866e1e51e8260c9eed836a042a5e7f6726bb2b411dffeaa712e19c388f23b"
 dependencies = [
  "loom",
+]
+
+[[package]]
+name = "stellarmaps"
+version = "0.4.0"
+dependencies = [
+ "anyhow",
+ "font-kit",
+ "regex",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "zip",
 ]
 
 [[package]]

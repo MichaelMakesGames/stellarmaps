@@ -35,6 +35,6 @@ jobs:
         with:
           tagName: stellarmaps-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version
           releaseName: 'StellarMaps v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseBody: 'Choose the appropriate download for your system below. For Windows, the setup.exe file is recommended.'
           releaseDraft: true
           prerelease: false
