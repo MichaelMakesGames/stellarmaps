@@ -16,7 +16,7 @@ import type { Bypass, Country, GameState, LocalizedText, Sector } from './GameSt
 import { countryOptions, type MapSettings } from './mapSettings';
 import { get } from 'svelte/store';
 import { loadEmblem, stellarisDataPromiseStore } from './loadStellarisData';
-import { isDefined, parseNumberEntry } from './utils';
+import { getLuminance, getLuminanceContrast, isDefined, parseNumberEntry } from './utils';
 
 const SCALE = 100;
 const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
@@ -138,9 +138,11 @@ export default async function processMapData(gameState: GameState, settings: Map
 		.map((key) => parseInt(key))
 		.filter((id) => !knownSystems.has(id));
 	const knownCounties = new Set(
-		getGameStateValueAsArray(terraIncognitaPerspectiveCountry?.relations_manager?.relation)
-			.filter((relation) => relation.communications)
-			.map((relation) => relation.country),
+		terraIncognitaPerspectiveCountryId == null
+			? Object.keys(gameState.country).map((id) => parseInt(id))
+			: getGameStateValueAsArray(terraIncognitaPerspectiveCountry?.relations_manager?.relation)
+					.filter((relation) => relation.communications)
+					.map((relation) => relation.country),
 	);
 	if (terraIncognitaPerspectiveCountryId != null)
 		knownCounties.add(terraIncognitaPerspectiveCountryId);
@@ -736,7 +738,7 @@ function localizeText(text: LocalizedText, loc: Record<string, string>): string 
 				.replace('adj', localizeText(var0.value, loc))
 				.replace('$1$', var1 ? localizeText(var1.value, loc) : '');
 		} catch {
-			console.warn(text);
+			console.warn('localization failed', text);
 			return 'LOCALIZATION FAILED';
 		}
 	} else if (text.key === '%ADJ%') {
@@ -752,7 +754,7 @@ function localizeText(text: LocalizedText, loc: Record<string, string>): string 
 					.replace('$1$', localizeText(var0.value.variables[0].value, loc));
 			}
 		} catch {
-			console.warn(text);
+			console.warn('localization failed', text);
 			return 'LOCALIZATION FAILED';
 		}
 	}
@@ -1245,5 +1247,35 @@ function joinSystemPolygons(
 		return intersect(polygonOrMultiPolygon, galaxyBorderCirclesGeoJSON);
 	} else {
 		return polygonOrMultiPolygon;
+	}
+}
+
+export function resolveColor(
+	mapSettings: MapSettings,
+	colors: Record<string, string>,
+	countryColors: { primaryColor: string; secondaryColor: string },
+	colorSetting: string,
+	backgroundColorSetting?: string,
+	minimumContrast?: number,
+): string {
+	let value = colorSetting;
+	if (value === 'border') value = mapSettings.borderColor;
+	if (value === 'primary') value = countryColors.primaryColor;
+	if (value === 'secondary') value = countryColors.secondaryColor;
+	value = colors[value] ?? colors['black'];
+	if (!(backgroundColorSetting && minimumContrast)) {
+		return value;
+	} else {
+		const backgroundColor = resolveColor(
+			mapSettings,
+			colors,
+			countryColors,
+			backgroundColorSetting,
+		);
+		if (getLuminanceContrast(value, backgroundColor) < minimumContrast) {
+			return colors[getLuminance(backgroundColor) > 0.5 ? 'fallback_dark' : 'fallback_light'];
+		} else {
+			return value;
+		}
 	}
 }

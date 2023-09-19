@@ -21,3 +21,7 @@ export function loadSave(path: string) {
 export function loadFonts() {
 	return invoke<string[]>('get_fonts_cmd');
 }
+
+export function reveal_file(path: string) {
+	invoke('reveal_file_cmd', { path });
+}

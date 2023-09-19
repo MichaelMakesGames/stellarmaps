@@ -19,7 +19,11 @@
         "confirm": false,
         "message": false,
         "open": true,
-        "save": false
+        "save": true
+      },
+      "fs": {
+        "scope": ["$PICTURE/*"],
+        "writeFile": true
       },
       "os": {
         "all": true

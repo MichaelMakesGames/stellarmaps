@@ -22,7 +22,6 @@
 
 	const handleNumberInput: FormEventHandler<HTMLInputElement> = (e) => {
 		const newValue = parseFloat((e.target as HTMLInputElement).value);
-		console.warn(newValue);
 		if (Number.isFinite(newValue)) {
 			value = newValue;
 		} else if (config.type === 'number' && config.optional) {

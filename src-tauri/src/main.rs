@@ -24,7 +24,8 @@ fn main() {
 				get_stellaris_save_metadata_cmd,
 				get_stellaris_save_cmd,
 				get_emblem_cmd,
-				get_fonts_cmd
+				get_fonts_cmd,
+				reveal_file_cmd
 			]
 		)
 		.run(tauri::generate_context!())
@@ -65,6 +66,11 @@ async fn get_fonts_cmd() -> Result<Vec<String>, String> {
 #[tauri::command]
 async fn get_stellaris_install_dir_cmd() -> Result<String, String> {
 	return Ok(get_stellaris_install_dir().to_string_lossy().into_owned());
+}
+
+#[tauri::command]
+async fn reveal_file_cmd(path: String) {
+	opener::reveal(path);
 }
 
 fn get_steam_dir() -> PathBuf {
