@@ -14,14 +14,6 @@
 	import { loadSave, loadSaveMetadata, type StellarisSaveMetadata } from './tauriCommands';
 	import { toastError, wait } from './utils';
 
-	const toastStore = getToastStore();
-	const savesPromise = loadSaveMetadata().catch(
-		toastError({
-			title: 'Failed to load Stellaris saves',
-			defaultValue: [] as StellarisSaveMetadata[][],
-			toastStore,
-		}),
-	);
 	let selectedSaveGroup: StellarisSaveMetadata[] | null = null;
 	let selectedSave: StellarisSaveMetadata | null = null;
 	$: if (
@@ -31,6 +23,23 @@
 		selectedSave = selectedSaveGroup[0];
 	}
 	let loadedSave: StellarisSaveMetadata | null = null;
+
+	const toastStore = getToastStore();
+	function loadSaves() {
+		return loadSaveMetadata().catch(
+			toastError({
+				title: 'Failed to load Stellaris saves',
+				defaultValue: [] as StellarisSaveMetadata[][],
+				toastStore,
+			}),
+		);
+	}
+	let savesPromise = loadSaves();
+	function refreshSaves() {
+		selectedSaveGroup = null;
+		selectedSave = null;
+		savesPromise = loadSaves();
+	}
 </script>
 
 <form
@@ -72,11 +81,9 @@
 	>
 		<div class="flex justify-between">
 			<h2 class="label">Save Game</h2>
-			<small class="text-surface-300">
-				{#if selectedSave}
-					{selectedSave.date}
-				{/if}
-			</small>
+			<button type="button" class="anchor text-sm !text-surface-300" on:click={refreshSaves}>
+				Refresh Save List
+			</button>
 		</div>
 		<select class="select mb-1" bind:value={selectedSaveGroup}>
 			{#if selectedSaveGroup == null}
