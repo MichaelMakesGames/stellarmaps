@@ -20,6 +20,9 @@ export interface GameState {
 	sectors: Record<number, Sector>;
 	federation: Record<number, Federation>;
 	player?: { name: string; country: number }[];
+	galaxy: {
+		shape: string;
+	};
 }
 
 export interface GalacticObject {
