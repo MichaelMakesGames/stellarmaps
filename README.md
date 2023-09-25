@@ -11,11 +11,11 @@ Stylized and customizable Stellaris maps
 - Hyperlanes and hyper relays
 - Unions mode
 - Terra incognita
+- PNG export
+- Modded emblem and name support
 
 ## Planned
 
-- PNG export
-- Modded emblem and name support
 - Nebulae
 - Gateways and wormholes
 - Legend

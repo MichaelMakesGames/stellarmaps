@@ -16,6 +16,7 @@
 	import { mapSettings, lastProcessedMapSettings } from './mapSettings';
 	import processMapData, { resolveColor } from './processMapData';
 	import { BACKGROUND_COLOR } from './constants';
+	import { ORBITRON_BASE64 } from './ORBITRON_BASE64';
 
 	export let id: string = '';
 	export let data: Awaited<ReturnType<typeof processMapData>>;
@@ -101,6 +102,9 @@
 	bind:this={svg}
 >
 	<defs>
+		{#if exportMode}
+			{@html `<style>@font-face { font-family: "Orbitron"; src: url(${ORBITRON_BASE64}); }</style>`}
+		{/if}
 		{#if data}
 			{#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
 				<clipPath id="border-{border.countryId}-inner-clip-path">
