@@ -15,6 +15,7 @@
 	import { writable } from 'svelte/store';
 	import { mapSettings, lastProcessedMapSettings } from './mapSettings';
 	import processMapData, { resolveColor } from './processMapData';
+	import { BACKGROUND_COLOR } from './constants';
 
 	export let id: string = '';
 	export let data: Awaited<ReturnType<typeof processMapData>>;
@@ -96,7 +97,7 @@
 	width={exportMode ? exportWidth : undefined}
 	height={exportMode ? exportHeight : undefined}
 	class={exportMode ? undefined : 'w-full h-full'}
-	style="background: #111; text-shadow: 0px 0px 3px black;"
+	style="background: {BACKGROUND_COLOR}; text-shadow: 0px 0px 3px black;"
 	bind:this={svg}
 >
 	<defs>
@@ -153,13 +154,16 @@
 			{#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
 				<path
 					id="border-{border.countryId}-outer"
-					d={border.outerPath}
-					fill={resolveColor($mapSettings, colors, border, $mapSettings.borderColor)}
+					d={`${border.outerPath}`}
+					fill={resolveColor($mapSettings, colors, border, { value: $mapSettings.borderColor })}
 				/>
 				<path
 					id="border-{border.countryId}-inner"
 					d={border.innerPath}
-					fill={resolveColor($mapSettings, colors, border, $mapSettings.borderFillColor)}
+					fill={resolveColor($mapSettings, colors, border, {
+						value: $mapSettings.borderFillColor,
+						opacity: $mapSettings.borderFillOpacity,
+					})}
 				/>
 				{#if $mapSettings.sectorBorders}
 					{#each border.sectorBorders as sectorBorder}
@@ -168,22 +172,19 @@
 							stroke-width={sectorBorder.isUnionBorder
 								? $mapSettings.unionBorderWidth
 								: $mapSettings.sectorBorderWidth}
-							clip-path={resolveColor(
-								$mapSettings,
-								colors,
-								border,
-								$mapSettings.borderFillColor,
-							) === resolveColor($mapSettings, colors, border, $mapSettings.borderColor)
+							clip-path={resolveColor($mapSettings, colors, border, {
+								value: $mapSettings.borderFillColor,
+							}) === resolveColor($mapSettings, colors, border, { value: $mapSettings.borderColor })
 								? `url(#border-${border.countryId}-outer-clip-path)`
 								: `url(#border-${border.countryId}-inner-clip-path)`}
-							stroke={resolveColor(
-								$mapSettings,
-								colors,
-								border,
-								$mapSettings.sectorBorderColor,
-								$mapSettings.borderFillColor,
-								$mapSettings.sectorBorderMinContrast,
-							)}
+							stroke={resolveColor($mapSettings, colors, border, {
+								value: $mapSettings.sectorBorderColor,
+								minimumContrast: $mapSettings.sectorBorderMinContrast,
+								background: {
+									value: $mapSettings.borderFillColor,
+									opacity: $mapSettings.borderFillOpacity,
+								},
+							})}
 							stroke-linecap={sectorBorder.isUnionBorder || !$mapSettings.sectorBorderDashArray
 								? 'round'
 								: null}
@@ -238,40 +239,40 @@
 					<path
 						transform="translate({system.x},{system.y})"
 						d={countryCapitalIconPath}
-						fill={resolveColor(
-							$mapSettings,
-							colors,
-							system,
-							$mapSettings.populatedSystemIconColor,
-							$mapSettings.borderFillColor,
-							$mapSettings.populatedSystemIconMinContrast,
-						)}
+						fill={resolveColor($mapSettings, colors, system, {
+							value: $mapSettings.populatedSystemIconColor,
+							minimumContrast: $mapSettings.populatedSystemIconMinContrast,
+							background: {
+								value: $mapSettings.borderFillColor,
+								opacity: $mapSettings.borderFillOpacity,
+							},
+						})}
 					/>
 				{:else if system.isSectorCapital && $mapSettings.sectorCapitalIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
 					<path
 						transform="translate({system.x},{system.y})"
 						d={sectorCapitalIconPath}
-						fill={resolveColor(
-							$mapSettings,
-							colors,
-							system,
-							$mapSettings.populatedSystemIconColor,
-							$mapSettings.borderFillColor,
-							$mapSettings.populatedSystemIconMinContrast,
-						)}
+						fill={resolveColor($mapSettings, colors, system, {
+							value: $mapSettings.populatedSystemIconColor,
+							minimumContrast: $mapSettings.populatedSystemIconMinContrast,
+							background: {
+								value: $mapSettings.borderFillColor,
+								opacity: $mapSettings.borderFillOpacity,
+							},
+						})}
 					/>
 				{:else if system.isColonized && $mapSettings.populatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
 					<path
 						transform="translate({system.x},{system.y})"
 						d={populatedSystemIconPath}
-						fill={resolveColor(
-							$mapSettings,
-							colors,
-							system,
-							$mapSettings.populatedSystemIconColor,
-							$mapSettings.borderFillColor,
-							$mapSettings.populatedSystemIconMinContrast,
-						)}
+						fill={resolveColor($mapSettings, colors, system, {
+							value: $mapSettings.populatedSystemIconColor,
+							minimumContrast: $mapSettings.populatedSystemIconMinContrast,
+							background: {
+								value: $mapSettings.borderFillColor,
+								opacity: $mapSettings.borderFillOpacity,
+							},
+						})}
 					/>
 				{:else if $mapSettings.unpopulatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || system.systemIsKnown)}
 					<path

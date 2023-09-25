@@ -15,14 +15,23 @@ export function tokenize(gameState: string): string[] {
 	const tokens: string[] = [];
 	let token: string | null = null;
 	let quoteOpen = false;
+	let comment = false;
 	for (const char of gameState) {
-		if (token && quoteOpen) {
+		if (comment) {
+			if (char === '\n') {
+				comment = false;
+			}
+		} else if (token && quoteOpen) {
 			token = token.concat(char);
 			if (char === '"') {
 				tokens.push(token);
 				token = null;
 				quoteOpen = false;
 			}
+		} else if (char === '#') {
+			if (token) tokens.push(token);
+			token = null;
+			comment = true;
 		} else if (char.match(/\s/)) {
 			if (token) tokens.push(token);
 			token = null;

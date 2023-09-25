@@ -8,6 +8,7 @@
 	import { lastProcessedMapSettings, reprocessMap } from './mapSettings';
 	import processMapData from './processMapData';
 	import { toastError } from './utils';
+	import { BACKGROUND_COLOR } from './constants';
 
 	const modalStore = getModalStore();
 
@@ -53,7 +54,7 @@
 	}
 </script>
 
-<div class="w-full h-full relative" style:background="#111">
+<div class="w-full h-full relative" style:background={BACKGROUND_COLOR}>
 	{#if zoomed}
 		<button
 			type="button"

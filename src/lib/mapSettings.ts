@@ -2,6 +2,7 @@ import { get, writable, type Readable, readable } from 'svelte/store';
 import { loadFonts } from './tauriCommands';
 
 export type NumberMapSettings =
+	| 'borderFillOpacity'
 	| 'borderWidth'
 	| 'sectorBorderWidth'
 	| 'hyperlaneWidth'
@@ -167,6 +168,14 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				options: colorOptions,
 			},
 			{
+				id: 'borderFillOpacity',
+				name: 'Fill Opacity',
+				type: 'range',
+				min: 0,
+				max: 1,
+				step: 0.05,
+			},
+			{
 				id: 'borderColor',
 				name: 'Border Color',
 				type: 'select',
@@ -283,6 +292,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				requiresReprocessing: true,
 				type: 'select',
 				options: [
+					{ id: 'Orbitron', name: 'Orbitron' },
 					{ id: 'sans-serif', name: 'Sans-Serif' },
 					{ id: 'serif', name: 'Serif' },
 				],
@@ -558,28 +568,29 @@ export const mapSettingConfig: MapSettingGroup[] = [
 ];
 
 export const defaultMapSettings: MapSettings = {
-	borderFillColor: 'primary',
-	borderColor: 'secondary',
-	borderWidth: 4,
+	borderFillColor: 'secondary',
+	borderFillOpacity: 0.5,
+	borderColor: 'primary',
+	borderWidth: 2,
 	borderSmoothing: true,
-	hyperlaneWidth: 1,
-	hyperlaneOpacity: 0.1,
-	hyperRelayWidth: 3,
-	hyperRelayOpacity: 0.1,
+	hyperlaneWidth: 0.5,
+	hyperlaneOpacity: 0.15,
+	hyperRelayWidth: 1.5,
+	hyperRelayOpacity: 0.15,
 	countryNames: true,
-	countryNamesMinSize: 10,
+	countryNamesMinSize: 5,
 	countryNamesMaxSize: null,
-	countryNamesFont: 'sans-serif',
+	countryNamesFont: 'Orbitron',
 	countryEmblems: true,
 	countryEmblemsMinSize: null,
 	countryEmblemsMaxSize: null,
 	labelsAvoidHoles: 'owned',
 	sectorBorders: true,
 	sectorBorderSmoothing: true,
-	sectorBorderWidth: 1,
+	sectorBorderWidth: 0.5,
 	sectorBorderColor: 'border',
 	sectorBorderMinContrast: 0.1,
-	sectorBorderDashArray: '2 1',
+	sectorBorderDashArray: '1 2',
 	countryCapitalIcon: 'diamond',
 	countryCapitalIconSize: 15,
 	sectorCapitalIcon: 'triangle',
@@ -595,7 +606,7 @@ export const defaultMapSettings: MapSettings = {
 	unionLeaderSymbol: '★',
 	unionLeaderSymbolSize: 0.3,
 	unionLeaderUnderline: true,
-	unionBorderWidth: 3,
+	unionBorderWidth: 1,
 	terraIncognita: true,
 	terraIncognitaPerspectiveCountry: 'player',
 	terraIncognitaStyle: 'striped',

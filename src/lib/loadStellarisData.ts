@@ -2,6 +2,7 @@ import { invoke } from '@tauri-apps/api';
 import { jsonify, tokenize } from './parseSave';
 import { get, writable } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
+import Color from 'color';
 
 const stellarisPathStore = localStorageStore('stellarisPath', '');
 export const stellarisDataPromiseStore = writable(
@@ -38,20 +39,37 @@ function loadLoc(path: string) {
 }
 
 async function loadColors(path: string): Promise<Record<string, string>> {
-	const rawContent = await invoke<string>('get_stellaris_colors_cmd', { path });
-	const parsed = jsonify(tokenize(rawContent as string)) as Record<
-		string,
-		{ color: [number, number, number, number] }
-	>;
-	return Object.fromEntries(
-		Object.entries(parsed)
-			.map<[string, string]>(([key, value]) => [
-				key,
-				`rgba(${value.color[0]}, ${value.color[1]}, ${value.color[2]}, ${value.color[3] / 255})`,
-			])
-			.concat([
-				['fallback_dark', 'rgba(0, 0, 0, 0.75)'],
-				['fallback_light', 'rgba(255, 255, 255, 0.75)'],
-			]),
-	);
+	const rawContents = await invoke<string[]>('get_stellaris_colors_cmd', { path });
+	const colors: Record<string, string> = {
+		fallback_dark: 'rgba(0, 0, 0, 0.75)',
+		fallback_light: 'rgba(255, 255, 255, 0.75)',
+	};
+	for (const rawContent of rawContents) {
+		const re = /(hsv|rgb)\s*(\{\s*\d+\.?\d*\s*\d+\.?\d*\s*\d+\.?\d*\s*\})/gi;
+		const processedRawContent = rawContent.replace(re, (match) => {
+			return `{ ${match.substring(0, 3)} = ${match.substring(3)} }`;
+		});
+		const parsed = jsonify(tokenize(processedRawContent)) as {
+			colors: Record<
+				string,
+				{
+					map: { hsv?: [number, number, number]; rgb?: [number, number, number] };
+				}
+			>;
+		};
+		Object.entries(parsed.colors).forEach(([key, val]) => {
+			let vals: [number, number, number] = [0, 0, 0];
+			if (val.map.rgb) {
+				vals = val.map.rgb;
+			} else if (val.map.hsv) {
+				vals = val.map.hsv;
+			}
+			colors[key] = Color[val.map.rgb ? 'rgb' : 'hsv'](
+				...(val.map.rgb ? vals : [vals[0] * 360, vals[1] * 100, vals[2] * 100]),
+			)
+				.rgb()
+				.string();
+		});
+	}
+	return colors;
 }

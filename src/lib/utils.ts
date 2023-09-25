@@ -26,7 +26,7 @@ export function wait(ms: number): Promise<never> {
 }
 
 export function getLuminance(color: string): number {
-	const re = /rgba?\(\s*(?<r>\d+)\s*,\s*(?<g>\d+)\s*,\s*(?<b>\d+)\s*,\s*(?<a>\d+\.?\d*)\s*\)/;
+	const re = /rgba?\(\s*(?<r>\d+)\s*,\s*(?<g>\d+)\s*,\s*(?<b>\d+)\s*,?\s*(?<a>\d+\.?\d*)?\s*\)/;
 	const match = color.match(re);
 	if (match) {
 		return (

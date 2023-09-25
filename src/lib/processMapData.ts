@@ -18,6 +18,8 @@ import { get } from 'svelte/store';
 import { loadEmblem, stellarisDataPromiseStore } from './loadStellarisData';
 import { getLuminance, getLuminanceContrast, isDefined, parseNumberEntry } from './utils';
 import { interpolateBasis } from 'd3-interpolate';
+import Color from 'color';
+import { BACKGROUND_COLOR } from './constants';
 
 const SCALE = 100;
 const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
@@ -1416,32 +1418,43 @@ function joinSystemPolygons(
 	}
 }
 
+export interface ColorConfig {
+	value: string;
+	opacity?: number;
+	minimumContrast?: number;
+	background?: ColorConfig;
+}
+
 export function resolveColor(
 	mapSettings: MapSettings,
 	colors: Record<string, string>,
 	countryColors: { primaryColor: string; secondaryColor: string },
-	colorSetting: string,
-	backgroundColorSetting?: string,
-	minimumContrast?: number,
+	color: ColorConfig,
 ): string {
-	let value = colorSetting;
+	const backgroundColor = color.background
+		? resolveColor(mapSettings, colors, countryColors, color.background)
+		: BACKGROUND_COLOR;
+
+	let value = color.value;
 	if (value === 'border') value = mapSettings.borderColor;
 	if (value === 'primary') value = countryColors.primaryColor;
 	if (value === 'secondary') value = countryColors.secondaryColor;
 	value = colors[value] ?? colors['black'];
-	if (!(backgroundColorSetting && minimumContrast)) {
-		return value;
-	} else {
-		const backgroundColor = resolveColor(
-			mapSettings,
-			colors,
-			countryColors,
-			backgroundColorSetting,
-		);
-		if (getLuminanceContrast(value, backgroundColor) < minimumContrast) {
+
+	if (color.opacity != null) {
+		value = Color(value)
+			.mix(Color(backgroundColor), 1 - color.opacity)
+			.rgb()
+			.toString();
+	}
+
+	if (color.minimumContrast != null) {
+		if (getLuminanceContrast(value, backgroundColor) < color.minimumContrast) {
 			return colors[getLuminance(backgroundColor) > 0.5 ? 'fallback_dark' : 'fallback_light'];
 		} else {
 			return value;
 		}
 	}
+
+	return value;
 }

@@ -3,11 +3,12 @@
 
 use std::env;
 use std::fs;
+use std::io::Read;
 use std::path::Path;
 use std::path::PathBuf;
 use std::collections::HashMap;
 use std::time::UNIX_EPOCH;
-use std::io;
+use std::io::{ self, BufRead };
 use zip;
 use regex::Regex;
 use anyhow;
@@ -33,9 +34,21 @@ fn main() {
 }
 
 #[tauri::command]
-async fn get_stellaris_colors_cmd(path: String) -> Result<String, String> {
-	let path = Path::new(&path).join("common").join("named_colors").join("00_basic_colors.txt");
-	return fs::read_to_string(path).map_err(|err| err.to_string());
+async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
+	let paths = get_stellaris_data_paths(
+		Path::new(&path).to_path_buf(),
+		Path::new("flags").to_path_buf(),
+		"txt",
+		1
+	);
+	if paths.is_empty() {
+		return Err(String::from("No color files found"));
+	}
+	let data = paths
+		.into_iter()
+		.map(|p| fs::read_to_string(p).map_err(|err| err.to_string()))
+		.collect();
+	return data;
 }
 
 #[tauri::command]
@@ -54,8 +67,10 @@ async fn get_stellaris_save_cmd(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn get_emblem_cmd(category: String, file: String) -> Result<Vec<u8>, String> {
-	return get_emblem(category, file).map_err(|err| err.to_string());
+async fn get_emblem_cmd(path: String, category: String, file: String) -> Result<Vec<u8>, String> {
+	return get_emblem(Path::new(&path).to_path_buf(), category, file).map_err(|err|
+		err.to_string()
+	);
 }
 
 #[tauri::command]
@@ -70,7 +85,7 @@ async fn get_stellaris_install_dir_cmd() -> Result<String, String> {
 
 #[tauri::command]
 async fn reveal_file_cmd(path: String) {
-	opener::reveal(path);
+	let _ = opener::reveal(path);
 }
 
 fn get_steam_dir() -> PathBuf {
@@ -113,6 +128,53 @@ fn get_stellaris_user_data_dir() -> PathBuf {
 fn get_steam_user_data_dirs() -> anyhow::Result<Vec<PathBuf>> {
 	let steam_user_data_dir = get_steam_dir().join("userdata");
 	return get_sub_dirs(&steam_user_data_dir);
+}
+
+fn get_mod_path(enabled_mod: &serde_json::Value) -> anyhow::Result<PathBuf> {
+	let user_data_dir = get_stellaris_user_data_dir();
+	let enabled_mod_descriptor = user_data_dir.join(
+		enabled_mod.as_str().ok_or(anyhow::anyhow!("Expected enabled_mods to be string array"))?
+	);
+	let enabled_mod_descriptor = fs::File::open(enabled_mod_descriptor)?;
+	let enabled_mod_descriptor = io::read_to_string(enabled_mod_descriptor)?;
+	let path_re = Regex::new(r#"(?m)^path="(.*)"$"#).unwrap();
+	let mod_path = path_re
+		.captures(&enabled_mod_descriptor)
+		.map(|c| c.extract::<1>().1[0].to_string())
+		.unwrap_or_default();
+	return Ok(Path::new(&mod_path).to_path_buf());
+}
+
+fn get_enabled_mod_dirs() -> anyhow::Result<Vec<PathBuf>> {
+	let user_data_dir = get_stellaris_user_data_dir();
+	let dlc_load = user_data_dir.join("dlc_load.json");
+	let dlc_load = fs::File::open(dlc_load)?;
+	let dlc_load: serde_json::Value = serde_json::from_reader(dlc_load)?;
+	let enabled_mods = dlc_load
+		.get("enabled_mods")
+		.ok_or(anyhow::anyhow!("Expected dlc_load to contain enabled_mods"))?;
+	let mut mod_dirs = vec![];
+	for enabled_mod in enabled_mods
+		.as_array()
+		.ok_or(anyhow::anyhow!("Expected enabled_mods to be string array"))? {
+		match get_mod_path(enabled_mod) {
+			Ok(mod_path) => mod_dirs.push(mod_path),
+			_ => (),
+		}
+	}
+	return Ok(mod_dirs);
+}
+
+fn get_stellaris_data_dirs(install_path: PathBuf) -> Vec<PathBuf> {
+	let mut dirs = vec![install_path];
+	match get_enabled_mod_dirs() {
+		Ok(mod_dirs) =>
+			for dir in mod_dirs {
+				dirs.push(dir);
+			}
+		_ => (),
+	}
+	return dirs;
 }
 
 fn get_sub_dirs(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
@@ -225,23 +287,77 @@ fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 	return Ok(saves);
 }
 
+fn get_stellaris_data_paths(
+	install_path: PathBuf,
+	data_relative_dir: PathBuf,
+	extension: &str,
+	depth: u8
+) -> Vec<PathBuf> {
+	let data_root_dirs = get_stellaris_data_dirs(install_path);
+	let mut file_path_to_root_dir: HashMap<PathBuf, PathBuf> = HashMap::new();
+	for data_root_dir in data_root_dirs {
+		let dir = data_root_dir.join(&data_relative_dir);
+		match get_files_of_extension(&dir, extension, depth) {
+			Ok(files) => {
+				for file in files {
+					file_path_to_root_dir.insert(
+						file
+							.strip_prefix(&data_root_dir)
+							.expect("data file is not descendant of data root dir")
+							.to_path_buf(),
+						data_root_dir.clone()
+					);
+				}
+			}
+			_ => (),
+		}
+	}
+	let mut entries: Vec<(PathBuf, PathBuf)> = file_path_to_root_dir.into_iter().collect();
+	entries.sort_by(|a, b| a.0.cmp(&b.0));
+	return entries
+		.into_iter()
+		.map(|(child, base)| base.join(child))
+		.collect();
+}
+
 fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
-	let loc_dir = Path::new(&path).join("localisation").join("english");
-	let loc_file_paths = get_files_of_extension(&loc_dir, "yml", 8)?;
+	let loc_file_paths = get_stellaris_data_paths(
+		Path::new(&path).to_path_buf(),
+		Path::new("localisation").to_path_buf(),
+		"yml",
+		8
+	);
+	if loc_file_paths.is_empty() {
+		return Err(anyhow::anyhow!("No localisation files found"));
+	}
 	let mut locs: HashMap<String, String> = HashMap::new();
 	for path in loc_file_paths {
-		let re = Regex::new(r#"(?m)^\s*([\w\.\-]+)\s*:\d*\s*"(.*)".*$"#).unwrap();
-		let raw_content = fs::read_to_string(path)?;
-		for (_, [key, value]) in re.captures_iter(&raw_content).map(|c| c.extract()) {
-			locs.insert(key.to_string(), value.to_string());
+		let mut buf_reader = io::BufReader::new(fs::File::open(path)?);
+		let mut first_line = String::new();
+		let _ = buf_reader.read_line(&mut first_line)?;
+		if first_line.contains("l_english") {
+			let re = Regex::new(r#"(?m)^\s*([\w\.\-]+)\s*:\d*\s*"(.*)".*$"#).unwrap();
+			let mut raw_content = String::new();
+			let _ = buf_reader.read_to_string(&mut raw_content)?;
+			for (_, [key, value]) in re.captures_iter(&raw_content).map(|c| c.extract()) {
+				locs.insert(key.to_string(), value.to_string());
+			}
 		}
 	}
 	return Ok(locs);
 }
 
-fn get_emblem(category: String, file: String) -> io::Result<Vec<u8>> {
-	let path = get_stellaris_install_dir().join("flags").join(category).join("map").join(file);
-	return fs::read(path);
+fn get_emblem(install_path: PathBuf, category: String, file: String) -> anyhow::Result<Vec<u8>> {
+	let mut dirs = get_stellaris_data_dirs(install_path).to_owned();
+	dirs.reverse();
+	for dir in dirs {
+		let path = dir.join("flags").join(&category).join("map").join(&file);
+		if path.exists() {
+			let binary_data = fs::read(path)?;
+			return Ok(binary_data);
+		}
+	}
+	return Err(anyhow::anyhow!("No data dir contained emblem"));
 }
 
 fn get_fonts() -> anyhow::Result<Vec<String>> {

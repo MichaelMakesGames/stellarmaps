@@ -13,6 +13,7 @@
 	import { dialog, fs, path } from '@tauri-apps/api';
 	import { toastError, wait } from './utils';
 	import { reveal_file } from './tauriCommands';
+	import { BACKGROUND_COLOR } from './constants';
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 	const colors: Record<string, string> = $modalStore[0].meta?.colors;
@@ -297,7 +298,7 @@
 				width="1000"
 				height="1000"
 				class="w-[12rem] h-[12rem]"
-				style="background: #111;"
+				style="background: {BACKGROUND_COLOR};"
 				on:click={onPreviewClick}
 				role="button"
 				style:cursor="pointer"
@@ -307,12 +308,15 @@
 						<path
 							id="border-{border.countryId}-outer"
 							d={border.outerPath}
-							fill={resolveColor($mapSettings, colors, border, $mapSettings.borderColor)}
+							fill={resolveColor($mapSettings, colors, border, { value: $mapSettings.borderColor })}
 						/>
 						<path
 							id="border-{border.countryId}-inner"
 							d={border.innerPath}
-							fill={resolveColor($mapSettings, colors, border, $mapSettings.borderFillColor)}
+							fill={resolveColor($mapSettings, colors, border, {
+								value: $mapSettings.borderFillColor,
+								opacity: $mapSettings.borderFillOpacity,
+							})}
 						/>
 					{/each}
 					{#if $mapSettings.terraIncognita}
