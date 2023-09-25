@@ -2775,7 +2775,7 @@ dependencies = [
 
 [[package]]
 name = "stellarmaps"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "font-kit",
