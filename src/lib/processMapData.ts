@@ -503,7 +503,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 	const hyperlanes = new Set<string>();
 	const relayHyperlanes = new Set<string>();
 	Object.entries(gameState.galactic_object).forEach(([goId, go]) => {
-		for (const hyperlane of go.hyperlane ?? []) {
+		for (const hyperlane of getGameStateValueAsArray(go.hyperlane)) {
 			const isRelay =
 				go.megastructures?.some((id) => relayMegastructures.has(id)) &&
 				gameState.galactic_object[hyperlane.to].megastructures?.some((id) =>
@@ -1091,10 +1091,13 @@ function smoothPositionArrayIteration(
 	return smoothed;
 }
 
-function getGameStateValueAsArray<T>(value: null | undefined | T | T[]): T[] {
+function getGameStateValueAsArray<T>(
+	value: null | undefined | Record<string, never> | T | T[],
+): T[] {
 	if (value == null) return [];
 	if (Array.isArray(value)) return value;
-	return [value];
+	if (typeof value === 'object' && Object.keys(value).length === 0) return [];
+	return [value as T];
 }
 
 const CIRCLE_OUTER_PADDING = 20;
@@ -1141,8 +1144,8 @@ function processCircularGalaxyBorders(gameState: GameState, settings: MapSetting
 			const next = gameState.galactic_object[nextId];
 			if (next && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
-				const isOutlier =
-					next.hyperlane?.length === 1 && next.hyperlane[0].length > OUTLIER_DISTANCE;
+				const nextHyperlanes = getGameStateValueAsArray(next.hyperlane);
+				const isOutlier = nextHyperlanes.length === 1 && nextHyperlanes.length > OUTLIER_DISTANCE;
 				if (isOutlier) {
 					cluster.outliers.add(nextId);
 				} else {
@@ -1151,7 +1154,7 @@ function processCircularGalaxyBorders(gameState: GameState, settings: MapSetting
 					if (next.coordinate.y < cluster.bBox.yMin) cluster.bBox.yMin = next.coordinate.y;
 					if (next.coordinate.y > cluster.bBox.yMax) cluster.bBox.yMax = next.coordinate.y;
 				}
-				for (const hyperlane of next.hyperlane ?? []) {
+				for (const hyperlane of nextHyperlanes) {
 					if (!cluster.systems.has(hyperlane.to) && !edgeSet.has(hyperlane.to)) {
 						edge.push(hyperlane.to);
 						edgeSet.add(hyperlane.to);
