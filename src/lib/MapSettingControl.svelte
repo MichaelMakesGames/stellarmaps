@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { get } from 'svelte/store';
-	import { mapSettings, type MapSettingConfig, type IdAndName } from './mapSettings';
+	import Select from 'svelte-select';
+	import { mapSettings, type MapSettingConfig, type SelectOption } from './mapSettings';
 	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
 	import type { FormEventHandler } from 'svelte/elements';
 	import { slide } from 'svelte/transition';
 	import { onDestroy } from 'svelte';
+	import { isDefined } from './utils';
 
 	export let config: MapSettingConfig;
 
@@ -31,13 +33,16 @@
 
 	$: hidden = config.hideIf?.($mapSettings);
 
-	let dynamicOptions: IdAndName[] = [];
+	let dynamicOptions: SelectOption[] = [];
 	if (config.type === 'select' && config.dynamicOptions) {
 		const unsubscribe = config.dynamicOptions.subscribe((options) => {
 			dynamicOptions = options;
 		});
 		onDestroy(unsubscribe);
 	}
+
+	$: options = config.type === 'select' ? [...config.options, ...dynamicOptions] : [];
+	$: groups = Array.from(new Set(options.map((option) => option.group).filter(isDefined)));
 </script>
 
 {#if !hidden}
@@ -72,11 +77,15 @@
 			<input class="input" type="text" bind:value />
 		{:else if config.type === 'select'}
 			<select class="select" bind:value>
-				{#each config.options as option (option.id)}
+				{#each options.filter((opt) => opt.group == null) as option (option.id)}
 					<option value={option.id}>{option.name}</option>
 				{/each}
-				{#each dynamicOptions as option (option.id)}
-					<option value={option.id}>{option.name}</option>
+				{#each groups as group}
+					<optgroup label={group}>
+						{#each options.filter((opt) => opt.group === group) as option (option.id)}
+							<option value={option.id}>{option.name}</option>
+						{/each}
+					</optgroup>
 				{/each}
 			</select>
 		{:else if config.type === 'toggle'}

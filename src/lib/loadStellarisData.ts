@@ -40,10 +40,7 @@ function loadLoc(path: string) {
 
 async function loadColors(path: string): Promise<Record<string, string>> {
 	const rawContents = await invoke<string[]>('get_stellaris_colors_cmd', { path });
-	const colors: Record<string, string> = {
-		fallback_dark: 'rgba(0, 0, 0, 0.75)',
-		fallback_light: 'rgba(255, 255, 255, 0.75)',
-	};
+	const colors: Record<string, string> = {};
 	for (const rawContent of rawContents) {
 		const re = /(hsv|rgb)\s*(\{\s*\d+\.?\d*\s*\d+\.?\d*\s*\d+\.?\d*\s*\})/gi;
 		const processedRawContent = rawContent.replace(re, (match) => {
@@ -71,5 +68,7 @@ async function loadColors(path: string): Promise<Record<string, string>> {
 				.string();
 		});
 	}
+	colors.fallback_dark = 'rgba(0, 0, 0, 0.75)';
+	colors.fallback_light = 'rgba(255, 255, 255, 0.75)';
 	return colors;
 }

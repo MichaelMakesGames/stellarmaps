@@ -1,5 +1,6 @@
-import { get, writable, type Readable, readable } from 'svelte/store';
+import { get, writable, type Readable, readable, derived } from 'svelte/store';
 import { loadFonts } from './tauriCommands';
+import { stellarisDataPromiseStore } from './loadStellarisData';
 
 export type NumberMapSettings =
 	| 'borderFillOpacity'
@@ -90,11 +91,15 @@ export interface MapSettingConfigRange extends MapSettingConfigBase {
 	step: number;
 }
 
+export interface SelectOption extends IdAndName {
+	group?: string;
+}
+
 export interface MapSettingConfigSelect extends MapSettingConfigBase {
 	id: StringMapSettings;
 	type: 'select';
-	options: IdAndName[];
-	dynamicOptions?: Readable<IdAndName[]>;
+	options: SelectOption[];
+	dynamicOptions?: Readable<SelectOption[]>;
 }
 
 export interface MapSettingConfigText extends MapSettingConfigBase {
@@ -142,13 +147,37 @@ const textIconOptions: IdAndName[] = [
 	{ id: '✴', name: '✴ 8-Pointed Star' },
 ];
 
-const colorOptions: IdAndName[] = [
-	{ id: 'primary', name: 'Primary' },
-	{ id: 'secondary', name: 'Secondary' },
-	{ id: 'white', name: 'White' },
+const colorOptions: SelectOption[] = [
+	{ id: 'primary', name: 'Primary', group: 'Dynamic' },
+	{ id: 'secondary', name: 'Secondary', group: 'Dynamic' },
 ];
 
-const colorOptionsWithBorder: IdAndName[] = [{ id: 'border', name: 'Border' }, ...colorOptions];
+const colorOptionsWithBorder: SelectOption[] = [
+	{ id: 'border', name: 'Border', group: 'Dynamic Colors' },
+	...colorOptions,
+];
+
+const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, IdAndName[]>(
+	stellarisDataPromiseStore,
+	(stellarisDataPromise, set) => {
+		stellarisDataPromise.then(({ colors }) =>
+			set(
+				Object.keys(colors).map((c) => ({
+					id: c,
+					group: ['fallback_light', 'fallback_dark'].includes(c)
+						? 'StellarMaps Colors'
+						: 'Stellaris Colors',
+					name: c
+						.split('_')
+						.filter((word) => word.length > 0)
+						.map((word) => `${word.substring(0, 1).toUpperCase()}${word.substring(1)}`)
+						.join(' '),
+				})),
+			),
+		);
+	},
+	[],
+);
 
 const unionOptions: IdAndName[] = [
 	{ id: 'off', name: 'Off' },
@@ -166,6 +195,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Fill Color',
 				type: 'select',
 				options: colorOptions,
+				dynamicOptions: colorDynamicOptions,
 			},
 			{
 				id: 'borderFillOpacity',
@@ -180,6 +210,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Border Color',
 				type: 'select',
 				options: colorOptions,
+				dynamicOptions: colorDynamicOptions,
 			},
 			{
 				id: 'borderWidth',
@@ -353,6 +384,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Color',
 				type: 'select',
 				options: colorOptionsWithBorder,
+				dynamicOptions: colorDynamicOptions,
 				hideIf: (settings) => !settings.sectorBorders,
 			},
 			{
@@ -438,6 +470,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Color',
 				type: 'select',
 				options: colorOptionsWithBorder,
+				dynamicOptions: colorDynamicOptions,
 				hideIf: (settings) =>
 					settings.countryCapitalIcon === 'none' &&
 					settings.sectorCapitalIcon === 'none' &&
