@@ -8,8 +8,10 @@ export type NumberMapSettings =
 	| 'sectorBorderWidth'
 	| 'hyperlaneWidth'
 	| 'hyperlaneOpacity'
+	| 'unownedHyperlaneOpacity'
 	| 'hyperRelayWidth'
 	| 'hyperRelayOpacity'
+	| 'unownedHyperRelayOpacity'
 	| 'sectorBorderMinContrast'
 	| 'countryCapitalIconSize'
 	| 'sectorCapitalIconSize'
@@ -27,6 +29,10 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesMinSize';
 
 export type StringMapSettings =
+	| 'hyperlaneColor'
+	| 'hyperRelayColor'
+	| 'unownedHyperlaneColor'
+	| 'unownedHyperRelayColor'
 	| 'borderFillColor'
 	| 'borderColor'
 	| 'sectorBorderColor'
@@ -522,12 +528,36 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				step: 0.5,
 			},
 			{
+				id: 'hyperlaneColor',
+				name: 'Hyperlane Color',
+				type: 'select',
+				options: colorOptions,
+				dynamicOptions: colorDynamicOptions,
+			},
+			{
 				id: 'hyperlaneOpacity',
 				name: 'Hyperlane Opacity',
 				type: 'range',
 				min: 0,
 				max: 1,
 				step: 0.05,
+			},
+			{
+				id: 'unownedHyperlaneColor',
+				name: 'Unowned Hyperlane Color',
+				type: 'select',
+				options: colorOptions,
+				dynamicOptions: colorDynamicOptions,
+				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperlaneColor),
+			},
+			{
+				id: 'unownedHyperlaneOpacity',
+				name: 'Unowned Hyperlane Opacity',
+				type: 'range',
+				min: 0,
+				max: 1,
+				step: 0.05,
+				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperlaneColor),
 			},
 			{
 				id: 'hyperRelayWidth',
@@ -537,12 +567,36 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				step: 0.5,
 			},
 			{
+				id: 'hyperRelayColor',
+				name: 'Hyper Relay Color',
+				type: 'select',
+				options: colorOptions,
+				dynamicOptions: colorDynamicOptions,
+			},
+			{
 				id: 'hyperRelayOpacity',
 				name: 'Hyper Relay Opacity',
 				type: 'range',
 				min: 0,
 				max: 1,
 				step: 0.05,
+			},
+			{
+				id: 'unownedHyperRelayColor',
+				name: 'Unowned Hyper Relay Color',
+				type: 'select',
+				options: colorOptions,
+				dynamicOptions: colorDynamicOptions,
+				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperRelayColor),
+			},
+			{
+				id: 'unownedHyperRelayOpacity',
+				name: 'Unowned Hyper Relay Opacity',
+				type: 'range',
+				min: 0,
+				max: 1,
+				step: 0.05,
+				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperRelayColor),
 			},
 		],
 	},
@@ -607,9 +661,15 @@ export const defaultMapSettings: MapSettings = {
 	borderWidth: 2,
 	borderSmoothing: true,
 	hyperlaneWidth: 0.5,
+	hyperlaneColor: 'white',
 	hyperlaneOpacity: 0.15,
+	unownedHyperlaneColor: 'white',
+	unownedHyperlaneOpacity: 0.15,
 	hyperRelayWidth: 1.5,
+	hyperRelayColor: 'white',
 	hyperRelayOpacity: 0.15,
+	unownedHyperRelayColor: 'white',
+	unownedHyperRelayOpacity: 0.15,
 	countryNames: true,
 	countryNamesMinSize: 5,
 	countryNamesMaxSize: null,

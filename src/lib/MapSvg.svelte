@@ -204,21 +204,75 @@
 				{/if}
 			{/each}
 			<path
-				d={data.hyperlanesPath}
-				stroke="white"
+				d={[
+					data.unownedHyperlanesPath,
+					...data.borders
+						.filter((border) => !border.isKnown && $mapSettings.terraIncognita)
+						.map((border) => border.hyperlanesPath),
+				].join(' ')}
+				stroke={resolveColor(
+					$mapSettings,
+					colors,
+					{ primaryColor: 'white', secondaryColor: 'white' },
+					{
+						value: ['primary', 'secondary'].includes($mapSettings.hyperlaneColor)
+							? $mapSettings.unownedHyperlaneColor
+							: $mapSettings.hyperlaneColor,
+					},
+				)}
+				stroke-opacity={['primary', 'secondary'].includes($mapSettings.hyperlaneColor)
+					? $mapSettings.unownedHyperlaneOpacity
+					: $mapSettings.hyperlaneOpacity}
 				stroke-linecap="round"
 				stroke-linejoin="round"
 				stroke-width={$mapSettings.hyperlaneWidth}
-				opacity={$mapSettings.hyperlaneOpacity}
 			/>
 			<path
-				d={data.relayHyperlanesPath}
-				stroke="white"
+				d={[
+					data.unownedRelayHyperlanesPath,
+					...data.borders
+						.filter((border) => !border.isKnown && $mapSettings.terraIncognita)
+						.map((border) => border.relayHyperlanesPath),
+				].join(' ')}
+				stroke={resolveColor(
+					$mapSettings,
+					colors,
+					{ primaryColor: 'white', secondaryColor: 'white' },
+					{
+						value: ['primary', 'secondary'].includes($mapSettings.hyperRelayColor)
+							? $mapSettings.unownedHyperRelayColor
+							: $mapSettings.hyperRelayColor,
+					},
+				)}
+				stroke-opacity={['primary', 'secondary'].includes($mapSettings.hyperRelayColor)
+					? $mapSettings.unownedHyperRelayOpacity
+					: $mapSettings.hyperRelayOpacity}
 				stroke-linecap="round"
 				stroke-linejoin="round"
 				stroke-width={$mapSettings.hyperRelayWidth}
-				opacity={$mapSettings.hyperRelayOpacity}
 			/>
+			{#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
+				<path
+					d={border.hyperlanesPath}
+					stroke={resolveColor($mapSettings, colors, border, {
+						value: $mapSettings.hyperlaneColor,
+					})}
+					stroke-opacity={$mapSettings.hyperlaneOpacity}
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width={$mapSettings.hyperlaneWidth}
+				/>
+				<path
+					d={border.relayHyperlanesPath}
+					stroke={resolveColor($mapSettings, colors, border, {
+						value: $mapSettings.hyperRelayColor,
+					})}
+					stroke-opacity={$mapSettings.hyperRelayOpacity}
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width={$mapSettings.hyperRelayWidth}
+				/>
+			{/each}
 			{#if $mapSettings.terraIncognita}
 				<!-- filtered and patterned path disappears at some zoom levels -->
 				<!-- always draw a flat terra incognita underneath as a fallback -->

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { get } from 'svelte/store';
-	import Select from 'svelte-select';
 	import { mapSettings, type MapSettingConfig, type SelectOption } from './mapSettings';
 	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
