@@ -15,7 +15,6 @@
 	import { writable } from 'svelte/store';
 	import { mapSettings, lastProcessedMapSettings } from './mapSettings';
 	import processMapData, { resolveColor } from './processMapData';
-	import { BACKGROUND_COLOR } from './constants';
 	import { ORBITRON_BASE64 } from './ORBITRON_BASE64';
 
 	export let id: string = '';
@@ -98,7 +97,7 @@
 	width={exportMode ? exportWidth : undefined}
 	height={exportMode ? exportHeight : undefined}
 	class={exportMode ? undefined : 'w-full h-full'}
-	style="background: {BACKGROUND_COLOR}; text-shadow: 0px 0px 3px black;"
+	style="background: {colors[$mapSettings.backgroundColor]}; text-shadow: 0px 0px 3px black;"
 	bind:this={svg}
 >
 	<defs>

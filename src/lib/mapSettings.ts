@@ -29,6 +29,7 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesMinSize';
 
 export type StringMapSettings =
+	| 'backgroundColor'
 	| 'hyperlaneColor'
 	| 'hyperRelayColor'
 	| 'unownedHyperlaneColor'
@@ -170,7 +171,7 @@ const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, IdAndName[
 			set(
 				Object.keys(colors).map((c) => ({
 					id: c,
-					group: ['fallback_light', 'fallback_dark'].includes(c)
+					group: ['very_black', 'fallback_light', 'fallback_dark'].includes(c)
 						? 'StellarMaps Colors'
 						: 'Stellaris Colors',
 					name: c
@@ -641,6 +642,19 @@ export const mapSettingConfig: MapSettingGroup[] = [
 		],
 	},
 	{
+		id: 'misc',
+		name: 'Miscellaneous',
+		settings: [
+			{
+				id: 'backgroundColor',
+				name: 'Background Color',
+				type: 'select',
+				options: [],
+				dynamicOptions: colorDynamicOptions,
+			},
+		],
+	},
+	{
 		id: 'experimental',
 		name: 'Experimental',
 		settings: [
@@ -655,6 +669,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 ];
 
 export const defaultMapSettings: MapSettings = {
+	backgroundColor: 'very_black',
 	borderFillColor: 'secondary',
 	borderFillOpacity: 0.5,
 	borderColor: 'primary',

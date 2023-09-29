@@ -5,10 +5,9 @@
 	import { gameStatePromise } from './GameState';
 	import MapSvg from './MapSvg.svelte';
 	import { loadStellarisData, stellarisDataPromiseStore } from './loadStellarisData';
-	import { lastProcessedMapSettings, reprocessMap } from './mapSettings';
+	import { lastProcessedMapSettings, mapSettings, reprocessMap } from './mapSettings';
 	import processMapData from './processMapData';
 	import { toastError } from './utils';
-	import { BACKGROUND_COLOR } from './constants';
 
 	const modalStore = getModalStore();
 
@@ -54,7 +53,7 @@
 	}
 </script>
 
-<div class="w-full h-full relative" style:background={BACKGROUND_COLOR}>
+<div class="w-full h-full relative" style:background="#111">
 	{#if zoomed}
 		<button
 			type="button"

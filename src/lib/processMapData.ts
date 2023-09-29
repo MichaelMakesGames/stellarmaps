@@ -19,7 +19,6 @@ import { loadEmblem, stellarisDataPromiseStore } from './loadStellarisData';
 import { getLuminance, getLuminanceContrast, isDefined, parseNumberEntry } from './utils';
 import { interpolateBasis } from 'd3-interpolate';
 import Color from 'color';
-import { BACKGROUND_COLOR } from './constants';
 
 const SCALE = 100;
 const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
@@ -1416,15 +1415,18 @@ export function resolveColor(
 	countryColors: { primaryColor: string; secondaryColor: string },
 	color: ColorConfig,
 ): string {
-	const backgroundColor = color.background
-		? resolveColor(mapSettings, colors, countryColors, color.background)
-		: BACKGROUND_COLOR;
-
 	let value = color.value;
 	if (value === 'border') value = mapSettings.borderColor;
 	if (value === 'primary') value = countryColors.primaryColor;
 	if (value === 'secondary') value = countryColors.secondaryColor;
 	value = colors[value] ?? colors['black'];
+
+	// exit early if we can, to avoid potential infinite loop
+	if (color.opacity == null && color.minimumContrast == null) return value;
+
+	const backgroundColor = color.background
+		? resolveColor(mapSettings, colors, countryColors, color.background)
+		: resolveColor(mapSettings, colors, countryColors, { value: mapSettings.backgroundColor });
 
 	if (color.opacity != null) {
 		value = Color(value)

@@ -13,7 +13,6 @@
 	import { dialog, fs, path } from '@tauri-apps/api';
 	import { toastError, wait } from './utils';
 	import { reveal_file } from './tauriCommands';
-	import { BACKGROUND_COLOR } from './constants';
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 	const colors: Record<string, string> = $modalStore[0].meta?.colors;
@@ -298,7 +297,7 @@
 				width="1000"
 				height="1000"
 				class="w-[12rem] h-[12rem]"
-				style="background: {BACKGROUND_COLOR};"
+				style="background: {colors[$mapSettings.backgroundColor]};"
 				on:click={onPreviewClick}
 				role="button"
 				style:cursor="pointer"

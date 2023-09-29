@@ -68,6 +68,7 @@ async function loadColors(path: string): Promise<Record<string, string>> {
 				.string();
 		});
 	}
+	colors.very_black = 'rgb(17, 17, 17)';
 	colors.fallback_dark = 'rgba(0, 0, 0, 0.75)';
 	colors.fallback_light = 'rgba(255, 255, 255, 0.75)';
 	return colors;
