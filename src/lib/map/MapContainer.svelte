@@ -2,12 +2,12 @@
 	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { dialog } from '@tauri-apps/api';
 	import { fade } from 'svelte/transition';
-	import { gameStatePromise } from './GameState';
-	import MapSvg from './MapSvg.svelte';
-	import { loadStellarisData, stellarisDataPromiseStore } from './loadStellarisData';
-	import { lastProcessedMapSettings, mapSettings, reprocessMap } from './mapSettings';
-	import processMapData from './processMapData';
-	import { toastError } from './utils';
+	import { gameStatePromise } from '../GameState';
+	import Map from './Map.svelte';
+	import { loadStellarisData, stellarisDataPromiseStore } from '../loadStellarisData';
+	import { lastProcessedMapSettings, mapSettings, reprocessMap } from '../mapSettings';
+	import processMapData from './data/processMapData';
+	import { toastError } from '../utils';
 
 	const modalStore = getModalStore();
 
@@ -102,7 +102,7 @@
 			>
 				Export
 			</button>
-			<MapSvg
+			<Map
 				{colors}
 				{data}
 				onZoom={() => {

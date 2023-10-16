@@ -57,3 +57,27 @@ export function parseNumberEntry<T>(entry: [string, T]): [number, T] {
 export function isDefined<T>(value: T | null | undefined): value is T {
 	return value != null;
 }
+
+export function timeIt<Args extends unknown[], ReturnValue>(
+	message: string,
+	fn: (...args: Args) => ReturnValue,
+	...args: Args
+) {
+	console.log(`START: ${message}`);
+	console.time(`END:   ${message}`);
+	const result = fn(...args);
+	console.timeEnd(`END:   ${message}`);
+	return result;
+}
+
+export async function timeItAsync<Args extends unknown[], ReturnValue>(
+	message: string,
+	fn: (...args: Args) => Promise<ReturnValue>,
+	...args: Args
+) {
+	console.log(`START: ${message}`);
+	console.time(`END:   ${message}`);
+	const result = await fn(...args);
+	console.timeEnd(`END:   ${message}`);
+	return result;
+}

@@ -6,17 +6,17 @@
 		getToastStore,
 		localStorageStore,
 	} from '@skeletonlabs/skeleton';
-	import type processMapData from './processMapData';
 	import { mapSettings } from './mapSettings';
-	import { resolveColor } from './processMapData';
-	import MapSvg from './MapSvg.svelte';
+	import Map from './map/Map.svelte';
 	import { dialog, fs, path } from '@tauri-apps/api';
 	import { toastError, wait } from './utils';
 	import { reveal_file } from './tauriCommands';
+	import { resolveColor } from './map/mapUtils';
+	import type { MapData } from './map/data/processMapData';
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 	const colors: Record<string, string> = $modalStore[0].meta?.colors;
-	const mapData: Awaited<ReturnType<typeof processMapData>> = $modalStore[0].meta?.mapData;
+	const mapData: MapData = $modalStore[0].meta?.mapData;
 
 	let hiddenDiv: HTMLDivElement;
 
@@ -335,7 +335,7 @@
 			</svg>
 		</aside>
 		<div class="hidden" bind:this={hiddenDiv}>
-			<MapSvg
+			<Map
 				id="export-svg"
 				data={mapData}
 				{colors}
