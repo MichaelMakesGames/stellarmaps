@@ -9,6 +9,7 @@ use std::path::PathBuf;
 use std::collections::HashMap;
 use std::time::UNIX_EPOCH;
 use std::io::{ self, BufRead };
+use std::ffi::OsString;
 use zip;
 use regex::Regex;
 use anyhow;
@@ -38,7 +39,7 @@ async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
 	let paths = get_stellaris_data_paths(
 		Path::new(&path).to_path_buf(),
 		Path::new("flags").to_path_buf(),
-		"txt",
+		FileFilter::Name(OsString::from("colors.txt")),
 		1
 	);
 	if paths.is_empty() {
@@ -191,9 +192,14 @@ fn get_sub_dirs(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
 	Ok(sub_dirs)
 }
 
-fn get_files_of_extension(
+enum FileFilter {
+	Name(OsString),
+	Extension(OsString),
+}
+
+fn get_files_matching_filter(
 	path: &PathBuf,
-	extension: &str,
+	filter: &FileFilter,
 	depth: u8
 ) -> anyhow::Result<Vec<PathBuf>> {
 	let mut files: Vec<PathBuf> = Vec::new();
@@ -202,12 +208,20 @@ fn get_files_of_extension(
 			let entry = entry?;
 			let path = entry.path();
 			if path.is_dir() && (depth > 1 || depth == 0) {
-				let mut sub_dir_files = get_files_of_extension(&path, extension, depth - 1)?;
+				let mut sub_dir_files = get_files_matching_filter(&path, filter, depth - 1)?;
 				files.append(&mut sub_dir_files);
 			} else {
-				match path.extension() {
-					Some(ext) if ext == extension => files.push(path),
-					_ => (),
+				match filter {
+					FileFilter::Name(filter_name) =>
+						match path.file_name() {
+							Some(name) if name == filter_name => files.push(path),
+							_ => (),
+						}
+					FileFilter::Extension(filter_ext) =>
+						match path.extension() {
+							Some(ext) if ext == filter_ext => files.push(path),
+							_ => (),
+						}
 				}
 			}
 		}
@@ -276,7 +290,7 @@ fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 		.flat_map(|path| get_sub_dirs(&path).unwrap_or_default())
 		.map(|path| {
 			let files = Vec::from_iter(
-				get_files_of_extension(&path, "sav", 1)
+				get_files_matching_filter(&path, &FileFilter::Extension(OsString::from("sav")), 1)
 					.unwrap_or(Vec::new())
 					.iter()
 					.map(|path| StellarisSave::from_path_or_default(path))
@@ -290,14 +304,14 @@ fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 fn get_stellaris_data_paths(
 	install_path: PathBuf,
 	data_relative_dir: PathBuf,
-	extension: &str,
+	filter: FileFilter,
 	depth: u8
 ) -> Vec<PathBuf> {
 	let data_root_dirs = get_stellaris_data_dirs(install_path);
 	let mut file_path_to_root_dir: HashMap<PathBuf, PathBuf> = HashMap::new();
 	for data_root_dir in data_root_dirs {
 		let dir = data_root_dir.join(&data_relative_dir);
-		match get_files_of_extension(&dir, extension, depth) {
+		match get_files_matching_filter(&dir, &filter, depth) {
 			Ok(files) => {
 				for file in files {
 					file_path_to_root_dir.insert(
@@ -324,7 +338,7 @@ fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
 	let loc_file_paths = get_stellaris_data_paths(
 		Path::new(&path).to_path_buf(),
 		Path::new("localisation").to_path_buf(),
-		"yml",
+		FileFilter::Extension(OsString::from("yml")),
 		8
 	);
 	if loc_file_paths.is_empty() {
