@@ -93,12 +93,6 @@ function smoothPositionArray(
 	loops: boolean,
 ): helpers.Position[] {
 	let copy = positionArray.slice();
-	if (
-		loops &&
-		(copy[0][0] !== copy[copy.length - 1][0] || copy[0][1] !== copy[copy.length - 1][1])
-	) {
-		copy.push(copy[0]);
-	}
 	for (let i = 0; i < iterations; i++) {
 		copy = smoothPositionArrayIteration(copy, loops);
 	}
@@ -110,15 +104,18 @@ function smoothPositionArrayIteration(
 	loops: boolean,
 ): helpers.Position[] {
 	const smoothed = positionArray.flatMap((position, index) => {
-		if ((index === 0 || index === positionArray.length - 1) && !loops) {
+		const isFirst = index === 0;
+		const isLast = index === positionArray.length - 1;
+		if ((isFirst || isLast) && !loops) {
 			return [position];
 		} else {
-			const nextIndex = (index + 1) % positionArray.length;
+			const nextIndex = (index + (loops && isLast ? 2 : 1)) % positionArray.length;
 			const next = positionArray[nextIndex];
 			const nextDx = next[0] - position[0];
 			const nextDy = next[1] - position[1];
 
-			const prevIndex = (index + positionArray.length - 1) % positionArray.length;
+			const prevIndex =
+				(index + positionArray.length - (loops && isFirst ? 2 : 1)) % positionArray.length;
 			const prev = positionArray[prevIndex];
 			const prevDx = prev[0] - position[0];
 			const prevDy = prev[1] - position[1];
@@ -134,9 +131,5 @@ function smoothPositionArrayIteration(
 			}
 		}
 	});
-	if (loops) {
-		// fix floating point errors for properly closing ring
-		smoothed[smoothed.length - 1] = smoothed[0];
-	}
 	return smoothed;
 }

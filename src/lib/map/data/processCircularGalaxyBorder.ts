@@ -17,7 +17,11 @@ const STARBURST_LINES_PER_SLICE = 50;
 const STARBURST_SLICE_ANGLE = (Math.PI * 2) / STARBURST_NUM_SLICES;
 const ONE_DEGREE = Math.PI / 180;
 
-export default function processCircularGalaxyBorders(gameState: GameState, settings: MapSettings) {
+export default function processCircularGalaxyBorders(
+	gameState: GameState,
+	settings: MapSettings,
+	systemIdToCoordinates: Record<number, [number, number]>,
+) {
 	if (!settings.circularGalaxyBorders) {
 		return {
 			galaxyBorderCircles: [],
@@ -37,10 +41,10 @@ export default function processCircularGalaxyBorders(gameState: GameState, setti
 			systems: new Set<number>([goId]),
 			outliers: new Set<number>(),
 			bBox: {
-				xMin: go.coordinate.x,
-				xMax: go.coordinate.x,
-				yMin: go.coordinate.y,
-				yMax: go.coordinate.y,
+				xMin: systemIdToCoordinates[goId][0],
+				xMax: systemIdToCoordinates[goId][0],
+				yMin: systemIdToCoordinates[goId][1],
+				yMax: systemIdToCoordinates[goId][1],
 			},
 		};
 		const edge = go.hyperlane?.map((hyperlane) => hyperlane.to) ?? [];
@@ -53,14 +57,19 @@ export default function processCircularGalaxyBorders(gameState: GameState, setti
 			if (next && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
 				const nextHyperlanes = getGameStateValueAsArray(next.hyperlane);
-				const isOutlier = nextHyperlanes.length === 1 && nextHyperlanes.length > OUTLIER_DISTANCE;
+				const isOutlier =
+					nextHyperlanes.length === 1 && nextHyperlanes[0].length > OUTLIER_DISTANCE;
 				if (isOutlier) {
 					cluster.outliers.add(nextId);
 				} else {
-					if (next.coordinate.x < cluster.bBox.xMin) cluster.bBox.xMin = next.coordinate.x;
-					if (next.coordinate.x > cluster.bBox.xMax) cluster.bBox.xMax = next.coordinate.x;
-					if (next.coordinate.y < cluster.bBox.yMin) cluster.bBox.yMin = next.coordinate.y;
-					if (next.coordinate.y > cluster.bBox.yMax) cluster.bBox.yMax = next.coordinate.y;
+					if (systemIdToCoordinates[nextId][0] < cluster.bBox.xMin)
+						cluster.bBox.xMin = systemIdToCoordinates[nextId][0];
+					if (systemIdToCoordinates[nextId][0] > cluster.bBox.xMax)
+						cluster.bBox.xMax = systemIdToCoordinates[nextId][0];
+					if (systemIdToCoordinates[nextId][1] < cluster.bBox.yMin)
+						cluster.bBox.yMin = systemIdToCoordinates[nextId][1];
+					if (systemIdToCoordinates[nextId][1] > cluster.bBox.yMax)
+						cluster.bBox.yMax = systemIdToCoordinates[nextId][1];
 				}
 				for (const hyperlane of nextHyperlanes) {
 					if (!cluster.systems.has(hyperlane.to) && !edgeSet.has(hyperlane.to)) {
@@ -85,8 +94,7 @@ export default function processCircularGalaxyBorders(gameState: GameState, setti
 			const maxAngle = STARBURST_SLICE_ANGLE * (i + 1) + ONE_DEGREE;
 			const [minR, maxR] = getMinMaxSystemRadii(
 				Array.from(mainCluster.systems).filter((id) => {
-					const system = gameState.galactic_object[id];
-					let systemAngle = Math.atan2(system.coordinate.y, system.coordinate.x);
+					let systemAngle = Math.atan2(systemIdToCoordinates[id][1], systemIdToCoordinates[id][0]);
 					if (systemAngle < 0) systemAngle = Math.PI * 2 + systemAngle;
 					return (
 						!mainCluster.outliers.has(id) && systemAngle >= minAngle && systemAngle <= maxAngle
@@ -95,6 +103,7 @@ export default function processCircularGalaxyBorders(gameState: GameState, setti
 				0,
 				0,
 				gameState,
+				systemIdToCoordinates,
 			);
 			outerRadii.push(maxR);
 			innerRadii.push(minR);
@@ -138,6 +147,7 @@ export default function processCircularGalaxyBorders(gameState: GameState, setti
 			cx,
 			cy,
 			gameState,
+			systemIdToCoordinates,
 		);
 		const clusterCircles = [
 			{
@@ -169,8 +179,8 @@ export default function processCircularGalaxyBorders(gameState: GameState, setti
 		if (isStarburstCluster) clusterCircles.length = 0;
 		clusterCircles.push(
 			...Array.from(cluster.outliers).map((outlierId) => ({
-				cx: gameState.galactic_object[outlierId].coordinate.x,
-				cy: gameState.galactic_object[outlierId].coordinate.y,
+				cx: systemIdToCoordinates[outlierId][0],
+				cy: systemIdToCoordinates[outlierId][1],
 				r: OUTLIER_RADIUS,
 				type: 'outlier',
 			})),
@@ -218,11 +228,11 @@ function getMinMaxSystemRadii(
 	cx: number,
 	cy: number,
 	gameState: GameState,
+	systemIdToCoordinates: Record<number, [number, number]>,
 ): [number, number] {
 	const sortedRadiusesSquared = systemIds
 		.map((id) => {
-			const system = gameState.galactic_object[id];
-			return (cx - system.coordinate.x) ** 2 + (cy - system.coordinate.y) ** 2;
+			return (cx - systemIdToCoordinates[id][0]) ** 2 + (cy - systemIdToCoordinates[id][1]) ** 2;
 		})
 		.sort((a, b) => a - b);
 	return [

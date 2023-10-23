@@ -7,6 +7,7 @@ import { processEmblems } from './processEmblems';
 import processHyperRelays from './processHyperRelays';
 import processLabels from './processLabels';
 import processNames from './processNames';
+import processSystemCoordinates from './processSystemCoordinates';
 import processSystemOwnership from './processSystemOwnership';
 import processSystems from './processSystems';
 import processTerraIncognita from './processTerraIncognita';
@@ -14,7 +15,13 @@ import processVoronoi from './processVoronoi';
 import { createHyperlanePaths } from './utils';
 
 export default async function processMapData(gameState: GameState, settings: MapSettings) {
-	const voronoi = timeIt('voronoi', processVoronoi, gameState, settings);
+	const systemIdToCoordinates = timeIt(
+		'system coordinates',
+		processSystemCoordinates,
+		gameState,
+		settings,
+	);
+	const voronoi = timeIt('voronoi', processVoronoi, gameState, settings, systemIdToCoordinates);
 	const countryNames = await timeItAsync('names', processNames, gameState);
 	const {
 		countryToOwnedSystemIds,
@@ -25,12 +32,20 @@ export default async function processMapData(gameState: GameState, settings: Map
 		systemIdToPolygon,
 		systemIdToCountry,
 		systemIdToUnionLeader,
-	} = timeIt('system ownership', processSystemOwnership, gameState, settings, voronoi);
+	} = timeIt(
+		'system ownership',
+		processSystemOwnership,
+		gameState,
+		settings,
+		voronoi,
+		systemIdToCoordinates,
+	);
 	const { galaxyBorderCircles, galaxyBorderCirclesGeoJSON } = timeIt(
 		'circular galaxy borders',
 		processCircularGalaxyBorders,
 		gameState,
 		settings,
+		systemIdToCoordinates,
 	);
 	const { terraIncognitaPath, knownSystems, knownCountries } = timeIt(
 		'terra incognita',
@@ -46,9 +61,11 @@ export default async function processMapData(gameState: GameState, settings: Map
 			'unowned hyperlanes',
 			createHyperlanePaths,
 			gameState,
+			settings,
 			relayMegastructures,
 			systemIdToUnionLeader,
 			null,
+			systemIdToCoordinates,
 		);
 	const labels = timeIt(
 		'labels',
@@ -74,6 +91,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		relayMegastructures,
 		knownCountries,
 		galaxyBorderCirclesGeoJSON,
+		systemIdToCoordinates,
 	);
 	const systems = timeIt(
 		'systems',
@@ -83,6 +101,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		systemIdToCountry,
 		knownCountries,
 		knownSystems,
+		systemIdToCoordinates,
 	);
 	const emblems = await timeItAsync('emblems', processEmblems, Object.values(gameState.country));
 

@@ -9,6 +9,7 @@ import type { Delaunay } from 'd3-delaunay';
 import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
 import { isDefined, parseNumberEntry } from '../../utils';
+import explode from '@turf/explode';
 
 export const SCALE = 100;
 
@@ -18,6 +19,10 @@ export function pointToGeoJSON([x, y]: [number, number]): [number, number] {
 
 export function pointFromGeoJSON(point: helpers.Position): [number, number] {
 	return [point[0] * SCALE, point[1] * SCALE];
+}
+
+export function round3Position(position: [number, number]): [number, number] {
+	return [helpers.round(position[0], 3), helpers.round(position[1], 3)];
 }
 
 export function inverseX([x, y]: [number, number]): [number, number] {
@@ -125,15 +130,71 @@ export function joinSystemPolygons(
 ) {
 	const nonNullishPolygons = systemPolygons.filter(isDefined);
 	if (!nonNullishPolygons.length) return null;
+	const allPositions: Record<string, helpers.Position> = {};
 	const invalidMultiPolygon = helpers.multiPolygon(
-		nonNullishPolygons.map((polygon) => [polygon.map(pointToGeoJSON)]),
+		nonNullishPolygons.map((polygon) => {
+			const ring = polygon.map((point) => {
+				const position = round3Position(pointToGeoJSON(point));
+				allPositions[positionToString(position)] = position;
+				return position;
+			});
+			ring[ring.length - 1] = ring[0];
+			return [ring];
+		}),
 	);
 	const polygonOrMultiPolygon = union(invalidMultiPolygon, invalidMultiPolygon);
+	const externalPositionStrings = new Set(
+		(polygonOrMultiPolygon
+			? explode(polygonOrMultiPolygon).features.map((f) => f.geometry.coordinates)
+			: []
+		).map(positionToString),
+	);
+	const internalPositions = Object.values(allPositions).filter(
+		(p) => !externalPositionStrings.has(positionToString(p)),
+	);
 	if (polygonOrMultiPolygon && galaxyBorderCirclesGeoJSON) {
-		return intersect(polygonOrMultiPolygon, galaxyBorderCirclesGeoJSON);
+		return insertRedundantPositions(
+			intersect(polygonOrMultiPolygon, galaxyBorderCirclesGeoJSON),
+			internalPositions,
+		);
 	} else {
-		return polygonOrMultiPolygon;
+		return insertRedundantPositions(polygonOrMultiPolygon, internalPositions);
 	}
+}
+
+function insertRedundantPositions(
+	geojson: null | helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
+	positions: helpers.Position[],
+) {
+	if (geojson == null) return null;
+	getAllPositionArrays(geojson).forEach((positionArray) => {
+		for (let i = 0; i < positionArray.length - 1; i++) {
+			const pos = positionArray[i];
+			const nextPos = positionArray[i + 1];
+			const maxX = Math.max(pos[0], nextPos[0]);
+			const minX = Math.min(pos[0], nextPos[0]);
+			const maxY = Math.max(pos[1], nextPos[1]);
+			const minY = Math.min(pos[1], nextPos[1]);
+			const slope = helpers.round((nextPos[0] - pos[0]) / (nextPos[1] - pos[1]), 3);
+			const positionsToInsert = positions.filter((posToInsert) => {
+				return (
+					posToInsert[0] >= minX &&
+					posToInsert[0] <= maxX &&
+					posToInsert[1] >= minY &&
+					posToInsert[1] <= maxY &&
+					helpers.round((nextPos[0] - posToInsert[0]) / (nextPos[1] - posToInsert[1]), 3) === slope
+				);
+			});
+			positionsToInsert.sort((a, b) => {
+				const aDistToNextPosSquared = (a[0] - nextPos[0]) ** 2 + (a[1] - nextPos[1]) ** 2;
+				const bDistToNextPosSquared = (b[0] - nextPos[0]) ** 2 + (b[1] - nextPos[1]) ** 2;
+				return bDistToNextPosSquared - aDistToNextPosSquared;
+			});
+			positionArray.splice(i + 1, 0, ...positionsToInsert);
+			i += positionsToInsert.length;
+		}
+	});
+	return geojson;
 }
 
 export function getPolygons(
@@ -174,7 +235,7 @@ export function getCountryColors(countryId: number, gameState: GameState, settin
 }
 
 export function positionToString(p: helpers.Position): string {
-	return `${p[0].toFixed(3)},${p[1].toFixed(3)}`;
+	return `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
 }
 
 export function getAllPositionArrays(
@@ -198,9 +259,11 @@ export function getAllPositionArrays(
 
 export function createHyperlanePaths(
 	gameState: GameState,
+	settings: MapSettings,
 	relayMegastructures: Set<number>,
 	systemIdToUnionLeader: Record<number, number | undefined>,
 	owner: null | number,
+	systemIdToCoordinates: Record<number, [number, number]>,
 ) {
 	const hyperlanes = new Set<string>();
 	const relayHyperlanes = new Set<string>();
@@ -231,17 +294,53 @@ export function createHyperlanePaths(
 				}
 			}
 		});
-	const hyperlanesPath = Array.from(hyperlanes.values())
-		.map((key) => {
-			const [a, b] = key.split(',').map((id) => gameState.galactic_object[parseInt(id)]);
-			return `M ${-a.coordinate.x} ${a.coordinate.y} L ${-b.coordinate.x} ${b.coordinate.y}`;
-		})
-		.join(' ');
-	const relayHyperlanesPath = Array.from(relayHyperlanes.values())
-		.map((key) => {
-			const [a, b] = key.split(',').map((id) => gameState.galactic_object[parseInt(id)]);
-			return `M ${-a.coordinate.x} ${a.coordinate.y} L ${-b.coordinate.x} ${b.coordinate.y}`;
-		})
-		.join(' ');
+
+	const RADIUS = 3;
+	const RADIUS_45 = Math.sqrt(RADIUS ** 2 / 2);
+	const makeHyperlanePath = (key: string) => {
+		const [a, b] = key.split(',').map((id) => systemIdToCoordinates[parseInt(id)]);
+		const simplePath = `M ${-a[0]} ${a[1]} L ${-b[0]} ${b[1]}`;
+		const dx = b[0] - a[0];
+		const dy = b[1] - a[1];
+		const dxSign = dx > 0 ? -1 : 1;
+		const dySign = dy > 0 ? 1 : -1;
+		if (
+			!settings.hyperlaneMetroStyle ||
+			Math.abs(dx) < 1 ||
+			Math.abs(dy) < 1 ||
+			Math.abs(helpers.round(dx / dy, 1)) === 1
+		) {
+			return simplePath;
+		} else {
+			if (
+				Math.abs(dx) > Math.abs(dy) &&
+				Math.abs(dx) > RADIUS + RADIUS_45 &&
+				Math.abs(dy) > RADIUS
+			) {
+				return [
+					`M ${-a[0]} ${a[1]}`,
+					`h ${dxSign * (Math.abs(dx) - Math.abs(dy) - RADIUS)}`,
+					`q ${dxSign * RADIUS} 0 ${dxSign * (RADIUS + RADIUS_45)} ${dySign * RADIUS_45}`,
+					`L ${-b[0]} ${b[1]}`,
+				].join(' ');
+			} else if (
+				Math.abs(dy) > Math.abs(dx) &&
+				Math.abs(dy) > RADIUS + RADIUS_45 &&
+				Math.abs(dx) > RADIUS
+			) {
+				return [
+					`M ${-a[0]} ${a[1]}`,
+					`v ${dySign * (Math.abs(dy) - Math.abs(dx) - RADIUS)}`,
+					`q 0 ${dySign * RADIUS} ${dxSign * RADIUS_45} ${dySign * (RADIUS_45 + RADIUS)}`,
+					`L ${-b[0]} ${b[1]}`,
+				].join(' ');
+			} else {
+				return simplePath;
+			}
+		}
+	};
+
+	const hyperlanesPath = Array.from(hyperlanes.values()).map(makeHyperlanePath).join(' ');
+	const relayHyperlanesPath = Array.from(relayHyperlanes.values()).map(makeHyperlanePath).join(' ');
 	return { hyperlanesPath, relayHyperlanesPath };
 }

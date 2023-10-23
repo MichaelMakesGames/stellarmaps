@@ -36,6 +36,7 @@ export default function processBorders(
 	galaxyBorderCirclesGeoJSON: ReturnType<
 		typeof processCircularGalaxyBorders
 	>['galaxyBorderCirclesGeoJSON'],
+	systemIdToCoordinates: Record<number, [number, number]>,
 ) {
 	const borders = Object.entries(unionLeaderToSystemPolygons)
 		.map(parseNumberEntry)
@@ -128,7 +129,8 @@ export default function processBorders(
 				getAllPositionArrays(outerBorderGeoJSON)
 					.map((positionArray) =>
 						positionArray.map((p, i) => {
-							const nextPosition = positionArray[(i + 1) % positionArray.length];
+							const isLastPos = i === positionArray.length - 1;
+							const nextPosition = positionArray[(i + (isLastPos ? 2 : 1)) % positionArray.length];
 							return [positionToString(p), positionToString(nextPosition)].sort().join(',');
 						}),
 					)
@@ -140,7 +142,6 @@ export default function processBorders(
 				const firstSegment = currentSegment;
 				sectorPolygon.coordinates[0].forEach((pos, posIndex, posArray) => {
 					const posString = positionToString(pos);
-					const posIsExternal = allBorderPoints.has(posString);
 					const posIsLast = posIndex === posArray.length - 1;
 					const posSharedSectors = sectorOuterPolygons
 						.map((s, i) => i)
@@ -150,7 +151,7 @@ export default function processBorders(
 								sectorOuterPoints[otherSectorIndex].has(posString),
 						);
 
-					const nextPosIndex = (posIndex + 1) % posArray.length;
+					const nextPosIndex = (posIndex + (posIsLast ? 2 : 1)) % posArray.length;
 					const nextPos = posArray[nextPosIndex];
 					const nextPosString = positionToString(nextPos);
 
@@ -168,11 +169,9 @@ export default function processBorders(
 							);
 						}
 						// close up segment if
-						// just added pos is external
-						// or shared by 2+ other sectors
-						// or next line already added by other segment
+						// shared by 2+ other sectors
+						// or next line already added by other segment (or external border)
 						if (
-							posIsExternal ||
 							posSharedSectors.length >= 2 ||
 							(!posIsLast && addedSectorLines.has(nextLineString))
 						) {
@@ -198,9 +197,9 @@ export default function processBorders(
 						firstSegment !== currentSegment
 					) {
 						// last segment joins up with first segment
-						currentSegment.pop();
-						firstSegment.unshift(...currentSegment);
-						currentSegment = [];
+						currentSegment.pop(); // drop the duplicate point
+						firstSegment.unshift(...currentSegment); // insert into start of firstSegment
+						currentSegment = []; // clear currentSegment
 					}
 				});
 				// push last segment
@@ -245,9 +244,11 @@ export default function processBorders(
 			const innerPath = multiPolygonToPath(smoothedInnerBorderGeoJSON, settings);
 			const { hyperlanesPath, relayHyperlanesPath } = createHyperlanePaths(
 				gameState,
+				settings,
 				relayMegastructures,
 				systemIdToUnionLeader,
 				countryId,
+				systemIdToCoordinates,
 			);
 			return {
 				countryId,

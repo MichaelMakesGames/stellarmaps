@@ -59,7 +59,9 @@ export type BooleanMapSettings =
 	| 'sectorBorderSmoothing'
 	| 'unionLeaderUnderline'
 	| 'terraIncognita'
-	| 'circularGalaxyBorders';
+	| 'circularGalaxyBorders'
+	| 'alignStarsToGrid'
+	| 'hyperlaneMetroStyle';
 
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
@@ -599,6 +601,12 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				step: 0.05,
 				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperRelayColor),
 			},
+			{
+				id: 'hyperlaneMetroStyle',
+				name: 'Metro-style Hyperlanes',
+				type: 'toggle',
+				requiresReprocessing: true,
+			},
 		],
 	},
 	{
@@ -651,6 +659,12 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'select',
 				options: [],
 				dynamicOptions: colorDynamicOptions,
+			},
+			{
+				id: 'alignStarsToGrid',
+				name: 'Align Solar Systems to Grid',
+				type: 'toggle',
+				requiresReprocessing: true,
 			},
 		],
 	},
@@ -720,6 +734,8 @@ export const defaultMapSettings: MapSettings = {
 	terraIncognitaStyle: 'striped',
 	terraIncognitaBrightness: 50,
 	circularGalaxyBorders: false,
+	alignStarsToGrid: false,
+	hyperlaneMetroStyle: false,
 };
 
 export const mapSettings = writable(defaultMapSettings);

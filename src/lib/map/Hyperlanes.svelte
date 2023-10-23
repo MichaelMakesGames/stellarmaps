@@ -30,6 +30,7 @@
 	stroke-linecap="round"
 	stroke-linejoin="round"
 	stroke-width={$mapSettings.hyperlaneWidth}
+	fill="none"
 />
 <path
 	d={[
@@ -54,6 +55,7 @@
 	stroke-linecap="round"
 	stroke-linejoin="round"
 	stroke-width={$mapSettings.hyperRelayWidth}
+	fill="none"
 />
 {#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
 	<path
@@ -65,6 +67,7 @@
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		stroke-width={$mapSettings.hyperlaneWidth}
+		fill="none"
 	/>
 	<path
 		d={border.relayHyperlanesPath}
@@ -75,5 +78,6 @@
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		stroke-width={$mapSettings.hyperRelayWidth}
+		fill="none"
 	/>
 {/each}
