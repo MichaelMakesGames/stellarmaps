@@ -1,6 +1,7 @@
 import { get, writable, type Readable, readable, derived } from 'svelte/store';
 import { loadFonts } from './tauriCommands';
 import { stellarisDataPromiseStore } from './loadStellarisData';
+import { localStorageStore } from '@skeletonlabs/skeleton';
 
 export type NumberMapSettings =
 	| 'borderFillOpacity'
@@ -666,12 +667,6 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'toggle',
 				requiresReprocessing: true,
 			},
-		],
-	},
-	{
-		id: 'experimental',
-		name: 'Experimental',
-		settings: [
 			{
 				id: 'circularGalaxyBorders',
 				name: 'Circular Galaxy Borders',
@@ -738,6 +733,54 @@ export const defaultMapSettings: MapSettings = {
 	hyperlaneMetroStyle: false,
 };
 
-export const mapSettings = writable(defaultMapSettings);
-export const lastProcessedMapSettings = writable(defaultMapSettings);
+export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);
+export const lastProcessedMapSettings = localStorageStore(
+	'lastProcessedMapSettings',
+	defaultMapSettings,
+);
 export const reprocessMap = () => lastProcessedMapSettings.set(get(mapSettings));
+
+export interface SavedMapSettings {
+	name: string;
+	type: 'PRESET' | 'CUSTOM' | 'AUTO';
+	settings: MapSettings;
+}
+
+export const presetMapSettings: SavedMapSettings[] = [
+	{
+		name: 'Default',
+		type: 'PRESET',
+		settings: defaultMapSettings,
+	},
+	{
+		name: 'Relay Metro Map',
+		type: 'PRESET',
+		settings: {
+			...defaultMapSettings,
+			alignStarsToGrid: true,
+			hyperlaneMetroStyle: true,
+			hyperRelayWidth: 3,
+			hyperlaneWidth: 1.5,
+			hyperRelayColor: 'secondary',
+			hyperRelayOpacity: 1,
+			borderColor: 'very_black',
+			borderFillColor: 'secondary',
+			borderFillOpacity: 0.25,
+			backgroundColor: 'very_black',
+			borderSmoothing: false,
+			sectorBorderSmoothing: false,
+			countryNames: false,
+			countryEmblems: false,
+			populatedSystemIconColor: 'white',
+			sectorBorderWidth: 1,
+			sectorBorderDashArray: '',
+			sectorBorderMinContrast: 0,
+		},
+	},
+];
+
+export function settingsAreDifferent(a: MapSettings, b: MapSettings) {
+	return mapSettingConfig
+		.flatMap((group) => group.settings)
+		.some((setting) => a[setting.id] !== b[setting.id]);
+}

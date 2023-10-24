@@ -1,18 +1,33 @@
 <script lang="ts">
-	import { Accordion, AccordionItem, getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+	import {
+		Accordion,
+		AccordionItem,
+		ListBox,
+		ListBoxItem,
+		getModalStore,
+		getToastStore,
+		localStorageStore,
+		popup,
+	} from '@skeletonlabs/skeleton';
 	import MapSettingControl from './MapSettingControl.svelte';
 	import { gameStatePromise } from './GameState';
 	import {
 		lastProcessedMapSettings,
 		mapSettingConfig,
 		mapSettings,
+		presetMapSettings,
 		reprocessMap,
+		settingsAreDifferent,
+		type SavedMapSettings,
 	} from './mapSettings';
 	import parseSave from './parseSave';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
 	import ReprocessButton from './ReprocessButton.svelte';
 	import { loadSave, loadSaveMetadata, type StellarisSaveMetadata } from './tauriCommands';
 	import { toastError, wait } from './utils';
+
+	const modalStore = getModalStore();
+	const toastStore = getToastStore();
 
 	let selectedSaveGroup: StellarisSaveMetadata[] | null = null;
 	let selectedSave: StellarisSaveMetadata | null = null;
@@ -24,7 +39,6 @@
 	}
 	let loadedSave: StellarisSaveMetadata | null = null;
 
-	const toastStore = getToastStore();
 	function loadSaves() {
 		return loadSaveMetadata().catch(
 			toastError({
@@ -40,6 +54,63 @@
 		selectedSave = null;
 		savesPromise = loadSaves();
 	}
+
+	const loadedSettingsKey = localStorageStore('loadedSettingsKey', 'PRESET|Default');
+	async function loadSettings(savedSettings: SavedMapSettings) {
+		const loadedSettingsName = $loadedSettingsKey.substring($loadedSettingsKey.indexOf('|') + 1);
+		const loadedSettings = $loadedSettingsKey.startsWith('PRESET')
+			? presetMapSettings.find((preset) => preset.name === loadedSettingsName)
+			: $customSavedSettings.find((saved) => saved.name === loadedSettingsName);
+		let confirmed = true;
+		if (!loadedSettings || settingsAreDifferent(loadedSettings.settings, $mapSettings)) {
+			confirmed = await new Promise<boolean>((resolve) => {
+				modalStore.trigger({
+					type: 'confirm',
+					title: 'Are you sure?',
+					body: 'Your unsaved changes will be lost.',
+					response: resolve,
+				});
+			});
+		}
+		if (confirmed) {
+			loadedSettingsKey.set(`${savedSettings.type}|${savedSettings.name}`);
+			if (settingsAreDifferent(savedSettings.settings, $mapSettings)) {
+				await wait(100);
+				mapSettings.set(savedSettings.settings);
+				lastProcessedMapSettings.set(savedSettings.settings);
+			}
+		}
+	}
+
+	const customSavedSettings = localStorageStore<SavedMapSettings[]>('customSavedSettings', []);
+	function saveSettings() {
+		modalStore.trigger({
+			type: 'prompt',
+			title: 'Enter a name',
+			value: $loadedSettingsKey.substring($loadedSettingsKey.indexOf('|') + 1),
+			response: (response) => {
+				if (typeof response === 'string') {
+					customSavedSettings.update((prev) =>
+						prev
+							.filter((saved) => !(saved.name === response && saved.type === 'CUSTOM'))
+							.concat([
+								{
+									type: 'CUSTOM',
+									name: response,
+									settings: $mapSettings,
+								},
+							])
+							.sort((a, b) => a.name.toLocaleLowerCase().localeCompare(b.name.toLocaleLowerCase())),
+					);
+					loadedSettingsKey.set(`CUSTOM|${response}`);
+					toastStore.trigger({
+						message: `"${response}" settings saved`,
+						background: 'variant-filled-success',
+					});
+				}
+			},
+		});
+	}
 </script>
 
 <form
@@ -54,7 +125,7 @@
 			loadedSave = selectedSave;
 			if (selectedSave) {
 				const { path } = selectedSave;
-				const promise = wait(500)
+				const promise = wait(100)
 					.then(() => loadSave(path))
 					.then(parseSave);
 				gameStatePromise.set(promise);
@@ -120,7 +191,56 @@
 		</button>
 	</form>
 
-	<h2 class="h3 p-4 pb-1">Map Settings</h2>
+	<div class="flex items-baseline p-4 pb-1" style="transition-duration: 50ms;">
+		<h2 class="h3 flex-1">Map Settings</h2>
+		<button type="button" class="anchor mx-2" on:click={saveSettings}>Save</button>
+		<button
+			type="button"
+			class="anchor"
+			use:popup={{
+				event: 'focus-click',
+				target: 'popupCombobox',
+				placement: 'bottom',
+				closeQuery: '.listbox-item',
+			}}
+		>
+			Load
+		</button>
+		<div class="card w-48 shadow-xl py-2 z-10" data-popup="popupCombobox">
+			<ListBox rounded="rounded-none" active="variant-filled-primary">
+				{#if $customSavedSettings.length > 0}
+					<div class="text-secondary-300 px-4 pt-2" style="font-variant-caps: small-caps;">
+						Custom
+					</div>
+					{#each $customSavedSettings as saved}
+						<ListBoxItem
+							group={$loadedSettingsKey}
+							name="loadSettings"
+							value="CUSTOM|{saved.name}"
+							on:click={() => loadSettings(saved)}
+						>
+							{saved.name}
+						</ListBoxItem>
+					{/each}
+				{/if}
+				<div class="text-secondary-300 px-4 pt-2" style="font-variant-caps: small-caps;">
+					Presets
+				</div>
+				{#each presetMapSettings as preset}
+					<ListBoxItem
+						group={$loadedSettingsKey}
+						name="loadSettings"
+						value="PRESET|{preset.name}"
+						on:click={() => loadSettings(preset)}
+					>
+						{preset.name}
+					</ListBoxItem>
+				{/each}
+			</ListBox>
+			<div class="arrow bg-surface-100-800-token" />
+		</div>
+	</div>
+
 	<div class="px-4 pb-2 flex align-middle text-sm">
 		<ReprocessMapBadge /><span class="ms-1"> = requires reprocessing </span>
 	</div>

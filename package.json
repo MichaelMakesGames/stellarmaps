@@ -49,6 +49,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@floating-ui/dom": "^1.5.3",
 		"@tauri-apps/api": "^1.4.0",
 		"@turf/boolean-contains": "^6.5.0",
 		"@turf/buffer": "^6.5.0",

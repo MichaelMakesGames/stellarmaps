@@ -32,6 +32,5 @@ export default function processSystemCoordinates(gameState: GameState, settings:
 		usedCoordinates.add(positionToString(coordinates));
 		systemIdToCoordinates[id] = coordinates;
 	}
-	console.warn(systemIdToCoordinates);
 	return systemIdToCoordinates;
 }

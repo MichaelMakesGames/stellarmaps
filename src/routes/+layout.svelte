@@ -1,10 +1,19 @@
 <script>
-	import { AppBar, AppShell, Modal, Toast, initializeStores } from '@skeletonlabs/skeleton';
+	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+	import {
+		AppBar,
+		AppShell,
+		Modal,
+		Toast,
+		initializeStores,
+		storePopup,
+	} from '@skeletonlabs/skeleton';
 	import '../app.postcss';
 	import Sidebar from '../lib/Sidebar.svelte';
 	import ExportModal from '../lib/ExportModal.svelte';
 
 	initializeStores();
+	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
 </script>
 
 <Toast position="t" background="variant-filled-error" />
