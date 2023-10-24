@@ -2,11 +2,13 @@ import type { GameState } from '$lib/GameState';
 import type { MapSettings } from '$lib/mapSettings';
 import { parseNumberEntry } from '$lib/utils';
 import { interpolateBasis } from 'd3-interpolate';
-import { SCALE, getGameStateValueAsArray, pointToGeoJSON } from './utils';
+import { SCALE, getGameStateValueAsArray, pointFromGeoJSON, pointToGeoJSON } from './utils';
 import * as helpers from '@turf/helpers';
 import difference from '@turf/difference';
 import turfCircle from '@turf/circle';
 import union from '@turf/union';
+import convex from '@turf/convex';
+import centerOfMass from '@turf/center-of-mass';
 
 const CIRCLE_OUTER_PADDING = 20;
 const CIRCLE_INNER_PADDING = 10;
@@ -33,6 +35,7 @@ export default function processCircularGalaxyBorders(
 		systems: Set<number>;
 		outliers: Set<number>;
 		bBox: { xMin: number; xMax: number; yMin: number; yMax: number };
+		points: helpers.FeatureCollection<helpers.Point>;
 	}[] = [];
 
 	for (const [goId, go] of Object.entries(gameState.galactic_object).map(parseNumberEntry)) {
@@ -46,6 +49,9 @@ export default function processCircularGalaxyBorders(
 				yMin: systemIdToCoordinates[goId][1],
 				yMax: systemIdToCoordinates[goId][1],
 			},
+			points: helpers.featureCollection([
+				helpers.point(pointToGeoJSON(systemIdToCoordinates[goId])),
+			]),
 		};
 		const edge = go.hyperlane?.map((hyperlane) => hyperlane.to) ?? [];
 		const edgeSet = new Set(edge);
@@ -56,6 +62,7 @@ export default function processCircularGalaxyBorders(
 			const next = gameState.galactic_object[nextId];
 			if (next && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
+				cluster.points.features.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[nextId])));
 				const nextHyperlanes = getGameStateValueAsArray(next.hyperlane);
 				const isOutlier =
 					nextHyperlanes.length === 1 && nextHyperlanes[0].length > OUTLIER_DISTANCE;
@@ -140,8 +147,20 @@ export default function processCircularGalaxyBorders(
 
 	const galaxyBorderCircles = clusters.flatMap((cluster) => {
 		const isStarburstCluster = cluster === mainCluster && gameState.galaxy.shape === 'starburst';
-		const cx = (cluster.bBox.xMin + cluster.bBox.xMax) / 2;
-		const cy = (cluster.bBox.yMin + cluster.bBox.yMax) / 2;
+		let cx = (cluster.bBox.xMin + cluster.bBox.xMax) / 2;
+		let cy = (cluster.bBox.yMin + cluster.bBox.yMax) / 2;
+		if (cluster === mainCluster) {
+			cx = 0;
+			cy = 0;
+		} else {
+			const hull = convex(cluster.points);
+			if (hull) {
+				const hullCenter = centerOfMass(hull);
+				const point = pointFromGeoJSON(hullCenter.geometry.coordinates);
+				cx = point[0];
+				cy = point[1];
+			}
+		}
 		const [minR, maxR] = getMinMaxSystemRadii(
 			Array.from(cluster.systems).filter((id) => !cluster.outliers.has(id)),
 			cx,
