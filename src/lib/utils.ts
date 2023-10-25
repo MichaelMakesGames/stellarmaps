@@ -12,7 +12,7 @@ export function toastError<T>(options: {
 			message: `
 				<h4 class="h4">${options.title}</h4>
 				${options.description ? `<div>${options.description}</div>` : ''}
-				<pre class="bg-error-700 p-2 my-2 rounded whitespace-pre-line">${reason}</pre>
+				<pre class="bg-error-700 p-2 my-2 rounded whitespace-pre-line break-all">${reason}</pre>
 			`,
 			autohide: false,
 			action: options.action,

@@ -13,6 +13,7 @@ use zip;
 use regex::Regex;
 use anyhow;
 use font_kit::source::SystemSource;
+use steamlocate::SteamDir;
 
 fn main() {
 	tauri::Builder
@@ -80,7 +81,9 @@ async fn get_fonts_cmd() -> Result<Vec<String>, String> {
 
 #[tauri::command]
 async fn get_stellaris_install_dir_cmd() -> Result<String, String> {
-	return Ok(get_stellaris_install_dir().to_string_lossy().into_owned());
+	return get_stellaris_install_dir()
+		.and_then(|path| Ok(path.to_string_lossy().into_owned()))
+		.map_err(|err| err.to_string());
 }
 
 #[tauri::command]
@@ -88,25 +91,19 @@ async fn reveal_file_cmd(path: String) {
 	let _ = opener::reveal(path);
 }
 
-fn get_steam_dir() -> PathBuf {
-	match env::consts::OS {
-		"linux" => {
-			let home_dir = env::var("HOME").unwrap();
-			return Path::new(home_dir.as_str()).join(".steam/root");
-		}
-		"macos" => {
-			let home_dir = env::var("HOME").unwrap();
-			return Path::new(home_dir.as_str()).join("Library/Application Support/Steam");
-		}
-		"windows" => {
-			return Path::new("C:\\Program Files (x86)\\Steam").to_path_buf();
-		}
-		_ => panic!("unsupported OS"),
-	}
+fn get_steam_dir() -> anyhow::Result<PathBuf> {
+	return Ok(SteamDir::locate()?.path().to_path_buf());
 }
 
-fn get_stellaris_install_dir() -> PathBuf {
-	return get_steam_dir().join("steamapps").join("common").join("Stellaris");
+fn get_stellaris_install_dir() -> anyhow::Result<PathBuf> {
+	let steamdir = SteamDir::locate()?;
+	let app = steamdir.app(281990)?;
+	let path = app.ok_or(anyhow::anyhow!("Stellaris steam app not found"))?.path;
+	if path.exists() {
+		return Ok(path);
+	} else {
+		anyhow::bail!("Stellaris path does not exist: {}", path.display());
+	}
 }
 
 fn get_stellaris_user_data_dir() -> PathBuf {
@@ -126,7 +123,7 @@ fn get_stellaris_user_data_dir() -> PathBuf {
 }
 
 fn get_steam_user_data_dirs() -> anyhow::Result<Vec<PathBuf>> {
-	let steam_user_data_dir = get_steam_dir().join("userdata");
+	let steam_user_data_dir = get_steam_dir()?.join("userdata");
 	return get_sub_dirs(&steam_user_data_dir);
 }
 
