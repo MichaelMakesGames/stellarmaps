@@ -742,19 +742,16 @@ export const reprocessMap = () => lastProcessedMapSettings.set(get(mapSettings))
 
 export interface SavedMapSettings {
 	name: string;
-	type: 'PRESET' | 'CUSTOM' | 'AUTO';
 	settings: MapSettings;
 }
 
 export const presetMapSettings: SavedMapSettings[] = [
 	{
 		name: 'Default',
-		type: 'PRESET',
 		settings: defaultMapSettings,
 	},
 	{
 		name: 'Relay Metro Map',
-		type: 'PRESET',
 		settings: {
 			...defaultMapSettings,
 			alignStarsToGrid: true,

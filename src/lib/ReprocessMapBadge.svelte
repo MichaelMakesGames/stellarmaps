@@ -1,7 +1,7 @@
 <script>
-	import ReprocessIcon from './ReprocessIcon.svelte';
+	import HeroiconArrowPathRoundedSquareMini from './icons/HeroiconArrowPathRoundedSquareMini.svelte';
 </script>
 
 <span class="text-error-400 inline-block">
-	<ReprocessIcon />
+	<HeroiconArrowPathRoundedSquareMini />
 </span>

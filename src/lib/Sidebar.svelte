@@ -25,6 +25,7 @@
 	import ReprocessButton from './ReprocessButton.svelte';
 	import { loadSave, loadSaveMetadata, type StellarisSaveMetadata } from './tauriCommands';
 	import { toastError, wait } from './utils';
+	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -56,7 +57,7 @@
 	}
 
 	const loadedSettingsKey = localStorageStore('loadedSettingsKey', 'PRESET|Default');
-	async function loadSettings(savedSettings: SavedMapSettings) {
+	async function loadSettings(type: 'PRESET' | 'CUSTOM', savedSettings: SavedMapSettings) {
 		const loadedSettingsName = $loadedSettingsKey.substring($loadedSettingsKey.indexOf('|') + 1);
 		const loadedSettings = $loadedSettingsKey.startsWith('PRESET')
 			? presetMapSettings.find((preset) => preset.name === loadedSettingsName)
@@ -73,7 +74,7 @@
 			});
 		}
 		if (confirmed) {
-			loadedSettingsKey.set(`${savedSettings.type}|${savedSettings.name}`);
+			loadedSettingsKey.set(`${type}|${savedSettings.name}`);
 			if (settingsAreDifferent(savedSettings.settings, $mapSettings)) {
 				await wait(100);
 				mapSettings.set(savedSettings.settings);
@@ -92,10 +93,9 @@
 				if (typeof response === 'string') {
 					customSavedSettings.update((prev) =>
 						prev
-							.filter((saved) => !(saved.name === response && saved.type === 'CUSTOM'))
+							.filter((saved) => saved.name !== response)
 							.concat([
 								{
-									type: 'CUSTOM',
 									name: response,
 									settings: $mapSettings,
 								},
@@ -206,7 +206,7 @@
 		>
 			Load
 		</button>
-		<div class="card w-48 shadow-xl py-2 z-10" data-popup="popupCombobox">
+		<div class="card w-64 shadow-xl py-2 z-10" data-popup="popupCombobox">
 			<ListBox rounded="rounded-none" active="variant-filled-primary">
 				{#if $customSavedSettings.length > 0}
 					<div class="text-secondary-300 px-4 pt-2" style="font-variant-caps: small-caps;">
@@ -217,9 +217,32 @@
 							group={$loadedSettingsKey}
 							name="loadSettings"
 							value="CUSTOM|{saved.name}"
-							on:click={() => loadSettings(saved)}
+							on:click={() => loadSettings('CUSTOM', saved)}
 						>
 							{saved.name}
+							<svelte:fragment slot="trail">
+								<button
+									type="button"
+									class="text-error-600 hover:text-error-400 focus:text-error-400 relative top-1"
+									on:click={() => {
+										modalStore.trigger({
+											type: 'confirm',
+											title: 'Are you sure?',
+											body: `You are about to delete "${saved.name}". This cannot be undone.`,
+											buttonTextConfirm: 'Delete',
+											response: (response) => {
+												if (response) {
+													customSavedSettings.update((prev) =>
+														prev.filter((other) => !(other.name === saved.name)),
+													);
+												}
+											},
+										});
+									}}
+								>
+									<HeroiconTrashMini class="w-4 h-4" />
+								</button>
+							</svelte:fragment>
 						</ListBoxItem>
 					{/each}
 				{/if}
@@ -231,7 +254,7 @@
 						group={$loadedSettingsKey}
 						name="loadSettings"
 						value="PRESET|{preset.name}"
-						on:click={() => loadSettings(preset)}
+						on:click={() => loadSettings('PRESET', preset)}
 					>
 						{preset.name}
 					</ListBoxItem>

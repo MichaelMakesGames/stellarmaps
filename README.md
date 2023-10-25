@@ -24,7 +24,6 @@ Stylized and customizable Stellaris maps
 ## Known Issues
 
 - Does not work with mod packs using Irony's "Compressed" merge
-- If you use Irony to set the mod list, you must open the Paradox Launcher first before opening StellarMaps
 
 # Credits
 
