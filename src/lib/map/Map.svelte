@@ -13,8 +13,8 @@
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
 
 	export let id: string = '';
-	export let data: MapData;
-	export let colors: Record<string, string>;
+	export let data: null | MapData;
+	export let colors: null | Record<string, string>;
 	export let onZoom: undefined | (() => void) = undefined;
 	export let exportMode: boolean = false;
 	export let exportModeViewBox: string = '';
@@ -49,7 +49,8 @@
 	width={exportMode ? exportWidth : undefined}
 	height={exportMode ? exportHeight : undefined}
 	class={exportMode ? undefined : 'w-full h-full'}
-	style="background: {colors[$mapSettings.backgroundColor]}; text-shadow: 0px 0px 3px black;"
+	style="background: {colors?.[$mapSettings.backgroundColor] ??
+		'#111'}; text-shadow: 0px 0px 3px black;"
 	bind:this={svg}
 >
 	<defs>
@@ -69,7 +70,7 @@
 		{/if}
 	</defs>
 	<g bind:this={g}>
-		{#if data}
+		{#if data && colors}
 			<CountryBorders {data} {colors} />
 			<Hyperlanes {data} {colors} />
 			<TerraIncognita {data} />

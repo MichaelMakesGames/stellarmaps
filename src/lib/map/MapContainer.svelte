@@ -5,7 +5,7 @@
 	import { gameStatePromise } from '../GameState';
 	import Map from './Map.svelte';
 	import { loadStellarisData, stellarisDataPromiseStore } from '../loadStellarisData';
-	import { lastProcessedMapSettings, mapSettings, reprocessMap } from '../mapSettings';
+	import { lastProcessedMapSettings } from '../mapSettings';
 	import processMapData from './data/processMapData';
 	import { toastError } from '../utils';
 	import HeroiconArrowPathOutline from '$lib/icons/HeroiconArrowPathOutline.svelte';
@@ -44,12 +44,24 @@
 	);
 	$: colorsPromise = $stellarisDataPromiseStore.then(({ colors }) => colors);
 
-	let zoomed = true;
+	let zoomed = false;
 	let resetZoom: () => void;
 
 	async function openExportModal() {
 		Promise.all([$stellarisDataPromiseStore, mapDataPromise]).then(([{ colors }, mapData]) => {
 			modalStore.trigger({ type: 'component', component: 'export', meta: { colors, mapData } });
+		});
+	}
+
+	$: allAsyncDataPromise = Promise.all([colorsPromise, $gameStatePromise, mapDataPromise]);
+	let colorsOrNull: null | Awaited<typeof colorsPromise> = null;
+	let dataOrNull: null | Awaited<typeof mapDataPromise> = null;
+	$: {
+		colorsOrNull = null;
+		dataOrNull = null;
+		allAsyncDataPromise.then(([colors, gameState, data]) => {
+			colorsOrNull = colors;
+			dataOrNull = data;
 		});
 	}
 </script>
@@ -68,6 +80,14 @@
 			<HeroiconArrowPathOutline />
 		</button>
 	{/if}
+	<button
+		type="button"
+		class="btn variant-filled absolute top-3 right-3"
+		transition:fade
+		on:click={openExportModal}
+	>
+		Export
+	</button>
 	{#if !$gameStatePromise}
 		<div class="h-full w-full flex items-center">
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">
@@ -75,29 +95,20 @@
 			</div>
 		</div>
 	{:else}
-		{#await Promise.all([colorsPromise, $gameStatePromise, mapDataPromise])}
-			<div class="h-full w-full flex items-center">
+		{#await allAsyncDataPromise}
+			<div class="h-full w-full flex items-center absolute top-0 left-0">
 				<div class="h1 w-full text-center" style="lineHeight: 100%;">
 					This could take a few seconds...
 				</div>
 			</div>
-		{:then [colors, gameState, data]}
-			<button
-				type="button"
-				class="btn variant-filled absolute top-3 right-3"
-				transition:fade
-				on:click={openExportModal}
-			>
-				Export
-			</button>
-			<Map
-				{colors}
-				{data}
-				onZoom={() => {
-					zoomed = true;
-				}}
-				bind:resetZoom
-			/>
 		{/await}
+		<Map
+			colors={colorsOrNull}
+			data={dataOrNull}
+			onZoom={() => {
+				zoomed = true;
+			}}
+			bind:resetZoom
+		/>
 	{/if}
 </div>
