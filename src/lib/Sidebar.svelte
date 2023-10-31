@@ -152,7 +152,7 @@
 	>
 		<div class="flex justify-between">
 			<h2 class="label">Save Game</h2>
-			<button type="button" class="anchor text-sm !text-surface-300" on:click={refreshSaves}>
+			<button type="button" class="text-sm text-surface-300" on:click={refreshSaves}>
 				Refresh Save List
 			</button>
 		</div>
@@ -193,10 +193,10 @@
 
 	<div class="flex items-baseline p-4 pb-1" style="transition-duration: 50ms;">
 		<h2 class="h3 flex-1">Map Settings</h2>
-		<button type="button" class="anchor mx-2" on:click={saveSettings}>Save</button>
+		<button type="button" class="text-primary-500 mx-2" on:click={saveSettings}>Save</button>
 		<button
 			type="button"
-			class="anchor"
+			class="text-primary-500"
 			use:popup={{
 				event: 'focus-click',
 				target: 'popupCombobox',
@@ -265,7 +265,8 @@
 	</div>
 
 	<div class="px-4 pb-2 flex align-middle text-sm">
-		<ReprocessMapBadge /><span class="ms-1"> = requires reprocessing </span>
+		<ReprocessMapBadge />
+		<span class="ms-1">= requires reprocessing</span>
 	</div>
 	<div class="flex-shrink flex-grow overflow-y-auto">
 		<Accordion>

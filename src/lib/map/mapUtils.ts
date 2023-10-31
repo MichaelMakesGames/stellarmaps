@@ -1,5 +1,5 @@
 import Color from 'color';
-import type { MapSettings } from '../mapSettings';
+import type { ColorSetting, ColorSettingAdjustment, MapSettings } from '../mapSettings';
 import { getLuminance, getLuminanceContrast } from '../utils';
 import type { MapData } from './data/processMapData';
 
@@ -7,45 +7,82 @@ export function getDisplayedBorders(data: MapData, settings: MapSettings) {
 	return data.borders.filter((border) => border.isKnown || !settings.terraIncognita);
 }
 export interface ColorConfig {
-	value: string;
-	opacity?: number;
-	minimumContrast?: number;
+	value: ColorSetting;
 	background?: ColorConfig;
 }
 
 export function resolveColor(
 	mapSettings: MapSettings,
 	colors: Record<string, string>,
-	countryColors: { primaryColor: string; secondaryColor: string },
+	countryColors: undefined | null | { primaryColor: string; secondaryColor: string },
 	color: ColorConfig,
 ): string {
-	let value = color.value;
-	if (value === 'border') value = mapSettings.borderColor;
-	if (value === 'primary') value = countryColors.primaryColor;
-	if (value === 'secondary') value = countryColors.secondaryColor;
-	value = colors[value] ?? colors['black'];
+	let value = color.value.color;
 
-	// exit early if we can, to avoid potential infinite loop
-	if (color.opacity == null && color.minimumContrast == null) return value;
-
-	const backgroundColor = color.background
-		? resolveColor(mapSettings, colors, countryColors, color.background)
-		: resolveColor(mapSettings, colors, countryColors, { value: mapSettings.backgroundColor });
-
-	if (color.opacity != null) {
-		value = Color(value)
-			.mix(Color(backgroundColor), 1 - color.opacity)
-			.rgb()
-			.toString();
+	if (value === 'border') {
+		value = resolveColor(mapSettings, colors, countryColors, { value: mapSettings.borderColor });
+	} else {
+		if (value === 'primary') value = countryColors?.primaryColor ?? 'black';
+		if (value === 'secondary') value = countryColors?.secondaryColor ?? 'black';
+		value = colors[value] ?? colors['black'];
 	}
 
-	if (color.minimumContrast != null) {
-		if (getLuminanceContrast(value, backgroundColor) < color.minimumContrast) {
-			return colors[getLuminance(backgroundColor) > 0.5 ? 'fallback_dark' : 'fallback_light'];
-		} else {
-			return value;
+	// exit early if we can, to avoid potential infinite loop
+	if (color.value.colorAdjustments.length === 0) return value;
+
+	for (const adjustment of sortColorAdjustments(color.value.colorAdjustments)) {
+		if (adjustment.type === 'Darken') {
+			let lab = Color(value).lab();
+			lab = lab.l(Math.max(0, lab.l() - adjustment.value * 100));
+			value = lab.rgb().toString();
+		}
+		if (adjustment.type === 'Lighten') {
+			let lab = Color(value).lab();
+			lab = lab.l(Math.min(100, lab.l() + adjustment.value * 100));
+			value = lab.rgb().toString();
+		}
+		if (adjustment.type === 'Max Lightness') {
+			let lab = Color(value).lab();
+			lab = lab.l(Math.min(lab.l(), adjustment.value * 100));
+			value = lab.rgb().toString();
+		}
+		if (adjustment.type === 'Min Lightness') {
+			let lab = Color(value).lab();
+			lab = lab.l(Math.max(lab.l(), adjustment.value * 100));
+			value = lab.rgb().toString();
+		}
+		if (adjustment.type === 'Min Contrast') {
+			const backgroundColor = color.background
+				? resolveColor(mapSettings, colors, countryColors, color.background)
+				: resolveColor(mapSettings, colors, countryColors, { value: mapSettings.backgroundColor });
+			if (getLuminanceContrast(value, backgroundColor) < adjustment.value) {
+				value = colors[getLuminance(backgroundColor) > 0.5 ? 'fallback_dark' : 'fallback_light'];
+			}
+		}
+		if (adjustment.type === 'Opacity') {
+			const backgroundColor = color.background
+				? resolveColor(mapSettings, colors, countryColors, color.background)
+				: resolveColor(mapSettings, colors, countryColors, { value: mapSettings.backgroundColor });
+			value = Color(value)
+				.mix(Color(backgroundColor), 1 - adjustment.value)
+				.rgb()
+				.toString();
 		}
 	}
 
 	return value;
+}
+
+function sortColorAdjustments(adjustments: ColorSettingAdjustment[]) {
+	const order: ColorSettingAdjustment['type'][] = [
+		'Darken',
+		'Lighten',
+		'Max Lightness',
+		'Min Lightness',
+		'Opacity',
+		'Min Contrast',
+	];
+	return adjustments.slice().sort((a, b) => {
+		return order.indexOf(a.type) - order.indexOf(b.type);
+	});
 }

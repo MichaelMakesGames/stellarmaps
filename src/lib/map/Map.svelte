@@ -11,6 +11,7 @@
 	import SystemIcons from './SystemIcons.svelte';
 	import TerraIncognita from './TerraIncognita.svelte';
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
+	import { resolveColor } from './mapUtils';
 
 	export let id: string = '';
 	export let data: null | MapData;
@@ -49,8 +50,9 @@
 	width={exportMode ? exportWidth : undefined}
 	height={exportMode ? exportHeight : undefined}
 	class={exportMode ? undefined : 'w-full h-full'}
-	style="background: {colors?.[$mapSettings.backgroundColor] ??
-		'#111'}; text-shadow: 0px 0px 3px black;"
+	style="background: {colors
+		? resolveColor($mapSettings, colors, null, { value: $mapSettings.backgroundColor })
+		: '#111'}; text-shadow: 0px 0px 3px black;"
 	bind:this={svg}
 >
 	<defs>

@@ -288,7 +288,9 @@
 			</div>
 		</div>
 		<aside class="inline-block w-[12rem] flex-initial">
-			<p>Preview: <small>(Click to center)</small></p>
+			<p>
+				Preview: <small>(Click to center)</small>
+			</p>
 			<!-- svelte-ignore a11y-click-events-have-key-events a11y-interactive-supports-focus -->
 			<svg
 				id="map-svg"
@@ -297,7 +299,9 @@
 				width="1000"
 				height="1000"
 				class="w-[12rem] h-[12rem]"
-				style="background: {colors[$mapSettings.backgroundColor]};"
+				style="background: {resolveColor($mapSettings, colors, null, {
+					value: $mapSettings.backgroundColor,
+				})};"
 				on:click={onPreviewClick}
 				role="button"
 				style:cursor="pointer"
@@ -314,7 +318,6 @@
 							d={border.innerPath}
 							fill={resolveColor($mapSettings, colors, border, {
 								value: $mapSettings.borderFillColor,
-								opacity: $mapSettings.borderFillOpacity,
 							})}
 						/>
 					{/each}
@@ -362,14 +365,18 @@
 				invertCenterY = defaultExportSettings.invertCenterY;
 				zoom = defaultExportSettings.zoom;
 			}}
-			disabled={processing}>Reset</button
+			disabled={processing}
 		>
+			Reset
+		</button>
 		<button
 			type="button"
 			class="btn variant-ghost-surface"
 			on:click={modalStore.close}
-			disabled={processing}>Cancel</button
+			disabled={processing}
 		>
+			Cancel
+		</button>
 		<button type="submit" class="btn variant-filled-primary" disabled={processing}>
 			{processing ? 'Processing...' : 'Confirm'}
 		</button>

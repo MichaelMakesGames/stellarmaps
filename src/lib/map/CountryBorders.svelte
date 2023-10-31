@@ -18,7 +18,6 @@
 		d={border.innerPath}
 		fill={resolveColor($mapSettings, colors, border, {
 			value: $mapSettings.borderFillColor,
-			opacity: $mapSettings.borderFillOpacity,
 		})}
 	/>
 	{#if $mapSettings.sectorBorders}
@@ -35,10 +34,8 @@
 					: `url(#border-${border.countryId}-inner-clip-path)`}
 				stroke={resolveColor($mapSettings, colors, border, {
 					value: $mapSettings.sectorBorderColor,
-					minimumContrast: $mapSettings.sectorBorderMinContrast,
 					background: {
 						value: $mapSettings.borderFillColor,
-						opacity: $mapSettings.borderFillOpacity,
 					},
 				})}
 				stroke-linecap={sectorBorder.isUnionBorder || !$mapSettings.sectorBorderDashArray

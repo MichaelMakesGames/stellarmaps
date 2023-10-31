@@ -1,19 +1,20 @@
 <script lang="ts">
 	import HeroiconArrowPathRoundedSquareMini from './icons/HeroiconArrowPathRoundedSquareMini.svelte';
-	import { lastProcessedMapSettings, mapSettingConfig, mapSettings } from './mapSettings';
+	import {
+		lastProcessedMapSettings,
+		mapSettingConfig,
+		mapSettings,
+		settingsAreDifferent,
+	} from './mapSettings';
 
-	$: shouldShow = mapSettingConfig
-		.flatMap((group) => group.settings)
-		.some(
-			(setting) =>
-				setting.requiresReprocessing &&
-				$lastProcessedMapSettings[setting.id] !== $mapSettings[setting.id],
-		);
+	$: shouldShow = settingsAreDifferent($lastProcessedMapSettings, $mapSettings, {
+		requiresReprocessingOnly: true,
+	});
 </script>
 
 {#if shouldShow}
 	<button type="submit" class="btn btn-lg variant-filled-primary w-full rounded-none">
 		<span><HeroiconArrowPathRoundedSquareMini /></span>
-		<span> Reprocess Map </span>
+		<span>Reprocess Map</span>
 	</button>
 {/if}

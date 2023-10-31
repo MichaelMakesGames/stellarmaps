@@ -54,10 +54,8 @@
 			d={countryCapitalIconPath}
 			fill={resolveColor($mapSettings, colors, system, {
 				value: $mapSettings.populatedSystemIconColor,
-				minimumContrast: $mapSettings.populatedSystemIconMinContrast,
 				background: {
 					value: $mapSettings.borderFillColor,
-					opacity: $mapSettings.borderFillOpacity,
 				},
 			})}
 		/>
@@ -67,10 +65,8 @@
 			d={sectorCapitalIconPath}
 			fill={resolveColor($mapSettings, colors, system, {
 				value: $mapSettings.populatedSystemIconColor,
-				minimumContrast: $mapSettings.populatedSystemIconMinContrast,
 				background: {
 					value: $mapSettings.borderFillColor,
-					opacity: $mapSettings.borderFillOpacity,
 				},
 			})}
 		/>
@@ -80,10 +76,8 @@
 			d={populatedSystemIconPath}
 			fill={resolveColor($mapSettings, colors, system, {
 				value: $mapSettings.populatedSystemIconColor,
-				minimumContrast: $mapSettings.populatedSystemIconMinContrast,
 				background: {
 					value: $mapSettings.borderFillColor,
-					opacity: $mapSettings.borderFillOpacity,
 				},
 			})}
 		/>

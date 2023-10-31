@@ -2,22 +2,16 @@ import { get, writable, type Readable, readable, derived } from 'svelte/store';
 import { loadFonts } from './tauriCommands';
 import { stellarisDataPromiseStore } from './loadStellarisData';
 import { localStorageStore } from '@skeletonlabs/skeleton';
+import * as R from 'rambda';
 
 export type NumberMapSettings =
-	| 'borderFillOpacity'
 	| 'borderWidth'
 	| 'sectorBorderWidth'
 	| 'hyperlaneWidth'
-	| 'hyperlaneOpacity'
-	| 'unownedHyperlaneOpacity'
 	| 'hyperRelayWidth'
-	| 'hyperRelayOpacity'
-	| 'unownedHyperRelayOpacity'
-	| 'sectorBorderMinContrast'
 	| 'countryCapitalIconSize'
 	| 'sectorCapitalIconSize'
 	| 'populatedSystemIconSize'
-	| 'populatedSystemIconMinContrast'
 	| 'unpopulatedSystemIconSize'
 	| 'unionBorderWidth'
 	| 'unionLeaderSymbolSize'
@@ -30,21 +24,12 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesMinSize';
 
 export type StringMapSettings =
-	| 'backgroundColor'
-	| 'hyperlaneColor'
-	| 'hyperRelayColor'
-	| 'unownedHyperlaneColor'
-	| 'unownedHyperRelayColor'
-	| 'borderFillColor'
-	| 'borderColor'
-	| 'sectorBorderColor'
 	| 'sectorBorderDashArray'
 	| 'labelsAvoidHoles'
 	| 'countryNamesFont'
 	| 'countryCapitalIcon'
 	| 'sectorCapitalIcon'
 	| 'populatedSystemIcon'
-	| 'populatedSystemIconColor'
 	| 'unpopulatedSystemIcon'
 	| 'unionFederations'
 	| 'unionSubjects'
@@ -64,10 +49,49 @@ export type BooleanMapSettings =
 	| 'alignStarsToGrid'
 	| 'hyperlaneMetroStyle';
 
+export interface ColorSetting {
+	color: string;
+	colorAdjustments: ColorSettingAdjustment[];
+}
+
+export interface ColorSettingAdjustment {
+	type?: ColorSettingAdjustmentType;
+	value: number;
+}
+
+export type ColorSettingAdjustmentType =
+	| 'Lighten'
+	| 'Darken'
+	| 'Min Lightness'
+	| 'Max Lightness'
+	| 'Min Contrast'
+	| 'Opacity';
+
+export const COLOR_SETTING_ADJUSTMENT_TYPES: ColorSettingAdjustmentType[] = [
+	'Lighten',
+	'Darken',
+	'Min Lightness',
+	'Max Lightness',
+	'Opacity',
+	'Min Contrast',
+];
+
+export type ColorMapSettings =
+	| 'backgroundColor'
+	| 'borderColor'
+	| 'borderFillColor'
+	| 'hyperlaneColor'
+	| 'hyperRelayColor'
+	| 'populatedSystemIconColor'
+	| 'sectorBorderColor'
+	| 'unownedHyperlaneColor'
+	| 'unownedHyperRelayColor';
+
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
 	Record<StringMapSettings, string> &
-	Record<BooleanMapSettings, boolean>;
+	Record<BooleanMapSettings, boolean> &
+	Record<ColorMapSettings, ColorSetting>;
 
 export interface IdAndName {
 	id: string;
@@ -117,12 +141,20 @@ export interface MapSettingConfigText extends MapSettingConfigBase {
 	type: 'text';
 }
 
+export interface MapSettingConfigColor extends MapSettingConfigBase {
+	id: ColorMapSettings;
+	type: 'color';
+	allowedAdjustments?: ColorSettingAdjustmentType[];
+	allowedDynamicColors?: ('primary' | 'secondary' | 'border')[];
+}
+
 export type MapSettingConfig =
 	| MapSettingConfigText
 	| MapSettingConfigToggle
 	| MapSettingConfigNumber
 	| MapSettingConfigRange
-	| MapSettingConfigSelect;
+	| MapSettingConfigSelect
+	| MapSettingConfigColor;
 
 export interface MapSettingGroup extends IdAndName {
 	settings: MapSettingConfig[];
@@ -133,6 +165,8 @@ const fontOptions = readable<IdAndName[]>([], (set) => {
 });
 
 export const countryOptions = writable<IdAndName[]>([]);
+
+export const emptyOptions = readable<IdAndName[]>([]);
 
 const iconOptions: IdAndName[] = [
 	{ id: 'none', name: 'None' },
@@ -157,17 +191,13 @@ const textIconOptions: IdAndName[] = [
 	{ id: '✴', name: '✴ 8-Pointed Star' },
 ];
 
-const colorOptions: SelectOption[] = [
-	{ id: 'primary', name: 'Primary', group: 'Dynamic' },
-	{ id: 'secondary', name: 'Secondary', group: 'Dynamic' },
-];
-
-const colorOptionsWithBorder: SelectOption[] = [
+export const colorOptions: SelectOption[] = [
+	{ id: 'primary', name: 'Primary', group: 'Dynamic Colors' },
+	{ id: 'secondary', name: 'Secondary', group: 'Dynamic Colors' },
 	{ id: 'border', name: 'Border', group: 'Dynamic Colors' },
-	...colorOptions,
 ];
 
-const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, IdAndName[]>(
+export const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, IdAndName[]>(
 	stellarisDataPromiseStore,
 	(stellarisDataPromise, set) => {
 		stellarisDataPromise.then(({ colors }) =>
@@ -203,24 +233,13 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			{
 				id: 'borderFillColor',
 				name: 'Fill Color',
-				type: 'select',
-				options: colorOptions,
-				dynamicOptions: colorDynamicOptions,
-			},
-			{
-				id: 'borderFillOpacity',
-				name: 'Fill Opacity',
-				type: 'range',
-				min: 0,
-				max: 1,
-				step: 0.05,
+				type: 'color',
 			},
 			{
 				id: 'borderColor',
 				name: 'Border Color',
-				type: 'select',
-				options: colorOptions,
-				dynamicOptions: colorDynamicOptions,
+				type: 'color',
+				allowedDynamicColors: ['primary', 'secondary'],
 			},
 			{
 				id: 'borderWidth',
@@ -392,9 +411,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			{
 				id: 'sectorBorderColor',
 				name: 'Color',
-				type: 'select',
-				options: colorOptionsWithBorder,
-				dynamicOptions: colorDynamicOptions,
+				type: 'color',
 				hideIf: (settings) => !settings.sectorBorders,
 			},
 			{
@@ -403,15 +420,6 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'number',
 				min: 0,
 				step: 0.5,
-				hideIf: (settings) => !settings.sectorBorders,
-			},
-			{
-				id: 'sectorBorderMinContrast',
-				name: 'Minimum Contrast',
-				type: 'range',
-				min: 0,
-				max: 1,
-				step: 0.05,
 				hideIf: (settings) => !settings.sectorBorders,
 			},
 			{
@@ -478,21 +486,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			{
 				id: 'populatedSystemIconColor',
 				name: 'Color',
-				type: 'select',
-				options: colorOptionsWithBorder,
-				dynamicOptions: colorDynamicOptions,
-				hideIf: (settings) =>
-					settings.countryCapitalIcon === 'none' &&
-					settings.sectorCapitalIcon === 'none' &&
-					settings.populatedSystemIcon === 'none',
-			},
-			{
-				id: 'populatedSystemIconMinContrast',
-				name: 'Minimum Contrast',
-				type: 'range',
-				min: 0,
-				max: 1,
-				step: 0.05,
+				type: 'color',
 				hideIf: (settings) =>
 					settings.countryCapitalIcon === 'none' &&
 					settings.sectorCapitalIcon === 'none' &&
@@ -534,34 +528,14 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			{
 				id: 'hyperlaneColor',
 				name: 'Hyperlane Color',
-				type: 'select',
-				options: colorOptions,
-				dynamicOptions: colorDynamicOptions,
-			},
-			{
-				id: 'hyperlaneOpacity',
-				name: 'Hyperlane Opacity',
-				type: 'range',
-				min: 0,
-				max: 1,
-				step: 0.05,
+				type: 'color',
 			},
 			{
 				id: 'unownedHyperlaneColor',
 				name: 'Unowned Hyperlane Color',
-				type: 'select',
-				options: colorOptions,
-				dynamicOptions: colorDynamicOptions,
-				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperlaneColor),
-			},
-			{
-				id: 'unownedHyperlaneOpacity',
-				name: 'Unowned Hyperlane Opacity',
-				type: 'range',
-				min: 0,
-				max: 1,
-				step: 0.05,
-				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperlaneColor),
+				type: 'color',
+				hideIf: (settings) =>
+					!['primary', 'secondary', 'border'].includes(settings.hyperlaneColor.color),
 			},
 			{
 				id: 'hyperRelayWidth',
@@ -573,34 +547,14 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			{
 				id: 'hyperRelayColor',
 				name: 'Hyper Relay Color',
-				type: 'select',
-				options: colorOptions,
-				dynamicOptions: colorDynamicOptions,
-			},
-			{
-				id: 'hyperRelayOpacity',
-				name: 'Hyper Relay Opacity',
-				type: 'range',
-				min: 0,
-				max: 1,
-				step: 0.05,
+				type: 'color',
 			},
 			{
 				id: 'unownedHyperRelayColor',
 				name: 'Unowned Hyper Relay Color',
-				type: 'select',
-				options: colorOptions,
-				dynamicOptions: colorDynamicOptions,
-				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperRelayColor),
-			},
-			{
-				id: 'unownedHyperRelayOpacity',
-				name: 'Unowned Hyper Relay Opacity',
-				type: 'range',
-				min: 0,
-				max: 1,
-				step: 0.05,
-				hideIf: (settings) => !['primary', 'secondary'].includes(settings.hyperRelayColor),
+				type: 'color',
+				hideIf: (settings) =>
+					!['primary', 'secondary', 'border'].includes(settings.hyperRelayColor.color),
 			},
 			{
 				id: 'hyperlaneMetroStyle',
@@ -657,9 +611,9 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			{
 				id: 'backgroundColor',
 				name: 'Background Color',
-				type: 'select',
-				options: [],
-				dynamicOptions: colorDynamicOptions,
+				type: 'color',
+				allowedDynamicColors: [],
+				allowedAdjustments: ['Lighten', 'Darken', 'Min Lightness', 'Max Lightness'],
 			},
 			{
 				id: 'alignStarsToGrid',
@@ -678,22 +632,17 @@ export const mapSettingConfig: MapSettingGroup[] = [
 ];
 
 export const defaultMapSettings: MapSettings = {
-	backgroundColor: 'very_black',
-	borderFillColor: 'secondary',
-	borderFillOpacity: 0.5,
-	borderColor: 'primary',
+	backgroundColor: { color: 'very_black', colorAdjustments: [] },
+	borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'Opacity', value: 0.5 }] },
+	borderColor: { color: 'primary', colorAdjustments: [] },
 	borderWidth: 2,
 	borderSmoothing: true,
 	hyperlaneWidth: 0.5,
-	hyperlaneColor: 'white',
-	hyperlaneOpacity: 0.15,
-	unownedHyperlaneColor: 'white',
-	unownedHyperlaneOpacity: 0.15,
+	hyperlaneColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
+	unownedHyperlaneColor: { color: 'primary', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
 	hyperRelayWidth: 1.5,
-	hyperRelayColor: 'white',
-	hyperRelayOpacity: 0.15,
-	unownedHyperRelayColor: 'white',
-	unownedHyperRelayOpacity: 0.15,
+	hyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
+	unownedHyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
 	countryNames: true,
 	countryNamesMinSize: 5,
 	countryNamesMaxSize: null,
@@ -705,8 +654,7 @@ export const defaultMapSettings: MapSettings = {
 	sectorBorders: true,
 	sectorBorderSmoothing: true,
 	sectorBorderWidth: 0.5,
-	sectorBorderColor: 'border',
-	sectorBorderMinContrast: 0.1,
+	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'Min Contrast', value: 0.1 }] },
 	sectorBorderDashArray: '1 2',
 	countryCapitalIcon: 'diamond',
 	countryCapitalIconSize: 15,
@@ -714,8 +662,10 @@ export const defaultMapSettings: MapSettings = {
 	sectorCapitalIconSize: 10,
 	populatedSystemIcon: 'square',
 	populatedSystemIconSize: 5,
-	populatedSystemIconColor: 'border',
-	populatedSystemIconMinContrast: 0.3,
+	populatedSystemIconColor: {
+		color: 'border',
+		colorAdjustments: [{ type: 'Min Contrast', value: 0.3 }],
+	},
 	unpopulatedSystemIcon: 'circle',
 	unpopulatedSystemIconSize: 1,
 	unionFederations: 'off',
@@ -758,26 +708,34 @@ export const presetMapSettings: SavedMapSettings[] = [
 			hyperlaneMetroStyle: true,
 			hyperRelayWidth: 3,
 			hyperlaneWidth: 1.5,
-			hyperRelayColor: 'secondary',
-			hyperRelayOpacity: 1,
-			borderColor: 'very_black',
-			borderFillColor: 'secondary',
-			borderFillOpacity: 0.25,
-			backgroundColor: 'very_black',
+			hyperRelayColor: {
+				color: 'secondary',
+				colorAdjustments: [{ type: 'Min Lightness', value: 0.75 }],
+			},
+			borderColor: { color: 'very_black', colorAdjustments: [] },
+			borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'Opacity', value: 0.25 }] },
+			backgroundColor: { color: 'very_black', colorAdjustments: [] },
 			borderSmoothing: false,
+			sectorBorderColor: { color: 'border', colorAdjustments: [] },
 			sectorBorderSmoothing: false,
 			countryNames: false,
 			countryEmblems: false,
-			populatedSystemIconColor: 'white',
+			populatedSystemIconColor: { color: 'white', colorAdjustments: [] },
 			sectorBorderWidth: 1,
 			sectorBorderDashArray: '',
-			sectorBorderMinContrast: 0,
 		},
 	},
 ];
 
-export function settingsAreDifferent(a: MapSettings, b: MapSettings) {
+export function settingsAreDifferent(
+	a: MapSettings,
+	b: MapSettings,
+	{ requiresReprocessingOnly = false } = {},
+) {
 	return mapSettingConfig
 		.flatMap((group) => group.settings)
-		.some((setting) => a[setting.id] !== b[setting.id]);
+		.filter((setting) => !requiresReprocessingOnly || setting.requiresReprocessing)
+		.some((setting) => {
+			return !R.equals(a[setting.id], b[setting.id]);
+		});
 }

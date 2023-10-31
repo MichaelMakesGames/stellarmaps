@@ -1,12 +1,25 @@
 <script lang="ts">
-	import { get } from 'svelte/store';
-	import { mapSettings, type MapSettingConfig, type SelectOption } from './mapSettings';
-	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
+	import { get, readable, type Readable } from 'svelte/store';
+	import {
+		mapSettings,
+		type MapSettingConfig,
+		type SelectOption,
+		colorDynamicOptions,
+		emptyOptions,
+		colorOptions,
+	} from './mapSettings';
+	import {
+		Accordion,
+		AccordionItem,
+		popup,
+		RangeSlider,
+		SlideToggle,
+	} from '@skeletonlabs/skeleton';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
 	import type { FormEventHandler } from 'svelte/elements';
 	import { slide } from 'svelte/transition';
-	import { onDestroy } from 'svelte';
 	import { isDefined } from './utils';
+	import ColorSettingControl from './ColorSettingControl.svelte';
 
 	export let config: MapSettingConfig;
 
@@ -15,14 +28,16 @@
 		value = values[config.id];
 	});
 	$: {
-		mapSettings.update((prev) => ({
-			...prev,
-			[config.id]: value,
-		}));
+		if (value !== $mapSettings[config.id]) {
+			mapSettings.update((prev) => ({
+				...prev,
+				[config.id]: value,
+			}));
+		}
 	}
 
 	const handleNumberInput: FormEventHandler<HTMLInputElement> = (e) => {
-		const newValue = parseFloat((e.target as HTMLInputElement).value);
+		const newValue = parseFloat(e.currentTarget.value);
 		if (Number.isFinite(newValue)) {
 			value = newValue;
 		} else if (config.type === 'number' && config.optional) {
@@ -30,17 +45,12 @@
 		}
 	};
 
-	$: hidden = config.hideIf?.($mapSettings);
+	$: hidden = false; // config.hideIf?.($mapSettings);
 
-	let dynamicOptions: SelectOption[] = [];
-	if (config.type === 'select' && config.dynamicOptions) {
-		const unsubscribe = config.dynamicOptions.subscribe((options) => {
-			dynamicOptions = options;
-		});
-		onDestroy(unsubscribe);
-	}
+	const dynamicOptions: Readable<SelectOption[]> =
+		config.type === 'select' && config.dynamicOptions ? config.dynamicOptions : emptyOptions;
 
-	$: options = config.type === 'select' ? [...config.options, ...dynamicOptions] : [];
+	$: options = config.type === 'select' ? [...config.options, ...$dynamicOptions] : [];
 	$: groups = Array.from(new Set(options.map((option) => option.group).filter(isDefined)));
 </script>
 
@@ -93,6 +103,8 @@
 					{value ? 'Enabled' : 'Disabled'}
 				</SlideToggle>
 			</div>
+		{:else if config.type === 'color'}
+			<ColorSettingControl bind:value {config} />
 		{:else}
 			<span>TODO</span>
 		{/if}

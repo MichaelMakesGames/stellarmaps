@@ -1,10 +1,21 @@
 <script lang="ts">
-	import { mapSettings } from '$lib/mapSettings';
+	import { mapSettings, type ColorSetting } from '$lib/mapSettings';
 	import type { MapData } from '$lib/map/data/processMapData';
 	import { resolveColor } from './mapUtils';
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
+
+	function getOpacity(color: ColorSetting) {
+		return color.colorAdjustments.find((a) => a.type === 'Opacity')?.value ?? 1;
+	}
+
+	function filterOpacity(color: ColorSetting) {
+		return {
+			...color,
+			colorAdjustments: color.colorAdjustments.filter((a) => a.type !== 'Opacity'),
+		};
+	}
 </script>
 
 <path
@@ -19,14 +30,14 @@
 		colors,
 		{ primaryColor: 'white', secondaryColor: 'white' },
 		{
-			value: ['primary', 'secondary'].includes($mapSettings.hyperlaneColor)
-				? $mapSettings.unownedHyperlaneColor
-				: $mapSettings.hyperlaneColor,
+			value: ['primary', 'secondary', 'border'].includes($mapSettings.hyperlaneColor.color)
+				? filterOpacity($mapSettings.unownedHyperlaneColor)
+				: filterOpacity($mapSettings.hyperlaneColor),
 		},
 	)}
-	stroke-opacity={['primary', 'secondary'].includes($mapSettings.hyperlaneColor)
-		? $mapSettings.unownedHyperlaneOpacity
-		: $mapSettings.hyperlaneOpacity}
+	stroke-opacity={['primary', 'secondary', 'border'].includes($mapSettings.hyperlaneColor.color)
+		? getOpacity($mapSettings.unownedHyperlaneColor)
+		: getOpacity($mapSettings.hyperlaneColor)}
 	stroke-linecap="round"
 	stroke-linejoin="round"
 	stroke-width={$mapSettings.hyperlaneWidth}
@@ -44,14 +55,14 @@
 		colors,
 		{ primaryColor: 'white', secondaryColor: 'white' },
 		{
-			value: ['primary', 'secondary'].includes($mapSettings.hyperRelayColor)
-				? $mapSettings.unownedHyperRelayColor
-				: $mapSettings.hyperRelayColor,
+			value: ['primary', 'secondary', 'border'].includes($mapSettings.hyperRelayColor.color)
+				? filterOpacity($mapSettings.unownedHyperRelayColor)
+				: filterOpacity($mapSettings.hyperRelayColor),
 		},
 	)}
-	stroke-opacity={['primary', 'secondary'].includes($mapSettings.hyperRelayColor)
-		? $mapSettings.unownedHyperRelayOpacity
-		: $mapSettings.hyperRelayOpacity}
+	stroke-opacity={['primary', 'secondary', 'border'].includes($mapSettings.hyperRelayColor.color)
+		? getOpacity($mapSettings.unownedHyperRelayColor)
+		: getOpacity($mapSettings.hyperRelayColor)}
 	stroke-linecap="round"
 	stroke-linejoin="round"
 	stroke-width={$mapSettings.hyperRelayWidth}
@@ -61,9 +72,9 @@
 	<path
 		d={border.hyperlanesPath}
 		stroke={resolveColor($mapSettings, colors, border, {
-			value: $mapSettings.hyperlaneColor,
+			value: filterOpacity($mapSettings.hyperlaneColor),
 		})}
-		stroke-opacity={$mapSettings.hyperlaneOpacity}
+		stroke-opacity={getOpacity($mapSettings.hyperlaneColor)}
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		stroke-width={$mapSettings.hyperlaneWidth}
@@ -72,9 +83,9 @@
 	<path
 		d={border.relayHyperlanesPath}
 		stroke={resolveColor($mapSettings, colors, border, {
-			value: $mapSettings.hyperRelayColor,
+			value: filterOpacity($mapSettings.hyperRelayColor),
 		})}
-		stroke-opacity={$mapSettings.hyperRelayOpacity}
+		stroke-opacity={getOpacity($mapSettings.hyperRelayColor)}
 		stroke-linecap="round"
 		stroke-linejoin="round"
 		stroke-width={$mapSettings.hyperRelayWidth}
