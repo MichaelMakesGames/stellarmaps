@@ -50,7 +50,10 @@
 	width={exportMode ? exportWidth : undefined}
 	height={exportMode ? exportHeight : undefined}
 	class={exportMode ? undefined : 'w-full h-full'}
-	style="text-shadow: 0px 0px 3px black;"
+	style:text-shadow="0px 0px 3px black"
+	style:background={colors
+		? resolveColor($mapSettings, colors, null, { value: $mapSettings.backgroundColor })
+		: 'rgb(17,17,17)'}
 	bind:this={svg}
 >
 	<defs>
