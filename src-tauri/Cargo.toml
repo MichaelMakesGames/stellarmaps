@@ -1,6 +1,6 @@
 [package]
 name = "stellarmaps"
-version = "0.6.3"
+version = "0.7.0-dev"
 description = "Stellaris map renderer"
 authors = ["Michael Moore"]
 license = ""
@@ -17,7 +17,7 @@ tauri-build = { version = "1.4.0", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.4.0", features = [ "dialog-save", "fs-write-file", "dialog-open", "path-all", "os-all"] }
+tauri = { version = "1.4.0", features = [ "shell-open", "dialog-save", "fs-write-file", "dialog-open", "path-all", "os-all"] }
 zip = "0.6.6"
 regex = "1.9.3"
 anyhow = "1.0.75"

@@ -11,6 +11,7 @@
 	import '../app.postcss';
 	import Sidebar from '../lib/Sidebar.svelte';
 	import ExportModal from '../lib/ExportModal.svelte';
+	import VersionInfo from '../lib/VersionInfo.svelte';
 
 	initializeStores();
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
@@ -20,7 +21,7 @@
 <Modal components={{ export: { ref: ExportModal } }} />
 <AppShell slotPageContent="h-full" regionPage="h-full">
 	<svelte:fragment slot="header">
-		<AppBar>StellarMaps</AppBar>
+		<AppBar>StellarMaps <VersionInfo /></AppBar>
 	</svelte:fragment>
 	<svelte:fragment slot="sidebarLeft">
 		<Sidebar />
