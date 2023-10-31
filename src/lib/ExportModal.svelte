@@ -160,11 +160,39 @@
 		await promise;
 	}
 
+	async function exportSvg() {
+		const svg = document.querySelector('#export-svg')?.outerHTML;
+		const savePath = await dialog.save({
+			defaultPath: await path.join(await path.pictureDir(), 'map.svg'),
+			filters: [{ extensions: ['svg'], name: 'Image' }],
+		});
+		if (savePath && svg) {
+			await fs.writeFile(savePath, svg).then(() => {
+				toastStore.trigger({
+					background: 'variant-filled-success',
+					message: 'Export Successful',
+					timeout: 10000,
+					action: {
+						label: `
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+							</svg>
+						`,
+						response: () => reveal_file(savePath),
+					},
+				});
+			});
+			return;
+		} else {
+			return;
+		}
+	}
+
 	let processing = false;
-	async function onSubmit() {
+	async function onSubmit(exporter: () => Promise<void>) {
 		processing = true;
 		try {
-			await exportPng();
+			await exporter();
 			closeAndSaveSettings();
 		} catch (error) {
 			toastError({
@@ -181,7 +209,7 @@
 	class="modal block overflow-y-auto bg-surface-100-800-token w-[60rem] h-auto p-4 space-y-4 rounded-container-token shadow-xl"
 	role="dialog"
 	aria-modal="true"
-	on:submit={onSubmit}
+	on:submit={() => onSubmit(exportPng)}
 	novalidate
 >
 	<header class="modal-header text-2xl font-bold">Export PNG</header>
@@ -377,8 +405,16 @@
 		>
 			Cancel
 		</button>
+		<button
+			type="button"
+			class="btn variant-filled-tertiary"
+			disabled={processing}
+			on:click={() => onSubmit(exportSvg)}
+		>
+			{processing ? 'Processing...' : 'Export SVG'}
+		</button>
 		<button type="submit" class="btn variant-filled-primary" disabled={processing}>
-			{processing ? 'Processing...' : 'Confirm'}
+			{processing ? 'Processing...' : 'Export PNG'}
 		</button>
 	</footer>
 </form>

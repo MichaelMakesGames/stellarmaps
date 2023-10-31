@@ -2,7 +2,7 @@
 	import { mapSettings } from '../mapSettings';
 	import type { MapData } from './data/processMapData';
 	export let data: MapData;
-	$: terraIncognitaColor = `rgba(${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness})`;
+	$: terraIncognitaColor = `rgb(${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness})`;
 </script>
 
 {#if $mapSettings.terraIncognita}

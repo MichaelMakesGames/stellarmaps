@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { mapSettings } from '../mapSettings';
-	$: terraIncognitaLightStripeColor = `rgba(${Math.min(
+	$: terraIncognitaLightStripeColor = `rgb(${Math.min(
 		255,
 		$mapSettings.terraIncognitaBrightness + 10,
 	)},${Math.min(255, $mapSettings.terraIncognitaBrightness + 10)},${Math.min(
 		255,
 		$mapSettings.terraIncognitaBrightness + 10,
 	)})`;
-	$: terraIncognitaDarkStripeColor = `rgba(${Math.max(
+	$: terraIncognitaDarkStripeColor = `rgb(${Math.max(
 		0,
 		$mapSettings.terraIncognitaBrightness - 10,
 	)},${Math.max(0, $mapSettings.terraIncognitaBrightness - 10)},${Math.max(

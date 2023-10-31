@@ -50,9 +50,7 @@
 	width={exportMode ? exportWidth : undefined}
 	height={exportMode ? exportHeight : undefined}
 	class={exportMode ? undefined : 'w-full h-full'}
-	style="background: {colors
-		? resolveColor($mapSettings, colors, null, { value: $mapSettings.backgroundColor })
-		: '#111'}; text-shadow: 0px 0px 3px black;"
+	style="text-shadow: 0px 0px 3px black;"
 	bind:this={svg}
 >
 	<defs>
@@ -71,6 +69,15 @@
 			{/each}
 		{/if}
 	</defs>
+	<rect
+		x="-1000"
+		y="-1000"
+		width="2000"
+		height="2000"
+		fill={colors
+			? resolveColor($mapSettings, colors, null, { value: $mapSettings.backgroundColor })
+			: 'rgb(17,17,17)'}
+	/>
 	<g bind:this={g}>
 		{#if data && colors}
 			<CountryBorders {data} {colors} />
