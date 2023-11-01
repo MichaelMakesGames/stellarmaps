@@ -1,7 +1,13 @@
 import Color from 'color';
-import type { ColorSetting, ColorSettingAdjustment, MapSettings } from '../mapSettings';
+import type {
+	ColorSetting,
+	ColorSettingAdjustment,
+	MapSettings,
+	StrokeSetting,
+} from '../mapSettings';
 import { getLuminance, getLuminanceContrast } from '../utils';
 import type { MapData } from './data/processMapData';
+import type { SVGAttributes } from 'svelte/elements';
 
 export function getDisplayedBorders(data: MapData, settings: MapSettings) {
 	return data.borders.filter((border) => border.isKnown || !settings.terraIncognita);
@@ -85,4 +91,17 @@ function sortColorAdjustments(adjustments: ColorSettingAdjustment[]) {
 	return adjustments.slice().sort((a, b) => {
 		return order.indexOf(a.type) - order.indexOf(b.type);
 	});
+}
+
+export function getStrokeAttributes(
+	strokeSetting: StrokeSetting,
+	glow: boolean,
+): SVGAttributes<SVGPathElement> {
+	return {
+		'stroke-dasharray': strokeSetting.dashed ? strokeSetting.dashArray : null,
+		filter: glow && strokeSetting.glow ? 'url(#glow)' : null,
+		'stroke-width': strokeSetting.width.toString(),
+		'stroke-linecap': strokeSetting.dashed ? null : 'round',
+		'stroke-linejoin': strokeSetting.dashed ? null : 'round',
+	};
 }

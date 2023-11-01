@@ -20,6 +20,7 @@ import { getSmoothedPosition, smoothGeojson } from './smoothing';
 import buffer from '@turf/buffer';
 import type processHyperRelays from './processHyperRelays';
 import type processTerraIncognita from './processTerraIncognita';
+import difference from '@turf/difference';
 
 export default function processBorders(
 	gameState: GameState,
@@ -217,7 +218,7 @@ export default function processBorders(
 				return unionMemberBorderLines.has(firstLineString);
 			});
 			// extend segments at border, so they reach the border (border can shift from smoothing in next step)
-			if (settings.borderSmoothing) {
+			if (settings.borderStroke.smoothing) {
 				sectorSegments.forEach((segment) => {
 					if (allBorderPoints.has(positionToString(segment[0]))) {
 						segment[0] = getSmoothedPosition(segment[0], outerBorderGeoJSON);
@@ -232,16 +233,26 @@ export default function processBorders(
 			}
 
 			let smoothedOuterBorderGeoJSON = outerBorderGeoJSON;
-			if (settings.borderSmoothing) {
+			if (settings.borderStroke.smoothing) {
 				smoothedOuterBorderGeoJSON = smoothGeojson(outerBorderGeoJSON, 2);
 			}
 			const smoothedInnerBorderGeoJSON = buffer(
 				smoothedOuterBorderGeoJSON,
-				-settings.borderWidth / SCALE,
+				-settings.borderStroke.width / SCALE,
 				{ units: 'degrees' },
 			);
-			const outerPath = multiPolygonToPath(smoothedOuterBorderGeoJSON, settings);
-			const innerPath = multiPolygonToPath(smoothedInnerBorderGeoJSON, settings);
+			const outerPath = multiPolygonToPath(
+				smoothedOuterBorderGeoJSON,
+				settings.borderStroke.smoothing,
+			);
+			const innerPath = multiPolygonToPath(
+				smoothedInnerBorderGeoJSON,
+				settings.borderStroke.smoothing,
+			);
+			const borderOnlyGeoJSON = difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
+			const borderPath = borderOnlyGeoJSON
+				? multiPolygonToPath(borderOnlyGeoJSON, settings.borderStroke.smoothing)
+				: '';
 			const { hyperlanesPath, relayHyperlanesPath } = createHyperlanePaths(
 				gameState,
 				settings,
@@ -256,10 +267,16 @@ export default function processBorders(
 				secondaryColor,
 				outerPath,
 				innerPath,
+				borderPath,
 				hyperlanesPath,
 				relayHyperlanesPath,
 				sectorBorders: sectorSegments.map((segment) => ({
-					path: segmentToPath(segment, settings),
+					path: segmentToPath(
+						segment,
+						unionBorderSegments.includes(segment)
+							? settings.unionBorderStroke.smoothing
+							: settings.sectorBorderStroke.smoothing,
+					),
 					isUnionBorder: unionBorderSegments.includes(segment),
 				})),
 				isKnown: knownCountries.has(countryId),

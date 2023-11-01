@@ -5,15 +5,10 @@ import { localStorageStore } from '@skeletonlabs/skeleton';
 import * as R from 'rambda';
 
 export type NumberMapSettings =
-	| 'borderWidth'
-	| 'sectorBorderWidth'
-	| 'hyperlaneWidth'
-	| 'hyperRelayWidth'
 	| 'countryCapitalIconSize'
 	| 'sectorCapitalIconSize'
 	| 'populatedSystemIconSize'
 	| 'unpopulatedSystemIconSize'
-	| 'unionBorderWidth'
 	| 'unionLeaderSymbolSize'
 	| 'terraIncognitaBrightness';
 
@@ -24,7 +19,6 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesMinSize';
 
 export type StringMapSettings =
-	| 'sectorBorderDashArray'
 	| 'labelsAvoidHoles'
 	| 'countryNamesFont'
 	| 'countryCapitalIcon'
@@ -38,11 +32,8 @@ export type StringMapSettings =
 	| 'terraIncognitaStyle';
 
 export type BooleanMapSettings =
-	| 'borderSmoothing'
 	| 'countryEmblems'
 	| 'countryNames'
-	| 'sectorBorders'
-	| 'sectorBorderSmoothing'
 	| 'unionLeaderUnderline'
 	| 'terraIncognita'
 	| 'circularGalaxyBorders'
@@ -87,30 +78,51 @@ export type ColorMapSettings =
 	| 'unownedHyperlaneColor'
 	| 'unownedHyperRelayColor';
 
+export interface StrokeSetting {
+	enabled: boolean;
+	width: number;
+	smoothing: boolean;
+	dashed: boolean;
+	dashArray: string;
+	glow: boolean;
+}
+
+export type StrokeMapSettings =
+	| 'borderStroke'
+	| 'unionBorderStroke'
+	| 'sectorBorderStroke'
+	| 'hyperlaneStroke'
+	| 'hyperRelayStroke';
+
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
 	Record<StringMapSettings, string> &
 	Record<BooleanMapSettings, boolean> &
-	Record<ColorMapSettings, ColorSetting>;
+	Record<ColorMapSettings, ColorSetting> &
+	Record<StrokeMapSettings, StrokeSetting>;
 
 export interface IdAndName {
 	id: string;
 	name: string;
 }
 
+type RequiresReprocessingFunc<T> = (prev: T, next: T) => boolean;
+
 interface MapSettingConfigBase extends IdAndName {
-	requiresReprocessing?: boolean;
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 	hideIf?: (settings: MapSettings) => boolean;
 }
 
 export interface MapSettingConfigToggle extends MapSettingConfigBase {
 	id: BooleanMapSettings;
 	type: 'toggle';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<boolean>;
 }
 
 export interface MapSettingConfigNumber extends MapSettingConfigBase {
 	id: NumberMapSettings | NumberOptionalMapSettings;
 	type: 'number';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<null | number>;
 	min?: number;
 	max?: number;
 	step: number;
@@ -120,6 +132,7 @@ export interface MapSettingConfigNumber extends MapSettingConfigBase {
 export interface MapSettingConfigRange extends MapSettingConfigBase {
 	id: NumberMapSettings | NumberOptionalMapSettings;
 	type: 'range';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<null | number>;
 	min: number;
 	max: number;
 	step: number;
@@ -132,6 +145,7 @@ export interface SelectOption extends IdAndName {
 export interface MapSettingConfigSelect extends MapSettingConfigBase {
 	id: StringMapSettings;
 	type: 'select';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<string>;
 	options: SelectOption[];
 	dynamicOptions?: Readable<SelectOption[]>;
 }
@@ -139,13 +153,23 @@ export interface MapSettingConfigSelect extends MapSettingConfigBase {
 export interface MapSettingConfigText extends MapSettingConfigBase {
 	id: StringMapSettings;
 	type: 'text';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<string>;
 }
 
 export interface MapSettingConfigColor extends MapSettingConfigBase {
 	id: ColorMapSettings;
 	type: 'color';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<ColorSetting>;
 	allowedAdjustments?: ColorSettingAdjustmentType[];
 	allowedDynamicColors?: ('primary' | 'secondary' | 'border')[];
+}
+
+export interface MapSettingConfigStroke extends MapSettingConfigBase {
+	id: StrokeMapSettings;
+	type: 'stroke';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<StrokeSetting>;
+	noSmoothing?: boolean;
+	noDashed?: boolean;
 }
 
 export type MapSettingConfig =
@@ -154,14 +178,17 @@ export type MapSettingConfig =
 	| MapSettingConfigNumber
 	| MapSettingConfigRange
 	| MapSettingConfigSelect
-	| MapSettingConfigColor;
+	| MapSettingConfigColor
+	| MapSettingConfigStroke;
 
 export interface MapSettingGroup extends IdAndName {
 	settings: MapSettingConfig[];
 }
 
 const fontOptions = readable<IdAndName[]>([], (set) => {
-	loadFonts().then((fonts) => set(fonts.map((f) => ({ id: f, name: f }))));
+	loadFonts().then((fonts) =>
+		set(fonts.filter((f) => f !== 'Orbitron').map((f) => ({ id: f, name: f }))),
+	);
 });
 
 export const countryOptions = writable<IdAndName[]>([]);
@@ -231,29 +258,25 @@ export const mapSettingConfig: MapSettingGroup[] = [
 		name: 'Country Borders',
 		settings: [
 			{
-				id: 'borderFillColor',
-				name: 'Fill Color',
-				type: 'color',
+				id: 'borderStroke',
+				name: 'Country Borders',
+				type: 'stroke',
+				noDashed: true,
+				requiresReprocessing: (prev, next) =>
+					prev.width !== next.width || prev.smoothing !== next.smoothing,
 			},
 			{
 				id: 'borderColor',
 				name: 'Border Color',
 				type: 'color',
 				allowedDynamicColors: ['primary', 'secondary'],
+				hideIf: (settings) => !settings.borderStroke.enabled,
 			},
 			{
-				id: 'borderWidth',
-				name: 'Border Width',
-				requiresReprocessing: true,
-				type: 'number',
-				min: 0,
-				step: 0.5,
-			},
-			{
-				id: 'borderSmoothing',
-				name: 'Border Smoothing',
-				requiresReprocessing: true,
-				type: 'toggle',
+				id: 'borderFillColor',
+				name: 'Fill Color',
+				type: 'color',
+				hideIf: (settings) => !settings.borderStroke.enabled,
 			},
 		],
 	},
@@ -276,14 +299,10 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				options: unionOptions,
 			},
 			{
-				id: 'unionBorderWidth',
-				name: 'Union Internal Border Width',
-				type: 'number',
-				min: 0,
-				step: 0.5,
-				hideIf: (settings) =>
-					settings.unionFederations !== 'joinedBorders' &&
-					settings.unionSubjects !== 'joinedBorders',
+				id: 'unionBorderStroke',
+				name: 'Union Borders',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
 			},
 			{
 				id: 'unionLeaderSymbol',
@@ -404,36 +423,16 @@ export const mapSettingConfig: MapSettingGroup[] = [
 		name: 'Sector Borders',
 		settings: [
 			{
-				id: 'sectorBorders',
+				id: 'sectorBorderStroke',
 				name: 'Sector Borders',
-				type: 'toggle',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
 			},
 			{
 				id: 'sectorBorderColor',
 				name: 'Color',
 				type: 'color',
-				hideIf: (settings) => !settings.sectorBorders,
-			},
-			{
-				id: 'sectorBorderWidth',
-				name: 'Width',
-				type: 'number',
-				min: 0,
-				step: 0.5,
-				hideIf: (settings) => !settings.sectorBorders,
-			},
-			{
-				id: 'sectorBorderDashArray',
-				name: 'Dash Array',
-				type: 'text',
-				hideIf: (settings) => !settings.sectorBorders,
-			},
-			{
-				id: 'sectorBorderSmoothing',
-				name: 'Smoothing',
-				type: 'toggle',
-				requiresReprocessing: true,
-				hideIf: (settings) => !settings.sectorBorders,
+				hideIf: (settings) => !settings.sectorBorderStroke.enabled,
 			},
 		],
 	},
@@ -519,48 +518,54 @@ export const mapSettingConfig: MapSettingGroup[] = [
 		name: 'Hyperlanes',
 		settings: [
 			{
-				id: 'hyperlaneWidth',
-				name: 'Hyperlane Width',
-				type: 'number',
-				min: 0,
-				step: 0.5,
+				id: 'hyperlaneStroke',
+				name: 'Hyperlanes',
+				type: 'stroke',
+				noSmoothing: true,
 			},
 			{
 				id: 'hyperlaneColor',
 				name: 'Hyperlane Color',
 				type: 'color',
+				hideIf: (settings) => !settings.hyperlaneStroke.enabled,
 			},
 			{
 				id: 'unownedHyperlaneColor',
 				name: 'Unowned Hyperlane Color',
 				type: 'color',
+				allowedDynamicColors: [],
 				hideIf: (settings) =>
-					!['primary', 'secondary', 'border'].includes(settings.hyperlaneColor.color),
+					!settings.hyperlaneStroke.enabled ||
+					!isColorDynamic(settings.hyperlaneColor.color, settings),
 			},
 			{
-				id: 'hyperRelayWidth',
-				name: 'Hyper Relay Width',
-				type: 'number',
-				min: 0,
-				step: 0.5,
+				id: 'hyperRelayStroke',
+				name: 'Hyper Relays',
+				type: 'stroke',
+				noSmoothing: true,
 			},
 			{
 				id: 'hyperRelayColor',
 				name: 'Hyper Relay Color',
 				type: 'color',
+				hideIf: (settings) => !settings.hyperRelayStroke.enabled,
 			},
 			{
 				id: 'unownedHyperRelayColor',
 				name: 'Unowned Hyper Relay Color',
 				type: 'color',
+				allowedDynamicColors: [],
 				hideIf: (settings) =>
-					!['primary', 'secondary', 'border'].includes(settings.hyperRelayColor.color),
+					!settings.hyperRelayStroke.enabled ||
+					!isColorDynamic(settings.hyperRelayColor.color, settings),
 			},
 			{
 				id: 'hyperlaneMetroStyle',
 				name: 'Metro-style Hyperlanes',
 				type: 'toggle',
 				requiresReprocessing: true,
+				hideIf: (settings) =>
+					!settings.hyperlaneStroke.enabled && !settings.hyperRelayStroke.enabled,
 			},
 		],
 	},
@@ -635,12 +640,32 @@ export const defaultMapSettings: MapSettings = {
 	backgroundColor: { color: 'very_black', colorAdjustments: [] },
 	borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'Opacity', value: 0.5 }] },
 	borderColor: { color: 'primary', colorAdjustments: [] },
-	borderWidth: 2,
-	borderSmoothing: true,
-	hyperlaneWidth: 0.5,
+	borderStroke: {
+		enabled: true,
+		width: 2,
+		smoothing: true,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
+	hyperlaneStroke: {
+		enabled: true,
+		width: 0.5,
+		smoothing: false,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
 	hyperlaneColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
 	unownedHyperlaneColor: { color: 'primary', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
-	hyperRelayWidth: 1.5,
+	hyperRelayStroke: {
+		enabled: true,
+		width: 0.5,
+		smoothing: false,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
 	hyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
 	unownedHyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
 	countryNames: true,
@@ -651,11 +676,15 @@ export const defaultMapSettings: MapSettings = {
 	countryEmblemsMinSize: null,
 	countryEmblemsMaxSize: null,
 	labelsAvoidHoles: 'owned',
-	sectorBorders: true,
-	sectorBorderSmoothing: true,
-	sectorBorderWidth: 0.5,
+	sectorBorderStroke: {
+		enabled: true,
+		width: 1,
+		smoothing: true,
+		glow: false,
+		dashed: true,
+		dashArray: '3 3',
+	},
 	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'Min Contrast', value: 0.1 }] },
-	sectorBorderDashArray: '1 2',
 	countryCapitalIcon: 'diamond',
 	countryCapitalIconSize: 15,
 	sectorCapitalIcon: 'triangle',
@@ -673,7 +702,14 @@ export const defaultMapSettings: MapSettings = {
 	unionLeaderSymbol: '★',
 	unionLeaderSymbolSize: 0.3,
 	unionLeaderUnderline: true,
-	unionBorderWidth: 1,
+	unionBorderStroke: {
+		enabled: true,
+		width: 2,
+		smoothing: true,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
 	terraIncognita: true,
 	terraIncognitaPerspectiveCountry: 'player',
 	terraIncognitaStyle: 'striped',
@@ -706,8 +742,14 @@ export const presetMapSettings: SavedMapSettings[] = [
 			...defaultMapSettings,
 			alignStarsToGrid: true,
 			hyperlaneMetroStyle: true,
-			hyperRelayWidth: 3,
-			hyperlaneWidth: 1.5,
+			hyperlaneStroke: {
+				...defaultMapSettings.hyperlaneStroke,
+				width: 1.5,
+			},
+			hyperRelayStroke: {
+				...defaultMapSettings.hyperRelayStroke,
+				width: 3,
+			},
 			hyperRelayColor: {
 				color: 'secondary',
 				colorAdjustments: [{ type: 'Min Lightness', value: 0.75 }],
@@ -715,14 +757,20 @@ export const presetMapSettings: SavedMapSettings[] = [
 			borderColor: { color: 'very_black', colorAdjustments: [] },
 			borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'Opacity', value: 0.25 }] },
 			backgroundColor: { color: 'very_black', colorAdjustments: [] },
-			borderSmoothing: false,
+			borderStroke: {
+				...defaultMapSettings.borderStroke,
+				smoothing: false,
+			},
+			sectorBorderStroke: {
+				...defaultMapSettings.sectorBorderStroke,
+				width: 1,
+				smoothing: false,
+				dashed: false,
+			},
 			sectorBorderColor: { color: 'border', colorAdjustments: [] },
-			sectorBorderSmoothing: false,
 			countryNames: false,
 			countryEmblems: false,
 			populatedSystemIconColor: { color: 'white', colorAdjustments: [] },
-			sectorBorderWidth: 1,
-			sectorBorderDashArray: '',
 		},
 	},
 ];
@@ -736,6 +784,35 @@ export function settingsAreDifferent(
 		.flatMap((group) => group.settings)
 		.filter((setting) => !requiresReprocessingOnly || setting.requiresReprocessing)
 		.some((setting) => {
+			if (requiresReprocessingOnly && typeof setting.requiresReprocessing === 'function') {
+				const settingType = setting.type;
+				// switch is required for type inference
+				switch (settingType) {
+					case 'toggle':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					case 'color':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					case 'number':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					case 'range':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					case 'text':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					case 'select':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					case 'stroke':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					default:
+						throw new Error(`Unhandled setting type: ${settingType}`);
+				}
+			}
 			return !R.equals(a[setting.id], b[setting.id]);
 		});
+}
+
+export function isColorDynamic(color: string, settings: MapSettings): boolean {
+	return (
+		['primary', 'secondary'].includes(color) ||
+		(color === 'border' && isColorDynamic(settings.borderColor.color, settings))
+	);
 }

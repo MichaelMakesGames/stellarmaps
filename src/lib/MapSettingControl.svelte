@@ -20,6 +20,7 @@
 	import { slide } from 'svelte/transition';
 	import { isDefined } from './utils';
 	import ColorSettingControl from './ColorSettingControl.svelte';
+	import StrokeSettingControl from './StrokeSettingControl.svelte';
 
 	export let config: MapSettingConfig;
 
@@ -45,25 +46,42 @@
 		}
 	};
 
-	$: hidden = false; // config.hideIf?.($mapSettings);
+	$: hidden = config.hideIf?.($mapSettings);
 
 	const dynamicOptions: Readable<SelectOption[]> =
 		config.type === 'select' && config.dynamicOptions ? config.dynamicOptions : emptyOptions;
 
 	$: options = config.type === 'select' ? [...config.options, ...$dynamicOptions] : [];
 	$: groups = Array.from(new Set(options.map((option) => option.group).filter(isDefined)));
+
+	function handleStrokeToggle(e: Event) {
+		value = { ...value, enabled: (e.currentTarget as HTMLInputElement).checked };
+	}
 </script>
 
 {#if !hidden}
 	<label class="label" for={config.id} transition:slide>
-		<span>
+		<div class="flex items-center">
 			{config.name}
 			{#if config.requiresReprocessing}
-				<span class="relative top-1">
+				<span class="relative top-1 start-1">
 					<ReprocessMapBadge />
 				</span>
 			{/if}
-		</span>
+			<div class="grow" />
+			{#if config.type === 'stroke'}
+				<div class="inline-block relative top-1">
+					<SlideToggle
+						name={config.id}
+						checked={value.enabled}
+						size="sm"
+						active="variant-filled-primary"
+						label="Enabled"
+						on:change={handleStrokeToggle}
+					/>
+				</div>
+			{/if}
+		</div>
 		{#if config.type === 'number'}
 			<input
 				class="input"
@@ -105,6 +123,8 @@
 			</div>
 		{:else if config.type === 'color'}
 			<ColorSettingControl bind:value {config} />
+		{:else if config.type === 'stroke'}
+			<StrokeSettingControl bind:value {config} />
 		{:else}
 			<span>TODO</span>
 		{/if}

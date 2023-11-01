@@ -69,6 +69,13 @@
 					<use href="#border-{border.countryId}-outer" />
 				</clipPath>
 				<TerraIncognitaDefs />
+				<filter id="glow" filterUnits="userSpaceOnUse" x="-50%" y="-50%" width="200%" height="200%">
+					<feGaussianBlur in="SourceGraphic" stdDeviation="2" />
+					<!-- this actually just blurs;
+						for a glow effect, apply this filter, then layer a duplicate non-filtered element on top;
+						other approaches resulted in a pixellated look when zoomed in (at least when rendered with WebKitGTK)
+					-->
+				</filter>
 			{/each}
 		{/if}
 	</defs>
@@ -84,6 +91,7 @@
 	<g bind:this={g}>
 		{#if data && colors}
 			<CountryBorders {data} {colors} />
+			<Hyperlanes {data} {colors} />
 			<Hyperlanes {data} {colors} />
 			<TerraIncognita {data} />
 			<SystemIcons {data} {colors} />

@@ -86,7 +86,7 @@ export function multiPolygonToPath(
 	geoJSON:
 		| helpers.FeatureCollection<helpers.MultiPolygon | helpers.Polygon, helpers.Properties>
 		| helpers.Feature<helpers.MultiPolygon | helpers.Polygon, helpers.Properties>,
-	settings: MapSettings,
+	smooth: boolean,
 ) {
 	const features = geoJSON.type === 'FeatureCollection' ? geoJSON.features : [geoJSON];
 	const coordinates = features.flatMap((feature) =>
@@ -99,9 +99,7 @@ export function multiPolygonToPath(
 		.map((points) => points.map<[number, number]>(pointFromGeoJSON))
 		.map((points) => {
 			const pathContext = pathRound(3);
-			const curve = settings.borderSmoothing
-				? curveBasisClosed(pathContext)
-				: curveLinearClosed(pathContext);
+			const curve = smooth ? curveBasisClosed(pathContext) : curveLinearClosed(pathContext);
 			curve.lineStart();
 			for (const point of points.map(inverseX)) {
 				curve.point(...point);
@@ -112,10 +110,10 @@ export function multiPolygonToPath(
 		.join(' ');
 }
 
-export function segmentToPath(segment: helpers.Position[], settings: MapSettings): string {
+export function segmentToPath(segment: helpers.Position[], smooth: boolean): string {
 	const points = segment.map(pointFromGeoJSON);
 	const pathContext = pathRound(3);
-	const curve = settings.sectorBorderSmoothing ? curveBasis(pathContext) : curveLinear(pathContext);
+	const curve = smooth ? curveBasis(pathContext) : curveLinear(pathContext);
 	curve.lineStart();
 	for (const point of points.map(inverseX)) {
 		curve.point(...point);

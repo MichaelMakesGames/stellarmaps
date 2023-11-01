@@ -15,12 +15,18 @@
 
 	let options: SelectOption[] = [...colorOptions, ...$colorDynamicOptions];
 	$: groups = Array.from(new Set(options.map((option) => option.group).filter(isDefined)));
+
+	function filterAllowedOption(option: SelectOption) {
+		if (option.group !== 'Dynamic Colors') return true;
+		if (!config.allowedDynamicColors) return true;
+		return (config.allowedDynamicColors as string[]).includes(option.id);
+	}
 </script>
 
 <div class="bg-surface-800 rounded-lg">
-	<div class="">
+	<div class="p-2 pb-0">
 		<label class="flex items-baseline">
-			<!-- <span class="w-24">Color</span> -->
+			<span class="w-24">Color</span>
 			<select
 				class="select"
 				value={value.color}
@@ -28,12 +34,11 @@
 					value = { ...value, color: e.currentTarget.value };
 				}}
 			>
-				{#each options.filter((opt) => opt.group == null) as option (option.id)}
-					<option value={option.id}>{option.name}</option>
-				{/each}
 				{#each groups as group}
 					<optgroup label={group}>
-						{#each options.filter((opt) => opt.group === group) as option (option.id)}
+						{#each options
+							.filter((opt) => opt.group === group)
+							.filter(filterAllowedOption) as option (option.id)}
 							<option value={option.id}>{option.name}</option>
 						{/each}
 					</optgroup>

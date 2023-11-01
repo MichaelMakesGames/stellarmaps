@@ -70,7 +70,7 @@ export default function processLabels(
 										relativePointType: emblemAspectRatio ? 'top' : 'middle',
 										ratio: textAspectRatio,
 										iterations: 8,
-										xBuffer: settings.borderWidth / SCALE,
+										xBuffer: settings.borderStroke.width / SCALE,
 								  })
 								: null;
 							if (

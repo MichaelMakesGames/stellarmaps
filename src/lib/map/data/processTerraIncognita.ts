@@ -41,7 +41,10 @@ export default function processTerraIncognita(
 	const terraIncognitaPath =
 		terraIncognitaGeoJSON == null
 			? ''
-			: multiPolygonToPath(helpers.featureCollection([terraIncognitaGeoJSON]), settings);
+			: multiPolygonToPath(
+					helpers.featureCollection([terraIncognitaGeoJSON]),
+					settings.borderStroke.smoothing,
+			  );
 	return {
 		terraIncognitaPath,
 		knownSystems,
