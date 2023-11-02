@@ -32,13 +32,14 @@ export type StringMapSettings =
 	| 'terraIncognitaStyle';
 
 export type BooleanMapSettings =
+	| 'alignStarsToGrid'
+	| 'circularGalaxyBorders'
 	| 'countryEmblems'
 	| 'countryNames'
-	| 'unionLeaderUnderline'
+	| 'hyperlaneMetroStyle'
 	| 'terraIncognita'
-	| 'circularGalaxyBorders'
-	| 'alignStarsToGrid'
-	| 'hyperlaneMetroStyle';
+	| 'unionLeaderUnderline'
+	| 'unionMode';
 
 export interface ColorSetting {
 	color: string;
@@ -247,9 +248,9 @@ export const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, Sel
 );
 
 const unionOptions: IdAndName[] = [
+	{ id: 'joinedBorders', name: 'Joined Borders' },
+	{ id: 'separateBorders', name: 'Separate Borders' },
 	{ id: 'off', name: 'Off' },
-	{ id: 'separateBorders', name: 'Shared Colors, Separate Borders' },
-	{ id: 'joinedBorders', name: 'Shared Colors, Joined Borders' },
 ];
 
 export const mapSettingConfig: MapSettingGroup[] = [
@@ -282,14 +283,21 @@ export const mapSettingConfig: MapSettingGroup[] = [
 	},
 	{
 		id: 'unions',
-		name: 'Unions Mode',
+		name: 'Union Mode',
 		settings: [
+			{
+				id: 'unionMode',
+				name: 'Union Mode',
+				type: 'toggle',
+				requiresReprocessing: true,
+			},
 			{
 				id: 'unionFederations',
 				name: 'Federations',
 				requiresReprocessing: true,
 				type: 'select',
 				options: unionOptions,
+				hideIf: (settings) => !settings.unionMode,
 			},
 			{
 				id: 'unionSubjects',
@@ -297,21 +305,23 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				requiresReprocessing: true,
 				type: 'select',
 				options: unionOptions,
+				hideIf: (settings) => !settings.unionMode,
 			},
 			{
 				id: 'unionBorderStroke',
 				name: 'Union Borders',
 				type: 'stroke',
 				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+				hideIf: (settings) =>
+					!settings.unionMode ||
+					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
 			},
 			{
 				id: 'unionLeaderSymbol',
 				name: 'Union Leader Symbol',
 				type: 'select',
 				options: textIconOptions,
-				hideIf: (settings) =>
-					(settings.unionFederations === 'off' && settings.unionSubjects === 'off') ||
-					!settings.countryEmblems,
+				hideIf: (settings) => !settings.unionMode || !settings.countryEmblems,
 			},
 			{
 				id: 'unionLeaderSymbolSize',
@@ -321,17 +331,13 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				max: 1,
 				step: 0.05,
 				hideIf: (settings) =>
-					(settings.unionFederations === 'off' && settings.unionSubjects === 'off') ||
-					!settings.countryEmblems ||
-					settings.unionLeaderSymbol === 'none',
+					!settings.unionMode || !settings.countryEmblems || settings.unionLeaderSymbol === 'none',
 			},
 			{
 				id: 'unionLeaderUnderline',
 				name: 'Underline Union Leader Name',
 				type: 'toggle',
-				hideIf: (settings) =>
-					(settings.unionFederations === 'off' && settings.unionSubjects === 'off') ||
-					!settings.countryNames,
+				hideIf: (settings) => !settings.unionMode || !settings.countryNames,
 			},
 		],
 	},
@@ -697,9 +703,10 @@ export const defaultMapSettings: MapSettings = {
 	},
 	unpopulatedSystemIcon: 'circle',
 	unpopulatedSystemIconSize: 1,
-	unionFederations: 'off',
-	unionSubjects: 'off',
-	unionLeaderSymbol: '★',
+	unionMode: false,
+	unionFederations: 'joinedBorders',
+	unionSubjects: 'joinedBorders',
+	unionLeaderSymbol: '✶',
 	unionLeaderSymbolSize: 0.3,
 	unionLeaderUnderline: true,
 	unionBorderStroke: {

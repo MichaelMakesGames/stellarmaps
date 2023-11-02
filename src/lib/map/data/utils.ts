@@ -40,7 +40,9 @@ export function getUnionLeaderId(
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
 	const overlordFederation =
 		overlord?.federation != null ? gameState.federation[overlord?.federation] : null;
-	if (
+	if (!settings.unionMode) {
+		return countryId;
+	} else if (
 		settings.unionFederations === 'joinedBorders' &&
 		settings.unionSubjects === 'joinedBorders' &&
 		overlordFederation
@@ -58,7 +60,9 @@ export function getUnionLeaderId(
 export function isUnionLeader(countryId: number, gameState: GameState, settings: MapSettings) {
 	const country = gameState.country[countryId];
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
-	if (settings.unionFederations !== 'off' && settings.unionSubjects !== 'off') {
+	if (!settings.unionMode) {
+		return false;
+	} else if (settings.unionFederations !== 'off' && settings.unionSubjects !== 'off') {
 		if (federation) {
 			return federation.leader === countryId;
 		} else {
@@ -211,25 +215,7 @@ export function getPolygons(
 }
 
 export function getCountryColors(countryId: number, gameState: GameState, settings: MapSettings) {
-	const country = gameState.country[countryId];
-	const overlordId = country.overlord;
-	const overlord = overlordId != null ? gameState.country[overlordId] : null;
-	const federation = country.federation != null ? gameState.federation[country.federation] : null;
-	const overlordFederation =
-		overlord?.federation != null ? gameState.federation[overlord?.federation] : null;
-	if (
-		settings.unionFederations !== 'off' &&
-		settings.unionSubjects !== 'off' &&
-		overlordFederation
-	) {
-		return gameState.country[overlordFederation.leader].flag?.colors;
-	} else if (settings.unionFederations !== 'off' && federation) {
-		return gameState.country[federation.leader].flag?.colors;
-	} else if (settings.unionSubjects !== 'off' && overlord) {
-		return overlord.flag?.colors;
-	} else {
-		return country.flag?.colors;
-	}
+	return gameState.country[getUnionLeaderId(countryId, gameState, settings)]?.flag?.colors;
 }
 
 export function positionToString(p: helpers.Position): string {
