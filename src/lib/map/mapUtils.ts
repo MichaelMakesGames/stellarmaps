@@ -55,23 +55,23 @@ export function resolveColor({
 
 	for (const adjustment of sortColorAdjustments(colorStack[0].colorAdjustments)) {
 		const color = lab(colorString);
-		if (adjustment.type === 'Darken') {
+		if (adjustment.type === 'DARKEN') {
 			color.l = Math.max(0, color.l - adjustment.value * 100);
 			colorString = color.formatRgb();
 		}
-		if (adjustment.type === 'Lighten') {
+		if (adjustment.type === 'LIGHTEN') {
 			color.l = Math.min(100, color.l + adjustment.value * 100);
 			colorString = color.formatRgb();
 		}
-		if (adjustment.type === 'Max Lightness') {
+		if (adjustment.type === 'MAX_LIGHTNESS') {
 			color.l = Math.min(color.l, adjustment.value * 100);
 			colorString = color.formatRgb();
 		}
-		if (adjustment.type === 'Min Lightness') {
+		if (adjustment.type === 'MIN_LIGHTNESS') {
 			color.l = Math.max(color.l, adjustment.value * 100);
 			colorString = color.formatRgb();
 		}
-		if (adjustment.type === 'Min Contrast' && !isBackgroundColor) {
+		if (adjustment.type === 'MIN_CONTRAST' && !isBackgroundColor) {
 			const bgColor = lab(
 				resolveColor({
 					mapSettings,
@@ -90,7 +90,7 @@ export function resolveColor({
 			}
 			colorString = color.formatRgb();
 		}
-		if (adjustment.type === 'Opacity' && !isBackgroundColor) {
+		if (adjustment.type === 'OPACITY' && !isBackgroundColor) {
 			if (resolveToOpaqueColor) {
 				const bgColor = lab(
 					resolveColor({
@@ -114,12 +114,12 @@ export function resolveColor({
 
 function sortColorAdjustments(adjustments: ColorSettingAdjustment[]) {
 	const order: ColorSettingAdjustment['type'][] = [
-		'Darken',
-		'Lighten',
-		'Max Lightness',
-		'Min Lightness',
-		'Opacity',
-		'Min Contrast',
+		'DARKEN',
+		'LIGHTEN',
+		'MAX_LIGHTNESS',
+		'MIN_LIGHTNESS',
+		'OPACITY',
+		'MIN_CONTRAST',
 	];
 	return adjustments.slice().sort((a, b) => {
 		return order.indexOf(a.type) - order.indexOf(b.type);

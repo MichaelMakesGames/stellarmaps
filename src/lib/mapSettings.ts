@@ -52,20 +52,20 @@ export interface ColorSettingAdjustment {
 }
 
 export type ColorSettingAdjustmentType =
-	| 'Lighten'
-	| 'Darken'
-	| 'Min Lightness'
-	| 'Max Lightness'
-	| 'Min Contrast'
-	| 'Opacity';
+	| 'LIGHTEN'
+	| 'DARKEN'
+	| 'MIN_LIGHTNESS'
+	| 'MAX_LIGHTNESS'
+	| 'MIN_CONTRAST'
+	| 'OPACITY';
 
 export const COLOR_SETTING_ADJUSTMENT_TYPES: ColorSettingAdjustmentType[] = [
-	'Lighten',
-	'Darken',
-	'Min Lightness',
-	'Max Lightness',
-	'Opacity',
-	'Min Contrast',
+	'LIGHTEN',
+	'DARKEN',
+	'MIN_LIGHTNESS',
+	'MAX_LIGHTNESS',
+	'OPACITY',
+	'MIN_CONTRAST',
 ];
 
 export type ColorMapSettings =
@@ -618,7 +618,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Background Color',
 				type: 'color',
 				allowedDynamicColors: [],
-				allowedAdjustments: ['Lighten', 'Darken', 'Min Lightness', 'Max Lightness'],
+				allowedAdjustments: ['LIGHTEN', 'DARKEN', 'MIN_LIGHTNESS', 'MAX_LIGHTNESS'],
 			},
 			{
 				id: 'alignStarsToGrid',
@@ -638,7 +638,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 
 export const defaultMapSettings: MapSettings = {
 	backgroundColor: { color: 'very_black', colorAdjustments: [] },
-	borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'Opacity', value: 0.5 }] },
+	borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'OPACITY', value: 0.5 }] },
 	borderColor: { color: 'primary', colorAdjustments: [] },
 	borderStroke: {
 		enabled: true,
@@ -656,8 +656,8 @@ export const defaultMapSettings: MapSettings = {
 		dashed: false,
 		dashArray: '3 3',
 	},
-	hyperlaneColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
-	unownedHyperlaneColor: { color: 'primary', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
+	hyperlaneColor: { color: 'white', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
+	unownedHyperlaneColor: { color: 'primary', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
 	hyperRelayStroke: {
 		enabled: true,
 		width: 0.5,
@@ -666,8 +666,8 @@ export const defaultMapSettings: MapSettings = {
 		dashed: false,
 		dashArray: '3 3',
 	},
-	hyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
-	unownedHyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'Opacity', value: 0.15 }] },
+	hyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
+	unownedHyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
 	countryNames: true,
 	countryNamesMinSize: 5,
 	countryNamesMaxSize: null,
@@ -684,7 +684,7 @@ export const defaultMapSettings: MapSettings = {
 		dashed: true,
 		dashArray: '3 3',
 	},
-	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'Min Contrast', value: 0.1 }] },
+	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.1 }] },
 	countryCapitalIcon: 'diamond',
 	countryCapitalIconSize: 15,
 	sectorCapitalIcon: 'triangle',
@@ -693,7 +693,7 @@ export const defaultMapSettings: MapSettings = {
 	populatedSystemIconSize: 5,
 	populatedSystemIconColor: {
 		color: 'border',
-		colorAdjustments: [{ type: 'Min Contrast', value: 0.3 }],
+		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.3 }],
 	},
 	unpopulatedSystemIcon: 'circle',
 	unpopulatedSystemIconSize: 1,
@@ -753,10 +753,10 @@ export const presetMapSettings: SavedMapSettings[] = [
 			},
 			hyperRelayColor: {
 				color: 'secondary',
-				colorAdjustments: [{ type: 'Min Lightness', value: 0.75 }],
+				colorAdjustments: [{ type: 'MIN_LIGHTNESS', value: 0.75 }],
 			},
 			borderColor: { color: 'very_black', colorAdjustments: [] },
-			borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'Opacity', value: 0.25 }] },
+			borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'OPACITY', value: 0.25 }] },
 			backgroundColor: { color: 'very_black', colorAdjustments: [] },
 			borderStroke: {
 				...defaultMapSettings.borderStroke,
