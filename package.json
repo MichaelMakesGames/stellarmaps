@@ -1,6 +1,6 @@
 {
 	"name": "stellarmaps",
-	"version": "0.7.0-dev",
+	"version": "0.7.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
