@@ -223,7 +223,7 @@
 							<svelte:fragment slot="trail">
 								<button
 									type="button"
-									class="text-error-600 hover:text-error-400 focus:text-error-400 relative top-1"
+									class="text-error-400 hover:text-error-300 focus:text-error-300 relative top-1"
 									on:click={() => {
 										modalStore.trigger({
 											type: 'confirm',

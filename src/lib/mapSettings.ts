@@ -674,7 +674,7 @@ export const defaultMapSettings: MapSettings = {
 	countryNamesFont: 'Orbitron',
 	countryEmblems: true,
 	countryEmblemsMinSize: null,
-	countryEmblemsMaxSize: null,
+	countryEmblemsMaxSize: 75,
 	labelsAvoidHoles: 'owned',
 	sectorBorderStroke: {
 		enabled: true,
@@ -684,7 +684,7 @@ export const defaultMapSettings: MapSettings = {
 		dashed: true,
 		dashArray: '3 3',
 	},
-	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.1 }] },
+	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }] },
 	countryCapitalIcon: 'diamond',
 	countryCapitalIconSize: 15,
 	sectorCapitalIcon: 'triangle',
@@ -693,7 +693,7 @@ export const defaultMapSettings: MapSettings = {
 	populatedSystemIconSize: 5,
 	populatedSystemIconColor: {
 		color: 'border',
-		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.3 }],
+		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }],
 	},
 	unpopulatedSystemIcon: 'circle',
 	unpopulatedSystemIconSize: 1,
@@ -738,6 +738,57 @@ export const presetMapSettings: SavedMapSettings[] = [
 		settings: defaultMapSettings,
 	},
 	{
+		name: 'Unions',
+		settings: {
+			...defaultMapSettings,
+			unionMode: true,
+		},
+	},
+	{
+		name: 'Circular',
+		settings: {
+			...defaultMapSettings,
+			circularGalaxyBorders: true,
+		},
+	},
+	{
+		name: 'Light Borders',
+		settings: {
+			...defaultMapSettings,
+			borderColor: {
+				color: 'secondary',
+				colorAdjustments: [{ type: 'MIN_LIGHTNESS', value: 0.75 }],
+			},
+			borderFillColor: {
+				color: 'secondary',
+				colorAdjustments: [
+					{
+						type: 'MAX_LIGHTNESS',
+						value: 0.15,
+					},
+					{ type: 'OPACITY', value: 0.5 },
+				],
+			},
+			backgroundColor: {
+				color: 'true_black',
+				colorAdjustments: [],
+			},
+			borderStroke: {
+				...defaultMapSettings.borderStroke,
+				glow: true,
+			},
+			sectorBorderStroke: {
+				...defaultMapSettings.sectorBorderStroke,
+				glow: true,
+			},
+			unionBorderStroke: {
+				...defaultMapSettings.unionBorderStroke,
+				glow: true,
+			},
+			countryNames: false,
+		},
+	},
+	{
 		name: 'Relay Metro Map',
 		settings: {
 			...defaultMapSettings,
@@ -745,18 +796,26 @@ export const presetMapSettings: SavedMapSettings[] = [
 			hyperlaneMetroStyle: true,
 			hyperlaneStroke: {
 				...defaultMapSettings.hyperlaneStroke,
-				width: 1.5,
+				width: 0.5,
+				dashed: true,
+				dashArray: '0.5 1',
 			},
 			hyperRelayStroke: {
 				...defaultMapSettings.hyperRelayStroke,
-				width: 3,
+				width: 4,
 			},
 			hyperRelayColor: {
 				color: 'secondary',
-				colorAdjustments: [{ type: 'MIN_LIGHTNESS', value: 0.75 }],
+				colorAdjustments: [{ type: 'MIN_LIGHTNESS', value: 0.85 }],
 			},
 			borderColor: { color: 'very_black', colorAdjustments: [] },
-			borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'OPACITY', value: 0.25 }] },
+			borderFillColor: {
+				color: 'secondary',
+				colorAdjustments: [
+					{ type: 'MIN_LIGHTNESS', value: 0.15 },
+					{ type: 'OPACITY', value: 0.25 },
+				],
+			},
 			backgroundColor: { color: 'very_black', colorAdjustments: [] },
 			borderStroke: {
 				...defaultMapSettings.borderStroke,
@@ -771,7 +830,19 @@ export const presetMapSettings: SavedMapSettings[] = [
 			sectorBorderColor: { color: 'border', colorAdjustments: [] },
 			countryNames: false,
 			countryEmblems: false,
-			populatedSystemIconColor: { color: 'white', colorAdjustments: [] },
+			populatedSystemIconColor: {
+				color: 'secondary',
+				colorAdjustments: [
+					{ type: 'MIN_LIGHTNESS', value: 0.4 },
+					{ type: 'MAX_LIGHTNESS', value: 0.4 },
+				],
+			},
+			countryCapitalIcon: 'none',
+			sectorCapitalIcon: 'circle',
+			sectorCapitalIconSize: 10,
+			populatedSystemIcon: 'circle',
+			populatedSystemIconSize: 5,
+			unpopulatedSystemIconSize: 0.5,
 		},
 	},
 ];

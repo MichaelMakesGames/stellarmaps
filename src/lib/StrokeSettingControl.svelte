@@ -17,6 +17,7 @@
 				<input
 					class="input"
 					type="number"
+					step="0.5"
 					value={value.width}
 					on:input={(e) => {
 						const parsed = parseFloat(e.currentTarget.value);
