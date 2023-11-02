@@ -13,8 +13,9 @@
 	export let value: ColorSetting;
 	export let config: MapSettingConfigColor;
 
-	let options: SelectOption[] = [...colorOptions, ...$colorDynamicOptions];
+	$: options = [...colorOptions, ...$colorDynamicOptions];
 	$: groups = Array.from(new Set(options.map((option) => option.group).filter(isDefined)));
+	$: selectValue = options.find((option) => option.id === value.color)?.id;
 
 	function filterAllowedOption(option: SelectOption) {
 		if (option.group !== 'Dynamic Colors') return true;
@@ -29,7 +30,7 @@
 			<span class="w-24">Color</span>
 			<select
 				class="select"
-				value={value.color}
+				value={selectValue}
 				on:change={(e) => {
 					value = { ...value, color: e.currentTarget.value };
 				}}

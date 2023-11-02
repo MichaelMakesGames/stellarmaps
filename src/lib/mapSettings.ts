@@ -224,7 +224,7 @@ export const colorOptions: SelectOption[] = [
 	{ id: 'border', name: 'Border', group: 'Dynamic Colors' },
 ];
 
-export const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, IdAndName[]>(
+export const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, SelectOption[]>(
 	stellarisDataPromiseStore,
 	(stellarisDataPromise, set) => {
 		stellarisDataPromise.then(({ colors }) =>
