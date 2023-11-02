@@ -13,8 +13,9 @@ Stylized and customizable Stellaris maps
 - Hyperlanes and hyper relays
 - Unions mode
 - Terra incognita
-- PNG export
+- PNG and SVG export
 - Modded emblem and name support
+- Save and load multiple setting profiles
 
 ## Planned
 
@@ -28,6 +29,8 @@ Stylized and customizable Stellaris maps
 - Does not work with mod packs using Irony's "Compressed" merge
 - Exported SVGs are tested with Inkscape and web browsers. Other viewers/editors may or may not work
 - If viewing an SVG with Inkscape, the default Orbitron font will not work unless installed on your computer. [You can download it here.](https://fonts.google.com/specimen/Orbitron)
+- Glow effect might only be partially applied when exporting a zoomed-in PNG
+- Performance is choppy (but usable) on Linux
 
 # Credits
 
