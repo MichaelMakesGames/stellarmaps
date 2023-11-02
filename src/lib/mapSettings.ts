@@ -256,7 +256,7 @@ const unionOptions: IdAndName[] = [
 export const mapSettingConfig: MapSettingGroup[] = [
 	{
 		id: 'borders',
-		name: 'Country Borders',
+		name: 'Borders',
 		settings: [
 			{
 				id: 'borderStroke',
@@ -268,16 +268,37 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			},
 			{
 				id: 'borderColor',
-				name: 'Border Color',
+				name: 'Country Border Color',
 				type: 'color',
 				allowedDynamicColors: ['primary', 'secondary'],
 				hideIf: (settings) => !settings.borderStroke.enabled,
 			},
 			{
 				id: 'borderFillColor',
-				name: 'Fill Color',
+				name: 'Country Fill Color',
 				type: 'color',
 				hideIf: (settings) => !settings.borderStroke.enabled,
+			},
+			{
+				id: 'sectorBorderStroke',
+				name: 'Sector Borders',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+			},
+			{
+				id: 'sectorBorderColor',
+				name: 'Sector Border Color',
+				type: 'color',
+				hideIf: (settings) => !settings.sectorBorderStroke.enabled,
+			},
+			{
+				id: 'unionBorderStroke',
+				name: 'Union Borders',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+				hideIf: (settings) =>
+					!settings.unionMode ||
+					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
 			},
 		],
 	},
@@ -306,15 +327,6 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'select',
 				options: unionOptions,
 				hideIf: (settings) => !settings.unionMode,
-			},
-			{
-				id: 'unionBorderStroke',
-				name: 'Union Borders',
-				type: 'stroke',
-				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
-				hideIf: (settings) =>
-					!settings.unionMode ||
-					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
 			},
 			{
 				id: 'unionLeaderSymbol',
@@ -421,24 +433,6 @@ export const mapSettingConfig: MapSettingGroup[] = [
 					{ id: 'none', name: 'None' },
 				],
 				hideIf: (settings) => !settings.countryNames && !settings.countryEmblems,
-			},
-		],
-	},
-	{
-		id: 'sectorBorders',
-		name: 'Sector Borders',
-		settings: [
-			{
-				id: 'sectorBorderStroke',
-				name: 'Sector Borders',
-				type: 'stroke',
-				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
-			},
-			{
-				id: 'sectorBorderColor',
-				name: 'Color',
-				type: 'color',
-				hideIf: (settings) => !settings.sectorBorderStroke.enabled,
 			},
 		],
 	},
