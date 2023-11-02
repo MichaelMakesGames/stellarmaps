@@ -12,7 +12,7 @@
 		symbolWye,
 		type SymbolType,
 	} from 'd3-shape';
-	import { resolveColor } from './mapUtils';
+	import { getFillColorAttributes } from './mapUtils';
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
@@ -52,33 +52,33 @@
 		<path
 			transform="translate({system.x},{system.y})"
 			d={countryCapitalIconPath}
-			fill={resolveColor($mapSettings, colors, system, {
-				value: $mapSettings.populatedSystemIconColor,
-				background: {
-					value: $mapSettings.borderFillColor,
-				},
+			{...getFillColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				countryColors: system,
+				colorStack: [$mapSettings.populatedSystemIconColor, $mapSettings.borderFillColor],
 			})}
 		/>
 	{:else if system.isSectorCapital && $mapSettings.sectorCapitalIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
 		<path
 			transform="translate({system.x},{system.y})"
 			d={sectorCapitalIconPath}
-			fill={resolveColor($mapSettings, colors, system, {
-				value: $mapSettings.populatedSystemIconColor,
-				background: {
-					value: $mapSettings.borderFillColor,
-				},
+			{...getFillColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				countryColors: system,
+				colorStack: [$mapSettings.populatedSystemIconColor, $mapSettings.borderFillColor],
 			})}
 		/>
 	{:else if system.isColonized && $mapSettings.populatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
 		<path
 			transform="translate({system.x},{system.y})"
 			d={populatedSystemIconPath}
-			fill={resolveColor($mapSettings, colors, system, {
-				value: $mapSettings.populatedSystemIconColor,
-				background: {
-					value: $mapSettings.borderFillColor,
-				},
+			{...getFillColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				countryColors: system,
+				colorStack: [$mapSettings.populatedSystemIconColor, $mapSettings.borderFillColor],
 			})}
 		/>
 	{:else if $mapSettings.unpopulatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || system.systemIsKnown)}

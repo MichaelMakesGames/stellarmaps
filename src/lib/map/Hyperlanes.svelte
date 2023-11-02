@@ -1,21 +1,11 @@
 <script lang="ts">
-	import { mapSettings, type ColorSetting, isColorDynamic } from '$lib/mapSettings';
 	import type { MapData } from '$lib/map/data/processMapData';
-	import { getStrokeAttributes, resolveColor } from './mapUtils';
+	import { isColorDynamic, mapSettings } from '$lib/mapSettings';
+	import Glow from './Glow.svelte';
+	import { getStrokeAttributes, getStrokeColorAttributes } from './mapUtils';
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
-
-	function getOpacity(color: ColorSetting) {
-		return color.colorAdjustments.find((a) => a.type === 'Opacity')?.value ?? 1;
-	}
-
-	function filterOpacity(color: ColorSetting) {
-		return {
-			...color,
-			colorAdjustments: color.colorAdjustments.filter((a) => a.type !== 'Opacity'),
-		};
-	}
 
 	$: hyperRelaysDisabled = !$mapSettings.hyperRelayStroke.enabled;
 	$: hyperRelayIsDynamic = isColorDynamic($mapSettings.hyperRelayColor.color, $mapSettings);
@@ -48,97 +38,69 @@
 </script>
 
 {#if !hyperlanesDisabled}
-	{#if $mapSettings.hyperlaneStroke.glow}
+	<Glow enabled={$mapSettings.hyperlaneStroke.glow} let:filter>
 		<path
 			d={unownedHyperlanePath}
-			stroke={resolveColor($mapSettings, colors, null, {
-				value: filterOpacity(unownedHyperlaneColor),
+			{...getStrokeColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				colorStack: [unownedHyperlaneColor],
 			})}
-			stroke-opacity={getOpacity(unownedHyperlaneColor)}
-			{...getStrokeAttributes($mapSettings.hyperlaneStroke, true)}
+			{...getStrokeAttributes($mapSettings.hyperlaneStroke)}
+			{filter}
 			fill="none"
 		/>
-	{/if}
-	<path
-		d={unownedHyperlanePath}
-		stroke={resolveColor($mapSettings, colors, null, {
-			value: filterOpacity(unownedHyperlaneColor),
-		})}
-		stroke-opacity={getOpacity(unownedHyperlaneColor)}
-		{...getStrokeAttributes($mapSettings.hyperlaneStroke, false)}
-		fill="none"
-	/>
+	</Glow>
 {/if}
 {#if !hyperRelaysDisabled}
-	{#if $mapSettings.hyperRelayStroke.glow}
+	<Glow enabled={$mapSettings.hyperRelayStroke.glow} let:filter>
 		<path
 			d={unownedHyperRelayPath}
-			stroke={resolveColor($mapSettings, colors, null, {
-				value: filterOpacity(unownedHyperRelayColor),
+			{...getStrokeColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				colorStack: [unownedHyperRelayColor],
 			})}
-			stroke-opacity={getOpacity(unownedHyperRelayColor)}
-			{...getStrokeAttributes($mapSettings.hyperRelayStroke, true)}
+			{...getStrokeAttributes($mapSettings.hyperRelayStroke)}
+			{filter}
 			fill="none"
 		/>
-	{/if}
-	<path
-		d={unownedHyperRelayPath}
-		stroke={resolveColor($mapSettings, colors, null, {
-			value: filterOpacity(unownedHyperRelayColor),
-		})}
-		stroke-opacity={getOpacity(unownedHyperRelayColor)}
-		{...getStrokeAttributes($mapSettings.hyperRelayStroke, false)}
-		fill="none"
-	/>
+	</Glow>
 {/if}
 
 {#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
 	{#if !hyperlanesDisabled && hyperlaneIsDynamic}
-		{#if $mapSettings.hyperlaneStroke.glow}
+		<Glow enabled={$mapSettings.hyperlaneStroke.glow} let:filter>
 			<path
 				d={hyperRelaysDisabled
 					? `${border.hyperlanesPath} ${border.relayHyperlanesPath}`
 					: border.hyperlanesPath}
-				stroke={resolveColor($mapSettings, colors, border, {
-					value: filterOpacity($mapSettings.hyperlaneColor),
+				{...getStrokeColorAttributes({
+					mapSettings: $mapSettings,
+					colors,
+					countryColors: border,
+					colorStack: [$mapSettings.hyperlaneColor, $mapSettings.borderFillColor],
 				})}
-				stroke-opacity={getOpacity($mapSettings.hyperlaneColor)}
-				{...getStrokeAttributes($mapSettings.hyperlaneStroke, true)}
+				{...getStrokeAttributes($mapSettings.hyperlaneStroke)}
+				{filter}
 				fill="none"
 			/>
-		{/if}
-		<path
-			d={hyperRelaysDisabled
-				? `${border.hyperlanesPath} ${border.relayHyperlanesPath}`
-				: border.hyperlanesPath}
-			stroke={resolveColor($mapSettings, colors, border, {
-				value: filterOpacity($mapSettings.hyperlaneColor),
-			})}
-			stroke-opacity={getOpacity($mapSettings.hyperlaneColor)}
-			{...getStrokeAttributes($mapSettings.hyperlaneStroke, false)}
-			fill="none"
-		/>
+		</Glow>
 	{/if}
 	{#if !hyperRelaysDisabled && hyperRelayIsDynamic}
-		{#if $mapSettings.hyperRelayStroke.glow}
+		<Glow enabled={$mapSettings.hyperRelayStroke.glow} let:filter>
 			<path
 				d={border.relayHyperlanesPath}
-				stroke={resolveColor($mapSettings, colors, border, {
-					value: filterOpacity($mapSettings.hyperRelayColor),
+				{...getStrokeColorAttributes({
+					mapSettings: $mapSettings,
+					colors,
+					countryColors: border,
+					colorStack: [$mapSettings.hyperRelayColor, $mapSettings.borderFillColor],
 				})}
-				stroke-opacity={getOpacity($mapSettings.hyperRelayColor)}
-				{...getStrokeAttributes($mapSettings.hyperRelayStroke, true)}
+				{...getStrokeAttributes($mapSettings.hyperRelayStroke)}
+				{filter}
 				fill="none"
 			/>
-		{/if}
-		<path
-			d={border.relayHyperlanesPath}
-			stroke={resolveColor($mapSettings, colors, border, {
-				value: filterOpacity($mapSettings.hyperRelayColor),
-			})}
-			stroke-opacity={getOpacity($mapSettings.hyperRelayColor)}
-			{...getStrokeAttributes($mapSettings.hyperRelayStroke, false)}
-			fill="none"
-		/>
+		</Glow>
 	{/if}
 {/each}

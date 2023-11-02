@@ -25,31 +25,6 @@ export function wait(ms: number): Promise<never> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function getLuminance(color: string): number {
-	const re = /rgba?\(\s*(?<r>\d+)\s*,\s*(?<g>\d+)\s*,\s*(?<b>\d+)\s*,?\s*(?<a>\d+\.?\d*)?\s*\)/;
-	const match = color.match(re);
-	if (match) {
-		return (
-			(0.2126 * parseInt(match.groups?.r ?? '0')) / 255 +
-			(0.7152 * parseInt(match.groups?.g ?? '0')) / 255 +
-			(0.0722 * parseInt(match.groups?.b ?? '0')) / 255
-		);
-	} else {
-		console.warn('Failed to parse color', color);
-		return 0.5;
-	}
-}
-
-export function getLuminanceContrast(color1: string, color2: string): number {
-	const color1Luminance = getLuminance(color1);
-	const color2Luminance = getLuminance(color2);
-	const ratio =
-		color1Luminance > color2Luminance
-			? (color2Luminance + 0.05) / (color1Luminance + 0.05)
-			: (color1Luminance + 0.05) / (color2Luminance + 0.05);
-	return 1 - ratio;
-}
-
 export function parseNumberEntry<T>(entry: [string, T]): [number, T] {
 	return [parseInt(entry[0]), entry[1]];
 }

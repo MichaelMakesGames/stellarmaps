@@ -231,7 +231,7 @@ export const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, IdA
 			set(
 				Object.keys(colors).map((c) => ({
 					id: c,
-					group: ['very_black', 'fallback_light', 'fallback_dark'].includes(c)
+					group: ['very_black', 'true_black'].includes(c)
 						? 'StellarMaps Colors'
 						: 'Stellaris Colors',
 					name: c

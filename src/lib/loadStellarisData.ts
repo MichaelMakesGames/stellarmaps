@@ -2,7 +2,8 @@ import { invoke } from '@tauri-apps/api';
 import { jsonify, tokenize } from './parseSave';
 import { get, writable } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
-import Color from 'color';
+import { rgb } from 'd3-color';
+import { hsv } from 'd3-hsv';
 
 const stellarisPathStore = localStorageStore('stellarisPath', '');
 export const stellarisDataPromiseStore = writable(
@@ -61,15 +62,11 @@ async function loadColors(path: string): Promise<Record<string, string>> {
 			} else if (val.map.hsv) {
 				vals = val.map.hsv;
 			}
-			colors[key] = Color[val.map.rgb ? 'rgb' : 'hsv'](
-				...(val.map.rgb ? vals : [vals[0] * 360, vals[1] * 100, vals[2] * 100]),
-			)
-				.rgb()
-				.string();
+			const color = val.map.rgb ? rgb(...vals) : hsv(vals[0] * 360, vals[1], vals[2]);
+			colors[key] = color.formatRgb();
 		});
 	}
 	colors.very_black = 'rgb(17, 17, 17)';
-	colors.fallback_dark = 'rgba(0, 0, 0, 0.75)';
-	colors.fallback_light = 'rgba(255, 255, 255, 0.75)';
+	colors.true_black = 'rgb(0, 0, 0)';
 	return colors;
 }

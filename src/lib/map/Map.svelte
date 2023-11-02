@@ -4,13 +4,13 @@
 	import { writable } from 'svelte/store';
 	import { ORBITRON_BASE64 } from '../ORBITRON_BASE64';
 	import { mapSettings } from '../mapSettings';
-	import type { MapData } from './data/processMapData';
 	import CountryBorders from './CountryBorders.svelte';
 	import CountryLabels from './CountryLabels.svelte';
 	import Hyperlanes from './Hyperlanes.svelte';
 	import SystemIcons from './SystemIcons.svelte';
 	import TerraIncognita from './TerraIncognita.svelte';
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
+	import type { MapData } from './data/processMapData';
 	import { resolveColor } from './mapUtils';
 
 	export let id: string = '';
@@ -52,7 +52,11 @@
 	class={exportMode ? undefined : 'w-full h-full'}
 	style:text-shadow="0px 0px 3px black"
 	style:background={colors
-		? resolveColor($mapSettings, colors, null, { value: $mapSettings.backgroundColor })
+		? resolveColor({
+				mapSettings: $mapSettings,
+				colors,
+				colorStack: [$mapSettings.backgroundColor],
+		  })
 		: 'rgb(17,17,17)'}
 	bind:this={svg}
 >
@@ -85,7 +89,11 @@
 		width="2000"
 		height="2000"
 		fill={colors
-			? resolveColor($mapSettings, colors, null, { value: $mapSettings.backgroundColor })
+			? resolveColor({
+					mapSettings: $mapSettings,
+					colors,
+					colorStack: [$mapSettings.backgroundColor],
+			  })
 			: 'rgb(17,17,17)'}
 	/>
 	<g bind:this={g}>

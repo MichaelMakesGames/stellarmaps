@@ -11,7 +11,7 @@
 	import { dialog, fs, path } from '@tauri-apps/api';
 	import { toastError, wait } from './utils';
 	import { reveal_file } from './tauriCommands';
-	import { resolveColor } from './map/mapUtils';
+	import { getFillColorAttributes, resolveColor } from './map/mapUtils';
 	import type { MapData } from './map/data/processMapData';
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -327,8 +327,10 @@
 				width="1000"
 				height="1000"
 				class="w-[12rem] h-[12rem]"
-				style="background: {resolveColor($mapSettings, colors, null, {
-					value: $mapSettings.backgroundColor,
+				style="background: {resolveColor({
+					mapSettings: $mapSettings,
+					colors,
+					colorStack: [$mapSettings.backgroundColor],
 				})};"
 				on:click={onPreviewClick}
 				role="button"
@@ -337,15 +339,21 @@
 				{#if mapData}
 					{#each mapData.borders as border}
 						<path
-							id="border-{border.countryId}-outer"
-							d={border.outerPath}
-							fill={resolveColor($mapSettings, colors, border, { value: $mapSettings.borderColor })}
+							d={border.borderPath}
+							{...getFillColorAttributes({
+								mapSettings: $mapSettings,
+								colors,
+								countryColors: border,
+								colorStack: [$mapSettings.borderColor, $mapSettings.borderFillColor],
+							})}
 						/>
 						<path
-							id="border-{border.countryId}-inner"
 							d={border.innerPath}
-							fill={resolveColor($mapSettings, colors, border, {
-								value: $mapSettings.borderFillColor,
+							{...getFillColorAttributes({
+								mapSettings: $mapSettings,
+								colors,
+								countryColors: border,
+								colorStack: [$mapSettings.borderFillColor],
 							})}
 						/>
 					{/each}
