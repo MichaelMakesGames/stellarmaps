@@ -12,6 +12,8 @@
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
 	import type { MapData } from './data/processMapData';
 	import { resolveColor } from './mapUtils';
+	import Wormholes from './Wormholes.svelte';
+	import Icons from './Icons.svelte';
 
 	export let id: string = '';
 	export let data: null | MapData;
@@ -50,7 +52,6 @@
 	width={exportMode ? exportWidth : undefined}
 	height={exportMode ? exportHeight : undefined}
 	class={exportMode ? undefined : 'w-full h-full'}
-	style:text-shadow="0px 0px 3px black"
 	style:background={colors
 		? resolveColor({
 				mapSettings: $mapSettings,
@@ -82,6 +83,7 @@
 				</filter>
 			{/each}
 		{/if}
+		<Icons />
 	</defs>
 	<rect
 		x="-1000"
@@ -102,6 +104,7 @@
 			<Hyperlanes {data} {colors} />
 			<Hyperlanes {data} {colors} />
 			<TerraIncognita {data} />
+			<Wormholes {data} {colors} />
 			<SystemIcons {data} {colors} />
 			<CountryLabels {data} {exportMode} debug={$debug} />
 			{#if $debug}

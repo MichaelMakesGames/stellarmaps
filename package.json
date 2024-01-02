@@ -1,6 +1,6 @@
 {
 	"name": "stellarmaps",
-	"version": "0.7.0-dev",
+	"version": "0.8.0-dev",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
@@ -26,7 +26,7 @@
 		"@types/d3-interpolate": "^3.0.3",
 		"@types/d3-path": "^3.0.0",
 		"@types/d3-selection": "^3.0.6",
-		"@types/d3-shape": "^3.1.1",
+		"@types/d3-shape": "^3.1.6",
 		"@types/d3-zoom": "^3.0.4",
 		"@types/geojson": "^7946.0.10",
 		"@types/node": "^20.5.0",

@@ -56,7 +56,7 @@
 	>
 		<AccordionItem>
 			<svelte:fragment slot="summary">
-				Adjustments <div class="inline-block relative">
+				Color Adjustments <div class="inline-block relative">
 					<span class="badge-icon variant-filled-secondary absolute top-[-14px] left-0">
 						{value.colorAdjustments?.length ?? 0}
 					</span>

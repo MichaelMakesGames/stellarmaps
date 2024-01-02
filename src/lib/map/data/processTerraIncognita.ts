@@ -3,6 +3,7 @@ import type { MapSettings } from '$lib/mapSettings';
 import * as helpers from '@turf/helpers';
 import { getGameStateValueAsArray, joinSystemPolygons, multiPolygonToPath } from './utils';
 import type { Delaunay } from 'd3-delaunay';
+import { parseNumberEntry } from '$lib/utils';
 
 export default function processTerraIncognita(
 	gameState: GameState,
@@ -25,6 +26,19 @@ export default function processTerraIncognita(
 	const unknownSystems = Object.keys(gameState.galactic_object)
 		.map((key) => parseInt(key))
 		.filter((id) => !knownSystems.has(id));
+	const wormholeIds = new Set(
+		Object.entries(gameState.bypasses)
+			.map(parseNumberEntry)
+			.filter(([id, bypass]) => bypass.type === 'wormhole')
+			.map(([id]) => id),
+	);
+	const knownWormholes = terraIncognitaPerspectiveCountry
+		? new Set(
+				getGameStateValueAsArray(terraIncognitaPerspectiveCountry?.usable_bypasses).filter((id) =>
+					wormholeIds.has(id),
+				),
+		  )
+		: wormholeIds;
 	const knownCountries = new Set(
 		terraIncognitaPerspectiveCountryId == null
 			? Object.keys(gameState.country).map((id) => parseInt(id))
@@ -49,5 +63,6 @@ export default function processTerraIncognita(
 		terraIncognitaPath,
 		knownSystems,
 		knownCountries,
+		knownWormholes,
 	};
 }

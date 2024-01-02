@@ -1,87 +1,117 @@
 <script lang="ts">
 	import type { MapData } from '$lib/map/data/processMapData';
-	import { mapSettings } from '$lib/mapSettings';
 	import {
-		symbol,
-		symbolCircle,
-		symbolCross,
-		symbolDiamond,
-		symbolSquare,
-		symbolStar,
-		symbolTriangle,
-		symbolWye,
-		type SymbolType,
-	} from 'd3-shape';
+		mapSettings,
+		type IconMapSettings,
+		mapSettingConfig,
+		type MapSettings,
+		type MapSettingConfigIcon,
+	} from '$lib/mapSettings';
 	import { getFillColorAttributes } from './mapUtils';
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
 
-	const symbols: Record<string, SymbolType> = {
-		circle: symbolCircle,
-		cross: symbolCross,
-		diamond: symbolDiamond,
-		square: symbolSquare,
-		star: symbolStar,
-		triangle: symbolTriangle,
-		wye: symbolWye,
+	type SystemData = MapData['systems'][number];
+	interface IconSettingMetadata {
+		systemProperty?: keyof SystemData;
+		mustKnowOwner?: boolean;
+	}
+	const metadata: Record<IconMapSettings, IconSettingMetadata> = {
+		countryCapitalIcon: { systemProperty: 'isCountryCapital', mustKnowOwner: true },
+		sectorCapitalIcon: { systemProperty: 'isSectorCapital', mustKnowOwner: true },
+		populatedSystemIcon: { systemProperty: 'isColonized', mustKnowOwner: true },
+		unpopulatedSystemIcon: {},
+		wormholeIcon: { systemProperty: 'hasWormhole', mustKnowOwner: false },
 	};
-	$: countryCapitalIconPath =
-		$mapSettings.countryCapitalIcon !== 'none'
-			? symbol(symbols[$mapSettings.countryCapitalIcon], $mapSettings.countryCapitalIconSize)()
-			: '';
-	$: sectorCapitalIconPath =
-		$mapSettings.sectorCapitalIcon !== 'none'
-			? symbol(symbols[$mapSettings.sectorCapitalIcon], $mapSettings.sectorCapitalIconSize)()
-			: '';
-	$: populatedSystemIconPath =
-		$mapSettings.populatedSystemIcon !== 'none'
-			? symbol(symbols[$mapSettings.populatedSystemIcon], $mapSettings.populatedSystemIconSize)()
-			: '';
-	$: unpopulatedSystemIconPath =
-		$mapSettings.unpopulatedSystemIcon !== 'none'
-			? symbol(
-					symbols[$mapSettings.unpopulatedSystemIcon],
-					$mapSettings.unpopulatedSystemIconSize,
-			  )()
-			: '';
+
+	function getSystemIcons(system: MapData['systems'][number], mapSettings: MapSettings) {
+		const iconSettingConfigs = mapSettingConfig
+			.flatMap((category) => category.settings)
+			.filter((config): config is MapSettingConfigIcon => config.type === 'icon')
+			.filter((config) => mapSettings[config.id].enabled)
+			.filter((config) => {
+				const systemProperty = metadata[config.id].systemProperty;
+				if (systemProperty != null && !system[systemProperty]) return false;
+				if (metadata[config.id].mustKnowOwner && mapSettings.terraIncognita && !system.ownerIsKnown)
+					return false;
+				return true;
+			})
+			.sort((a, b) => mapSettings[b.id].priority - mapSettings[a.id].priority);
+		const centerConfig = iconSettingConfigs.find(
+			(config) => mapSettings[config.id].position === 'center',
+		);
+		const center =
+			centerConfig == null ? null : { ...mapSettings[centerConfig.id], x: system.x, y: system.y };
+		const startingOffset = (center?.size ?? 0) / 2;
+		let offset = startingOffset;
+		const left = iconSettingConfigs
+			.filter((config) => mapSettings[config.id].position === 'left')
+			.map((config) => {
+				const icon = {
+					...mapSettings[config.id],
+					x: system.x - offset - mapSettings[config.id].size / 2,
+					y: system.y,
+				};
+				offset += mapSettings[config.id].size;
+				return icon;
+			});
+		offset = startingOffset;
+		const right = iconSettingConfigs
+			.filter((config) => mapSettings[config.id].position === 'right')
+			.map((config) => {
+				const icon = {
+					...mapSettings[config.id],
+					x: system.x + offset + mapSettings[config.id].size / 2,
+					y: system.y,
+				};
+				offset += mapSettings[config.id].size;
+				return icon;
+			});
+		offset = startingOffset;
+		const top = iconSettingConfigs
+			.filter((config) => mapSettings[config.id].position === 'top')
+			.map((config) => {
+				const icon = {
+					...mapSettings[config.id],
+					y: system.y - offset - mapSettings[config.id].size / 2,
+					x: system.x,
+				};
+				offset += mapSettings[config.id].size;
+				return icon;
+			});
+		offset = startingOffset;
+		const bottom = iconSettingConfigs
+			.filter((config) => mapSettings[config.id].position === 'bottom')
+			.map((config) => {
+				const icon = {
+					...mapSettings[config.id],
+					y: system.y + offset + mapSettings[config.id].size / 2,
+					x: system.x,
+				};
+				offset += mapSettings[config.id].size;
+				return icon;
+			});
+		return { center, left, right, top, bottom, system };
+	}
 </script>
 
-{#each data.systems as system}
-	{#if system.isCountryCapital && $mapSettings.countryCapitalIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
-		<path
-			transform="translate({system.x},{system.y})"
-			d={countryCapitalIconPath}
+{#each data.systems
+	.filter((s) => s.systemIsKnown || !$mapSettings.terraIncognita)
+	.map((s) => getSystemIcons(s, $mapSettings)) as systemIcons}
+	{#each [...(systemIcons.center ? [systemIcons.center] : []), ...systemIcons.left, ...systemIcons.right, ...systemIcons.top, ...systemIcons.bottom] as systemIcon}
+		<use
+			href="#{systemIcon.icon}"
+			x={systemIcon.x - systemIcon.size / 2}
+			y={systemIcon.y - systemIcon.size / 2}
+			width={systemIcon.size}
+			height={systemIcon.size}
 			{...getFillColorAttributes({
 				mapSettings: $mapSettings,
 				colors,
-				countryColors: system,
-				colorStack: [$mapSettings.populatedSystemIconColor, $mapSettings.borderFillColor],
+				countryColors: systemIcons.system,
+				colorStack: [systemIcon.color, $mapSettings.borderFillColor],
 			})}
 		/>
-	{:else if system.isSectorCapital && $mapSettings.sectorCapitalIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
-		<path
-			transform="translate({system.x},{system.y})"
-			d={sectorCapitalIconPath}
-			{...getFillColorAttributes({
-				mapSettings: $mapSettings,
-				colors,
-				countryColors: system,
-				colorStack: [$mapSettings.populatedSystemIconColor, $mapSettings.borderFillColor],
-			})}
-		/>
-	{:else if system.isColonized && $mapSettings.populatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || (system.systemIsKnown && system.ownerIsKnown))}
-		<path
-			transform="translate({system.x},{system.y})"
-			d={populatedSystemIconPath}
-			{...getFillColorAttributes({
-				mapSettings: $mapSettings,
-				colors,
-				countryColors: system,
-				colorStack: [$mapSettings.populatedSystemIconColor, $mapSettings.borderFillColor],
-			})}
-		/>
-	{:else if $mapSettings.unpopulatedSystemIcon !== 'none' && (!$mapSettings.terraIncognita || system.systemIsKnown)}
-		<path transform="translate({system.x},{system.y})" d={unpopulatedSystemIconPath} fill="white" />
-	{/if}
+	{/each}
 {/each}

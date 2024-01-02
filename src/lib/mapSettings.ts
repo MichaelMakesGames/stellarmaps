@@ -4,13 +4,7 @@ import { stellarisDataPromiseStore } from './loadStellarisData';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import * as R from 'rambda';
 
-export type NumberMapSettings =
-	| 'countryCapitalIconSize'
-	| 'sectorCapitalIconSize'
-	| 'populatedSystemIconSize'
-	| 'unpopulatedSystemIconSize'
-	| 'unionLeaderSymbolSize'
-	| 'terraIncognitaBrightness';
+export type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness';
 
 export type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
@@ -21,10 +15,6 @@ export type NumberOptionalMapSettings =
 export type StringMapSettings =
 	| 'labelsAvoidHoles'
 	| 'countryNamesFont'
-	| 'countryCapitalIcon'
-	| 'sectorCapitalIcon'
-	| 'populatedSystemIcon'
-	| 'unpopulatedSystemIcon'
 	| 'unionFederations'
 	| 'unionSubjects'
 	| 'unionLeaderSymbol'
@@ -74,10 +64,10 @@ export type ColorMapSettings =
 	| 'borderFillColor'
 	| 'hyperlaneColor'
 	| 'hyperRelayColor'
-	| 'populatedSystemIconColor'
 	| 'sectorBorderColor'
 	| 'unownedHyperlaneColor'
-	| 'unownedHyperRelayColor';
+	| 'unownedHyperRelayColor'
+	| 'wormholeStrokeColor';
 
 export interface StrokeSetting {
 	enabled: boolean;
@@ -93,14 +83,34 @@ export type StrokeMapSettings =
 	| 'unionBorderStroke'
 	| 'sectorBorderStroke'
 	| 'hyperlaneStroke'
-	| 'hyperRelayStroke';
+	| 'hyperRelayStroke'
+	| 'wormholeStroke';
+
+export type IconPosition = 'left' | 'right' | 'top' | 'bottom' | 'center';
+export const ICON_POSITIONS = ['left', 'right', 'top', 'bottom', 'center'];
+export interface IconSetting {
+	enabled: boolean;
+	icon: string;
+	size: number;
+	position: IconPosition;
+	priority: number;
+	color: ColorSetting;
+}
+
+export type IconMapSettings =
+	| 'countryCapitalIcon'
+	| 'sectorCapitalIcon'
+	| 'populatedSystemIcon'
+	| 'unpopulatedSystemIcon'
+	| 'wormholeIcon';
 
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
 	Record<StringMapSettings, string> &
 	Record<BooleanMapSettings, boolean> &
 	Record<ColorMapSettings, ColorSetting> &
-	Record<StrokeMapSettings, StrokeSetting>;
+	Record<StrokeMapSettings, StrokeSetting> &
+	Record<IconMapSettings, IconSetting>;
 
 export interface IdAndName {
 	id: string;
@@ -173,6 +183,12 @@ export interface MapSettingConfigStroke extends MapSettingConfigBase {
 	noDashed?: boolean;
 }
 
+export interface MapSettingConfigIcon extends MapSettingConfigBase {
+	id: IconMapSettings;
+	type: 'icon';
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<IconSetting>;
+}
+
 export type MapSettingConfig =
 	| MapSettingConfigText
 	| MapSettingConfigToggle
@@ -180,7 +196,8 @@ export type MapSettingConfig =
 	| MapSettingConfigRange
 	| MapSettingConfigSelect
 	| MapSettingConfigColor
-	| MapSettingConfigStroke;
+	| MapSettingConfigStroke
+	| MapSettingConfigIcon;
 
 export interface MapSettingGroup extends IdAndName {
 	settings: MapSettingConfig[];
@@ -196,18 +213,7 @@ export const countryOptions = writable<IdAndName[]>([]);
 
 export const emptyOptions = readable<IdAndName[]>([]);
 
-const iconOptions: IdAndName[] = [
-	{ id: 'none', name: 'None' },
-	{ id: 'circle', name: 'Circle' },
-	{ id: 'cross', name: 'Cross' },
-	{ id: 'diamond', name: 'Diamond' },
-	{ id: 'square', name: 'Square' },
-	{ id: 'star', name: 'Star' },
-	{ id: 'triangle', name: 'Triangle' },
-	{ id: 'wye', name: 'Y' },
-];
-
-const textIconOptions: IdAndName[] = [
+export const glyphOptions: SelectOption[] = [
 	{ id: 'none', name: 'None' },
 	{ id: '✦', name: '✦ 4-Pointed Star' },
 	{ id: '✧', name: '✧ 4-Pointed Star (outline)' },
@@ -217,6 +223,15 @@ const textIconOptions: IdAndName[] = [
 	{ id: '✯', name: '✯ 5-Pointed Star (pinwheel)' },
 	{ id: '✶', name: '✶ 6-Pointed Star' },
 	{ id: '✴', name: '✴ 8-Pointed Star' },
+];
+
+export const iconOptions: SelectOption[] = [
+	{ group: 'Basic Shapes', id: 'icon-circle', name: 'Circle' },
+	{ group: 'Basic Shapes', id: 'icon-square', name: 'Square' },
+	{ group: 'Basic Shapes', id: 'icon-diamond', name: 'Diamond' },
+	{ group: 'Basic Shapes', id: 'icon-cross', name: 'Cross' },
+	{ group: 'Basic Shapes', id: 'icon-triangle', name: 'Triangle' },
+	{ group: 'Stellaris', id: 'icon-wormhole', name: 'Wormhole' },
 ];
 
 export const colorOptions: SelectOption[] = [
@@ -332,7 +347,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				id: 'unionLeaderSymbol',
 				name: 'Union Leader Symbol',
 				type: 'select',
-				options: textIconOptions,
+				options: glyphOptions,
 				hideIf: (settings) => !settings.unionMode || !settings.countryEmblems,
 			},
 			{
@@ -443,73 +458,27 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			{
 				id: 'countryCapitalIcon',
 				name: 'Country Capital',
-				type: 'select',
-				options: iconOptions,
-			},
-			{
-				id: 'countryCapitalIconSize',
-				name: 'Country Capital Size',
-				type: 'number',
-				min: 0,
-				step: 1,
-				hideIf: (settings) => settings.countryCapitalIcon === 'none',
+				type: 'icon',
 			},
 			{
 				id: 'sectorCapitalIcon',
 				name: 'Sector Capital',
-				type: 'select',
-				options: iconOptions,
-			},
-			{
-				id: 'sectorCapitalIconSize',
-				name: 'Sector Capital Size',
-				type: 'number',
-				min: 0,
-				step: 1,
-				hideIf: (settings) => settings.sectorCapitalIcon === 'none',
+				type: 'icon',
 			},
 			{
 				id: 'populatedSystemIcon',
 				name: 'Populated System',
-				type: 'select',
-				options: iconOptions,
+				type: 'icon',
 			},
-			{
-				id: 'populatedSystemIconSize',
-				name: 'Populated System Size',
-				type: 'number',
-				min: 0,
-				step: 1,
-				hideIf: (settings) => settings.populatedSystemIcon === 'none',
-			},
-			{
-				id: 'populatedSystemIconColor',
-				name: 'Color',
-				type: 'color',
-				hideIf: (settings) =>
-					settings.countryCapitalIcon === 'none' &&
-					settings.sectorCapitalIcon === 'none' &&
-					settings.populatedSystemIcon === 'none',
-			},
-		],
-	},
-	{
-		id: 'starIcons',
-		name: 'Stars',
-		settings: [
 			{
 				id: 'unpopulatedSystemIcon',
-				name: 'Icon',
-				type: 'select',
-				options: iconOptions,
+				name: 'Other System',
+				type: 'icon',
 			},
 			{
-				id: 'unpopulatedSystemIconSize',
-				name: 'Icon Size',
-				type: 'number',
-				min: 0,
-				step: 1,
-				hideIf: (settings) => settings.unpopulatedSystemIcon === 'none',
+				id: 'wormholeIcon',
+				name: 'Wormole',
+				type: 'icon',
 			},
 		],
 	},
@@ -566,6 +535,25 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				requiresReprocessing: true,
 				hideIf: (settings) =>
 					!settings.hyperlaneStroke.enabled && !settings.hyperRelayStroke.enabled,
+			},
+		],
+	},
+	{
+		id: 'bypassLinks',
+		name: 'Bypass Links',
+		settings: [
+			{
+				id: 'wormholeStroke',
+				name: 'Wormhole Links',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'wormholeStrokeColor',
+				name: 'Wormhole Links Color',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.wormholeStroke.enabled,
 			},
 		],
 	},
@@ -685,18 +673,46 @@ export const defaultMapSettings: MapSettings = {
 		dashArray: '3 3',
 	},
 	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }] },
-	countryCapitalIcon: 'diamond',
-	countryCapitalIconSize: 15,
-	sectorCapitalIcon: 'triangle',
-	sectorCapitalIconSize: 10,
-	populatedSystemIcon: 'square',
-	populatedSystemIconSize: 5,
-	populatedSystemIconColor: {
-		color: 'border',
-		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }],
+	countryCapitalIcon: {
+		enabled: true,
+		icon: 'icon-diamond',
+		size: 8,
+		position: 'center',
+		priority: 40,
+		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
 	},
-	unpopulatedSystemIcon: 'circle',
-	unpopulatedSystemIconSize: 1,
+	sectorCapitalIcon: {
+		enabled: true,
+		icon: 'icon-triangle',
+		size: 6,
+		position: 'center',
+		priority: 30,
+		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
+	},
+	populatedSystemIcon: {
+		enabled: true,
+		icon: 'icon-square',
+		size: 2,
+		position: 'center',
+		priority: 20,
+		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
+	},
+	unpopulatedSystemIcon: {
+		enabled: true,
+		icon: 'icon-circle',
+		size: 1,
+		position: 'center',
+		priority: 10,
+		color: { color: 'white', colorAdjustments: [] },
+	},
+	wormholeIcon: {
+		enabled: true,
+		icon: 'icon-wormhole',
+		size: 10,
+		position: 'right',
+		priority: 10,
+		color: { color: 'intense_purple', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
+	},
 	unionMode: false,
 	unionFederations: 'joinedBorders',
 	unionSubjects: 'joinedBorders',
@@ -718,6 +734,18 @@ export const defaultMapSettings: MapSettings = {
 	circularGalaxyBorders: false,
 	alignStarsToGrid: false,
 	hyperlaneMetroStyle: false,
+	wormholeStroke: {
+		enabled: false,
+		width: 1,
+		smoothing: false,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
+	wormholeStrokeColor: {
+		color: 'intense_purple',
+		colorAdjustments: [],
+	},
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);
@@ -830,19 +858,40 @@ export const presetMapSettings: SavedMapSettings[] = [
 			sectorBorderColor: { color: 'border', colorAdjustments: [] },
 			countryNames: false,
 			countryEmblems: false,
-			populatedSystemIconColor: {
-				color: 'secondary',
-				colorAdjustments: [
-					{ type: 'MIN_LIGHTNESS', value: 0.4 },
-					{ type: 'MAX_LIGHTNESS', value: 0.4 },
-				],
+			populatedSystemIcon: {
+				...defaultMapSettings.populatedSystemIcon,
+				icon: 'icon-circle',
+				size: 2.5,
+				position: 'center',
+				color: {
+					color: 'secondary',
+					colorAdjustments: [
+						{ type: 'MIN_LIGHTNESS', value: 0.4 },
+						{ type: 'MAX_LIGHTNESS', value: 0.4 },
+					],
+				},
 			},
-			countryCapitalIcon: 'none',
-			sectorCapitalIcon: 'circle',
-			sectorCapitalIconSize: 10,
-			populatedSystemIcon: 'circle',
-			populatedSystemIconSize: 5,
-			unpopulatedSystemIconSize: 0.5,
+			sectorCapitalIcon: {
+				...defaultMapSettings.sectorCapitalIcon,
+				icon: 'icon-circle',
+				size: 4,
+				position: 'center',
+				color: {
+					color: 'secondary',
+					colorAdjustments: [
+						{ type: 'MIN_LIGHTNESS', value: 0.4 },
+						{ type: 'MAX_LIGHTNESS', value: 0.4 },
+					],
+				},
+			},
+			countryCapitalIcon: {
+				...defaultMapSettings.countryCapitalIcon,
+				enabled: false,
+			},
+			unpopulatedSystemIcon: {
+				...defaultMapSettings.unpopulatedSystemIcon,
+				size: 0.5,
+			},
 		},
 	},
 ];

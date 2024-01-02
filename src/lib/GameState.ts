@@ -31,11 +31,13 @@ export interface GalacticObject {
 	hyperlane?: { to: number; length: number }[] | Record<string, never>;
 	megastructures?: number[];
 	colonies?: number[];
+	bypasses?: number[];
 }
 
 export interface Bypass {
 	type: string;
 	owner?: { type: number; id: number };
+	linked_to?: number;
 }
 
 export interface Megastructure {
@@ -65,6 +67,7 @@ export interface Country {
 	relations_manager?: {
 		relation?: Relation | Relation[];
 	};
+	usable_bypasses?: number[];
 }
 
 export interface Relation {

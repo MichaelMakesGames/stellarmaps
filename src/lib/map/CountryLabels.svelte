@@ -85,6 +85,7 @@
 				text-decoration={label.isUnionLeader && $mapSettings.unionLeaderUnderline
 					? 'underline'
 					: ''}
+				style:text-shadow="0px 0px 3px black"
 			>
 				{label.name}
 			</text>

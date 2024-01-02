@@ -21,6 +21,7 @@
 	import { isDefined } from './utils';
 	import ColorSettingControl from './ColorSettingControl.svelte';
 	import StrokeSettingControl from './StrokeSettingControl.svelte';
+	import IconSettingControl from './IconSettingControl.svelte';
 
 	export let config: MapSettingConfig;
 
@@ -69,7 +70,7 @@
 				</span>
 			{/if}
 			<div class="grow" />
-			{#if config.type === 'stroke'}
+			{#if config.type === 'stroke' || config.type === 'icon'}
 				<div class="inline-block relative top-1">
 					<SlideToggle
 						name={config.id}
@@ -125,6 +126,8 @@
 			<ColorSettingControl bind:value {config} />
 		{:else if config.type === 'stroke'}
 			<StrokeSettingControl bind:value {config} />
+		{:else if config.type === 'icon'}
+			<IconSettingControl bind:value {config} />
 		{:else}
 			<span>TODO</span>
 		{/if}
