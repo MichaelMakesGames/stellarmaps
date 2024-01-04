@@ -12,7 +12,7 @@
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
 	import type { MapData } from './data/processMapData';
 	import { resolveColor } from './mapUtils';
-	import Wormholes from './Wormholes.svelte';
+	import BypassLinks from './BypassLinks.svelte';
 	import Icons from './Icons.svelte';
 
 	export let id: string = '';
@@ -102,9 +102,8 @@
 		{#if data && colors}
 			<CountryBorders {data} {colors} />
 			<Hyperlanes {data} {colors} />
-			<Hyperlanes {data} {colors} />
 			<TerraIncognita {data} />
-			<Wormholes {data} {colors} />
+			<BypassLinks {data} {colors} />
 			<SystemIcons {data} {colors} />
 			<CountryLabels {data} {exportMode} debug={$debug} />
 			{#if $debug}

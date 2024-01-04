@@ -12,7 +12,7 @@ import processSystemOwnership from './processSystemOwnership';
 import processSystems from './processSystems';
 import processTerraIncognita from './processTerraIncognita';
 import processVoronoi from './processVoronoi';
-import processWormholes from './processWormholes';
+import processBypassLinks from './processBypassLinks';
 import { createHyperlanePaths } from './utils';
 
 export default async function processMapData(gameState: GameState, settings: MapSettings) {
@@ -102,13 +102,13 @@ export default async function processMapData(gameState: GameState, settings: Map
 		systemIdToCountry,
 		knownCountries,
 		knownSystems,
-		knownWormholes,
 		systemIdToCoordinates,
 	);
-	const wormholes = timeIt(
-		'wormholes',
-		processWormholes,
+	const bypassLinks = timeIt(
+		'bypassLinks',
+		processBypassLinks,
 		gameState,
+		knownSystems,
 		knownWormholes,
 		systemIdToCoordinates,
 	);
@@ -120,7 +120,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		unownedRelayHyperlanesPath,
 		emblems,
 		systems,
-		wormholes,
+		bypassLinks,
 		labels,
 		terraIncognitaPath,
 		galaxyBorderCircles,

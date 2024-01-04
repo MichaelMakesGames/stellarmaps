@@ -67,7 +67,9 @@ export type ColorMapSettings =
 	| 'sectorBorderColor'
 	| 'unownedHyperlaneColor'
 	| 'unownedHyperRelayColor'
-	| 'wormholeStrokeColor';
+	| 'wormholeStrokeColor'
+	| 'lGateStrokeColor'
+	| 'shroudTunnelStrokeColor';
 
 export interface StrokeSetting {
 	enabled: boolean;
@@ -84,7 +86,9 @@ export type StrokeMapSettings =
 	| 'sectorBorderStroke'
 	| 'hyperlaneStroke'
 	| 'hyperRelayStroke'
-	| 'wormholeStroke';
+	| 'wormholeStroke'
+	| 'lGateStroke'
+	| 'shroudTunnelStroke';
 
 export type IconPosition = 'left' | 'right' | 'top' | 'bottom' | 'center';
 export const ICON_POSITIONS = ['left', 'right', 'top', 'bottom', 'center'];
@@ -102,7 +106,10 @@ export type IconMapSettings =
 	| 'sectorCapitalIcon'
 	| 'populatedSystemIcon'
 	| 'unpopulatedSystemIcon'
-	| 'wormholeIcon';
+	| 'wormholeIcon'
+	| 'gatewayIcon'
+	| 'lGateIcon'
+	| 'shroudTunnelIcon';
 
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
@@ -232,6 +239,9 @@ export const iconOptions: SelectOption[] = [
 	{ group: 'Basic Shapes', id: 'icon-cross', name: 'Cross' },
 	{ group: 'Basic Shapes', id: 'icon-triangle', name: 'Triangle' },
 	{ group: 'Stellaris', id: 'icon-wormhole', name: 'Wormhole' },
+	{ group: 'Stellaris', id: 'icon-gateway', name: 'Gateway' },
+	{ group: 'Stellaris', id: 'icon-l-gate', name: 'L-Gate' },
+	{ group: 'Stellaris', id: 'icon-shroud-tunnel', name: 'Shroud Tunnel (unofficial)' },
 ];
 
 export const colorOptions: SelectOption[] = [
@@ -480,6 +490,21 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Wormole',
 				type: 'icon',
 			},
+			{
+				id: 'gatewayIcon',
+				name: 'Gateway',
+				type: 'icon',
+			},
+			{
+				id: 'lGateIcon',
+				name: 'L-Gate',
+				type: 'icon',
+			},
+			{
+				id: 'shroudTunnelIcon',
+				name: 'Shroud Tunnel',
+				type: 'icon',
+			},
 		],
 	},
 	{
@@ -554,6 +579,32 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'color',
 				allowedDynamicColors: [],
 				hideIf: (settings) => !settings.wormholeStroke.enabled,
+			},
+			{
+				id: 'lGateStroke',
+				name: 'L-Gate Links',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'lGateStrokeColor',
+				name: 'L-Gate Links Color',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.lGateStroke.enabled,
+			},
+			{
+				id: 'shroudTunnelStroke',
+				name: 'Shroud Tunnel Links',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'shroudTunnelStrokeColor',
+				name: 'Shroud Tunnel Links Color',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.shroudTunnelStroke.enabled,
 			},
 		],
 	},
@@ -706,12 +757,36 @@ export const defaultMapSettings: MapSettings = {
 		color: { color: 'white', colorAdjustments: [] },
 	},
 	wormholeIcon: {
-		enabled: true,
+		enabled: false,
 		icon: 'icon-wormhole',
-		size: 10,
+		size: 8,
+		position: 'right',
+		priority: 40,
+		color: { color: 'white', colorAdjustments: [] },
+	},
+	gatewayIcon: {
+		enabled: false,
+		icon: 'icon-gateway',
+		size: 8,
+		position: 'right',
+		priority: 30,
+		color: { color: 'white', colorAdjustments: [] },
+	},
+	lGateIcon: {
+		enabled: false,
+		icon: 'icon-l-gate',
+		size: 8,
+		position: 'right',
+		priority: 20,
+		color: { color: 'white', colorAdjustments: [] },
+	},
+	shroudTunnelIcon: {
+		enabled: false,
+		icon: 'icon-shroud-tunnel',
+		size: 8,
 		position: 'right',
 		priority: 10,
-		color: { color: 'intense_purple', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
+		color: { color: 'white', colorAdjustments: [] },
 	},
 	unionMode: false,
 	unionFederations: 'joinedBorders',
@@ -743,6 +818,30 @@ export const defaultMapSettings: MapSettings = {
 		dashArray: '3 3',
 	},
 	wormholeStrokeColor: {
+		color: 'intense_purple',
+		colorAdjustments: [],
+	},
+	lGateStroke: {
+		enabled: false,
+		width: 1,
+		smoothing: false,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
+	lGateStrokeColor: {
+		color: 'intense_purple',
+		colorAdjustments: [],
+	},
+	shroudTunnelStroke: {
+		enabled: false,
+		width: 1,
+		smoothing: false,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
+	shroudTunnelStrokeColor: {
 		color: 'intense_purple',
 		colorAdjustments: [],
 	},

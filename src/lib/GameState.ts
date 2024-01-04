@@ -32,6 +32,7 @@ export interface GalacticObject {
 	megastructures?: number[];
 	colonies?: number[];
 	bypasses?: number[];
+	flags?: Record<string, number | undefined>;
 }
 
 export interface Bypass {

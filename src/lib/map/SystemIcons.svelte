@@ -23,6 +23,9 @@
 		populatedSystemIcon: { systemProperty: 'isColonized', mustKnowOwner: true },
 		unpopulatedSystemIcon: {},
 		wormholeIcon: { systemProperty: 'hasWormhole', mustKnowOwner: false },
+		gatewayIcon: { systemProperty: 'hasGateway', mustKnowOwner: false },
+		lGateIcon: { systemProperty: 'hasLGate', mustKnowOwner: false },
+		shroudTunnelIcon: { systemProperty: 'hasShroudTunnel', mustKnowOwner: false },
 	};
 
 	function getSystemIcons(system: MapData['systems'][number], mapSettings: MapSettings) {

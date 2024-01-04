@@ -1,4 +1,4 @@
-import type { Bypass, GameState } from '$lib/GameState';
+import type { GameState } from '$lib/GameState';
 import type { MapSettings } from '$lib/mapSettings';
 import { parseNumberEntry } from '$lib/utils';
 import type processSystemOwnership from './processSystemOwnership';
@@ -10,7 +10,6 @@ export default function processSystems(
 	systemIdToCountry: ReturnType<typeof processSystemOwnership>['systemIdToCountry'],
 	knownCountries: Set<number>,
 	knownSystems: Set<number>,
-	knownWormholes: Set<number>,
 	systemIdToCoordinates: Record<number, [number, number]>,
 ) {
 	const systems = Object.entries(gameState.galactic_object)
@@ -34,10 +33,13 @@ export default function processSystems(
 			const ownerIsKnown = countryId != null && knownCountries.has(countryId);
 			const systemIsKnown = knownSystems.has(systemId);
 
-			const hasWormhole =
-				system.bypasses
-					?.map((bypassId) => gameState.bypasses[bypassId])
-					.find((b) => b?.type === 'wormhole') != null;
+			const bypassTypes = new Set(
+				system.bypasses?.map((bypassId) => gameState.bypasses[bypassId]?.type),
+			);
+			const hasWormhole = bypassTypes.has('wormhole');
+			const hasGateway = bypassTypes.has('gateway');
+			const hasLGate = bypassTypes.has('lgate');
+			const hasShroudTunnel = bypassTypes.has('shroud_tunnel');
 
 			return {
 				primaryColor,
@@ -49,6 +51,9 @@ export default function processSystems(
 				ownerIsKnown,
 				systemIsKnown,
 				hasWormhole,
+				hasGateway,
+				hasLGate,
+				hasShroudTunnel,
 				x,
 				y,
 			};
