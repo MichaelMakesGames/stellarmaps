@@ -3,6 +3,7 @@ import { loadFonts } from './tauriCommands';
 import { stellarisDataPromiseStore } from './loadStellarisData';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import * as R from 'rambda';
+import { z } from 'zod';
 
 export type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness';
 
@@ -31,33 +32,22 @@ export type BooleanMapSettings =
 	| 'unionLeaderUnderline'
 	| 'unionMode';
 
-export interface ColorSetting {
-	color: string;
-	colorAdjustments: ColorSettingAdjustment[];
-}
-
-export interface ColorSettingAdjustment {
-	type?: ColorSettingAdjustmentType;
-	value: number;
-}
-
-export type ColorSettingAdjustmentType =
-	| 'LIGHTEN'
-	| 'DARKEN'
-	| 'MIN_LIGHTNESS'
-	| 'MAX_LIGHTNESS'
-	| 'MIN_CONTRAST'
-	| 'OPACITY';
-
-export const COLOR_SETTING_ADJUSTMENT_TYPES: ColorSettingAdjustmentType[] = [
-	'LIGHTEN',
-	'DARKEN',
-	'MIN_LIGHTNESS',
-	'MAX_LIGHTNESS',
-	'OPACITY',
-	'MIN_CONTRAST',
-];
-
+const colorSettingSchema = z.object({
+	color: z.string(),
+	colorAdjustments: z.array(
+		z.object({
+			type: z
+				.enum(['LIGHTEN', 'DARKEN', 'MIN_LIGHTNESS', 'MAX_LIGHTNESS', 'OPACITY', 'MIN_CONTRAST'])
+				.nullish(),
+			value: z.number().min(0).max(1),
+		}),
+	),
+});
+export type ColorSetting = z.infer<typeof colorSettingSchema>;
+export type ColorSettingAdjustment = ColorSetting['colorAdjustments'][number];
+export type ColorSettingAdjustmentType = NonNullable<ColorSettingAdjustment['type']>;
+export const COLOR_SETTING_ADJUSTMENT_TYPES =
+	colorSettingSchema.shape.colorAdjustments.element.shape.type.unwrap().unwrap().options;
 export type ColorMapSettings =
 	| 'backgroundColor'
 	| 'borderColor'
@@ -71,15 +61,15 @@ export type ColorMapSettings =
 	| 'lGateStrokeColor'
 	| 'shroudTunnelStrokeColor';
 
-export interface StrokeSetting {
-	enabled: boolean;
-	width: number;
-	smoothing: boolean;
-	dashed: boolean;
-	dashArray: string;
-	glow: boolean;
-}
-
+const strokeSettingSchema = z.object({
+	enabled: z.boolean(),
+	width: z.number(),
+	smoothing: z.boolean(),
+	dashed: z.boolean(),
+	dashArray: z.string(),
+	glow: z.boolean(),
+});
+export type StrokeSetting = z.infer<typeof strokeSettingSchema>;
 export type StrokeMapSettings =
 	| 'borderStroke'
 	| 'unionBorderStroke'
@@ -90,17 +80,17 @@ export type StrokeMapSettings =
 	| 'lGateStroke'
 	| 'shroudTunnelStroke';
 
-export type IconPosition = 'left' | 'right' | 'top' | 'bottom' | 'center';
-export const ICON_POSITIONS = ['left', 'right', 'top', 'bottom', 'center'];
-export interface IconSetting {
-	enabled: boolean;
-	icon: string;
-	size: number;
-	position: IconPosition;
-	priority: number;
-	color: ColorSetting;
-}
-
+const iconSettingSchema = z.object({
+	enabled: z.boolean(),
+	icon: z.string(),
+	size: z.number(),
+	position: z.enum(['left', 'right', 'top', 'bottom', 'center']),
+	priority: z.number(),
+	color: colorSettingSchema,
+});
+export type IconSetting = z.infer<typeof iconSettingSchema>;
+export type IconPosition = IconSetting['position'];
+export const ICON_POSITIONS = iconSettingSchema.shape.position.options;
 export type IconMapSettings =
 	| 'countryCapitalIcon'
 	| 'sectorCapitalIcon'
@@ -677,7 +667,10 @@ export const mapSettingConfig: MapSettingGroup[] = [
 
 export const defaultMapSettings: MapSettings = {
 	backgroundColor: { color: 'very_black', colorAdjustments: [] },
-	borderFillColor: { color: 'secondary', colorAdjustments: [{ type: 'OPACITY', value: 0.5 }] },
+	borderFillColor: {
+		color: 'secondary',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.5 }],
+	},
 	borderColor: { color: 'primary', colorAdjustments: [] },
 	borderStroke: {
 		enabled: true,
@@ -695,8 +688,14 @@ export const defaultMapSettings: MapSettings = {
 		dashed: false,
 		dashArray: '3 3',
 	},
-	hyperlaneColor: { color: 'white', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
-	unownedHyperlaneColor: { color: 'primary', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
+	hyperlaneColor: {
+		color: 'white',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.15 }],
+	},
+	unownedHyperlaneColor: {
+		color: 'primary',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.15 }],
+	},
 	hyperRelayStroke: {
 		enabled: true,
 		width: 0.5,
@@ -705,8 +704,14 @@ export const defaultMapSettings: MapSettings = {
 		dashed: false,
 		dashArray: '3 3',
 	},
-	hyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
-	unownedHyperRelayColor: { color: 'white', colorAdjustments: [{ type: 'OPACITY', value: 0.15 }] },
+	hyperRelayColor: {
+		color: 'white',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.15 }],
+	},
+	unownedHyperRelayColor: {
+		color: 'white',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.15 }],
+	},
 	countryNames: true,
 	countryNamesMinSize: 5,
 	countryNamesMaxSize: null,
@@ -723,14 +728,20 @@ export const defaultMapSettings: MapSettings = {
 		dashed: true,
 		dashArray: '3 3',
 	},
-	sectorBorderColor: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }] },
+	sectorBorderColor: {
+		color: 'border',
+		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
+	},
 	countryCapitalIcon: {
 		enabled: true,
 		icon: 'icon-diamond',
 		size: 8,
 		position: 'center',
 		priority: 40,
-		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
+		color: {
+			color: 'border',
+			colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }],
+		},
 	},
 	sectorCapitalIcon: {
 		enabled: true,
@@ -738,7 +749,10 @@ export const defaultMapSettings: MapSettings = {
 		size: 6,
 		position: 'center',
 		priority: 30,
-		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
+		color: {
+			color: 'border',
+			colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }],
+		},
 	},
 	populatedSystemIcon: {
 		enabled: true,
@@ -746,7 +760,10 @@ export const defaultMapSettings: MapSettings = {
 		size: 2,
 		position: 'center',
 		priority: 20,
-		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }] },
+		color: {
+			color: 'border',
+			colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.5 }],
+		},
 	},
 	unpopulatedSystemIcon: {
 		enabled: true,
@@ -847,11 +864,13 @@ export const defaultMapSettings: MapSettings = {
 	},
 };
 
-export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);
+export const mapSettings = localStorageStore('mapSettings', defaultMapSettings, {});
 export const lastProcessedMapSettings = localStorageStore(
 	'lastProcessedMapSettings',
 	defaultMapSettings,
 );
+mapSettings.set(validateAndResetSettings(get(mapSettings)));
+lastProcessedMapSettings.set(validateAndResetSettings(get(lastProcessedMapSettings)));
 export const reprocessMap = () => lastProcessedMapSettings.set(get(mapSettings));
 
 export interface SavedMapSettings {
@@ -1022,6 +1041,8 @@ export function settingsAreDifferent(
 						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
 					case 'stroke':
 						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
+					case 'icon':
+						return setting.requiresReprocessing(a[setting.id], b[setting.id]);
 					default:
 						throw new Error(`Unhandled setting type: ${settingType}`);
 				}
@@ -1035,4 +1056,107 @@ export function isColorDynamic(color: string, settings: MapSettings): boolean {
 		['primary', 'secondary'].includes(color) ||
 		(color === 'border' && isColorDynamic(settings.borderColor.color, settings))
 	);
+}
+
+export function validateAndResetSettings(unvalidatedSettings: MapSettings): MapSettings {
+	const settings = { ...unvalidatedSettings };
+	const configs = mapSettingConfig.flatMap((category) => category.settings);
+	for (const key of Object.keys(settings)) {
+		const config = configs.find((config) => config.id === key);
+		if (!config) {
+			console.warn(`no config found for setting ${key}; deleting`);
+			delete settings[key as keyof MapSettings];
+		} else {
+			const valid = validateSetting(settings[key as keyof MapSettings], config);
+			if (!valid) {
+				console.warn(`invalid value for setting ${key}; setting default`);
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				(settings as any)[key] = (defaultMapSettings as any)[key];
+			}
+		}
+	}
+	for (const config of configs) {
+		if (!Object.hasOwn(settings, config.id)) {
+			console.warn(`missing value for setting ${config.id}; setting default`);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(settings as any)[config.id] = (defaultMapSettings as any)[config.id];
+		}
+	}
+	return settings;
+}
+
+function validateSetting<T extends MapSettingConfig>(value: unknown, config: T): boolean {
+	switch (config.type) {
+		case 'color': {
+			const result = colorSettingSchema.safeParse(value);
+			if (result.success) {
+				const { data } = result;
+				if (config.allowedAdjustments) {
+					return data.colorAdjustments.every(
+						(adjustment) =>
+							adjustment.type == null || config.allowedAdjustments?.includes(adjustment.type),
+					);
+				} else {
+					return true;
+				}
+			} else {
+				return false;
+			}
+		}
+		case 'icon': {
+			const result = iconSettingSchema.safeParse(value);
+			return result.success;
+		}
+		case 'number': {
+			if (typeof value === 'number') {
+				const min = config.min ?? -Infinity;
+				const max = config.max ?? Infinity;
+				return value >= min && value <= max;
+			} else if (value == null) {
+				return Boolean(config.optional);
+			} else {
+				return false;
+			}
+		}
+		case 'range': {
+			if (typeof value === 'number') {
+				return value >= config.min && value <= config.max;
+			} else {
+				return false;
+			}
+		}
+		case 'select': {
+			if (typeof value === 'string') {
+				if (config.dynamicOptions) {
+					// dynamic options aren't checked for now; assume valid
+					return true;
+				} else {
+					return config.options.some((option) => option.id === value);
+				}
+			} else {
+				return false;
+			}
+		}
+		case 'stroke': {
+			const result = strokeSettingSchema.safeParse(value);
+			if (result.success) {
+				const { data } = result;
+				if (data.dashed && config.noDashed) return false;
+				if (data.smoothing && config.noSmoothing) return false;
+				return true;
+			} else {
+				return false;
+			}
+		}
+		case 'text': {
+			return typeof value === 'string';
+		}
+		case 'toggle': {
+			return typeof value === 'boolean';
+		}
+		default: {
+			console.warn(`unknown setting type ${(config as { type?: unknown }).type}`);
+			return false;
+		}
+	}
 }
