@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { GameState } from './GameState';
 
 export default async function parseSave(rawGameState: string): Promise<GameState> {

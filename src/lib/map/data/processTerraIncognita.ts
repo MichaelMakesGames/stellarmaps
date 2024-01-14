@@ -29,7 +29,7 @@ export default function processTerraIncognita(
 	const wormholeIds = new Set(
 		Object.entries(gameState.bypasses)
 			.map(parseNumberEntry)
-			.filter(([id, bypass]) => bypass.type === 'wormhole')
+			.filter(([_id, bypass]) => bypass.type === 'wormhole')
 			.map(([id]) => id),
 	);
 	const knownWormholes = terraIncognitaPerspectiveCountry
@@ -37,7 +37,7 @@ export default function processTerraIncognita(
 				getGameStateValueAsArray(terraIncognitaPerspectiveCountry?.usable_bypasses).filter((id) =>
 					wormholeIds.has(id),
 				),
-		  )
+			)
 		: wormholeIds;
 	const knownCountries = new Set(
 		terraIncognitaPerspectiveCountryId == null
@@ -58,7 +58,7 @@ export default function processTerraIncognita(
 			: multiPolygonToPath(
 					helpers.featureCollection([terraIncognitaGeoJSON]),
 					settings.borderStroke.smoothing,
-			  );
+				);
 	return {
 		terraIncognitaPath,
 		knownSystems,

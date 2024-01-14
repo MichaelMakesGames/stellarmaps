@@ -1,36 +1,33 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::env;
-use std::fs;
-use std::io::Read;
-use std::path::Path;
-use std::path::PathBuf;
-use std::collections::HashMap;
-use std::time::UNIX_EPOCH;
-use std::io::{ self, BufRead };
-use std::ffi::OsString;
-use zip;
-use regex::Regex;
 use anyhow;
 use font_kit::source::SystemSource;
+use regex::Regex;
+use std::collections::HashMap;
+use std::env;
+use std::ffi::OsString;
+use std::fs;
+use std::io::Read;
+use std::io::{self, BufRead};
+use std::path::Path;
+use std::path::PathBuf;
+use std::time::UNIX_EPOCH;
 use steamlocate::SteamDir;
+use zip;
 
 fn main() {
-	tauri::Builder
-		::default()
-		.invoke_handler(
-			tauri::generate_handler![
-				get_stellaris_colors_cmd,
-				get_stellaris_loc_cmd,
-				get_stellaris_install_dir_cmd,
-				get_stellaris_save_metadata_cmd,
-				get_stellaris_save_cmd,
-				get_emblem_cmd,
-				get_fonts_cmd,
-				reveal_file_cmd
-			]
-		)
+	tauri::Builder::default()
+		.invoke_handler(tauri::generate_handler![
+			get_stellaris_colors_cmd,
+			get_stellaris_loc_cmd,
+			get_stellaris_install_dir_cmd,
+			get_stellaris_save_metadata_cmd,
+			get_stellaris_save_cmd,
+			get_emblem_cmd,
+			get_fonts_cmd,
+			reveal_file_cmd
+		])
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }
@@ -41,7 +38,7 @@ async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
 		Path::new(&path).to_path_buf(),
 		Path::new("flags").to_path_buf(),
 		FileFilter::Name(OsString::from("colors.txt")),
-		1
+		1,
 	);
 	if paths.is_empty() {
 		return Err(String::from("No color files found"));
@@ -70,9 +67,7 @@ async fn get_stellaris_save_cmd(path: String) -> Result<String, String> {
 
 #[tauri::command]
 async fn get_emblem_cmd(path: String, category: String, file: String) -> Result<Vec<u8>, String> {
-	return get_emblem(Path::new(&path).to_path_buf(), category, file).map_err(|err|
-		err.to_string()
-	);
+	return get_emblem(Path::new(&path).to_path_buf(), category, file).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
@@ -98,8 +93,10 @@ fn get_steam_dir() -> anyhow::Result<PathBuf> {
 
 fn get_stellaris_install_dir() -> anyhow::Result<PathBuf> {
 	let steamdir = SteamDir::locate()?;
-	let app = steamdir.app(281990)?;
-	let path = app.ok_or(anyhow::anyhow!("Stellaris steam app not found"))?.path;
+	let (app, lib) = steamdir
+		.find_app(281990)?
+		.ok_or(anyhow::anyhow!("Stellaris Steam install not found"))?;
+	let path = lib.resolve_app_dir(&app);
 	if path.exists() {
 		return Ok(path);
 	} else {
@@ -114,10 +111,14 @@ fn get_stellaris_user_data_dir() -> PathBuf {
 			return Path::new(home_dir.as_str()).join(".local/share/Paradox Interactive/Stellaris");
 		}
 		"macos" => {
-			return tauri::api::path::document_dir().unwrap().join("Paradox Interactive/Stellaris");
+			return tauri::api::path::document_dir()
+				.unwrap()
+				.join("Paradox Interactive/Stellaris");
 		}
 		"windows" => {
-			return tauri::api::path::document_dir().unwrap().join("Paradox Interactive\\Stellaris");
+			return tauri::api::path::document_dir()
+				.unwrap()
+				.join("Paradox Interactive\\Stellaris");
 		}
 		_ => panic!("unsupported OS"),
 	}
@@ -131,7 +132,9 @@ fn get_steam_user_data_dirs() -> anyhow::Result<Vec<PathBuf>> {
 fn get_mod_path(enabled_mod: &serde_json::Value) -> anyhow::Result<PathBuf> {
 	let user_data_dir = get_stellaris_user_data_dir();
 	let enabled_mod_descriptor = user_data_dir.join(
-		enabled_mod.as_str().ok_or(anyhow::anyhow!("Expected enabled_mods to be string array"))?
+		enabled_mod
+			.as_str()
+			.ok_or(anyhow::anyhow!("Expected enabled_mods to be string array"))?,
 	);
 	let enabled_mod_descriptor = fs::File::open(enabled_mod_descriptor)?;
 	let enabled_mod_descriptor = io::read_to_string(enabled_mod_descriptor)?;
@@ -154,7 +157,8 @@ fn get_enabled_mod_dirs() -> anyhow::Result<Vec<PathBuf>> {
 	let mut mod_dirs = vec![];
 	for enabled_mod in enabled_mods
 		.as_array()
-		.ok_or(anyhow::anyhow!("Expected enabled_mods to be string array"))? {
+		.ok_or(anyhow::anyhow!("Expected enabled_mods to be string array"))?
+	{
 		match get_mod_path(enabled_mod) {
 			Ok(mod_path) => mod_dirs.push(mod_path),
 			_ => (),
@@ -166,10 +170,11 @@ fn get_enabled_mod_dirs() -> anyhow::Result<Vec<PathBuf>> {
 fn get_stellaris_data_dirs(install_path: PathBuf) -> Vec<PathBuf> {
 	let mut dirs = vec![install_path];
 	match get_enabled_mod_dirs() {
-		Ok(mod_dirs) =>
+		Ok(mod_dirs) => {
 			for dir in mod_dirs {
 				dirs.push(dir);
 			}
+		}
 		_ => (),
 	}
 	return dirs;
@@ -197,7 +202,7 @@ enum FileFilter {
 fn get_files_matching_filter(
 	path: &PathBuf,
 	filter: &FileFilter,
-	depth: u8
+	depth: u8,
 ) -> anyhow::Result<Vec<PathBuf>> {
 	let mut files: Vec<PathBuf> = Vec::new();
 	if path.is_dir() {
@@ -209,16 +214,14 @@ fn get_files_matching_filter(
 				files.append(&mut sub_dir_files);
 			} else {
 				match filter {
-					FileFilter::Name(filter_name) =>
-						match path.file_name() {
-							Some(name) if name == filter_name => files.push(path),
-							_ => (),
-						}
-					FileFilter::Extension(filter_ext) =>
-						match path.extension() {
-							Some(ext) if ext == filter_ext => files.push(path),
-							_ => (),
-						}
+					FileFilter::Name(filter_name) => match path.file_name() {
+						Some(name) if name == filter_name => files.push(path),
+						_ => (),
+					},
+					FileFilter::Extension(filter_ext) => match path.extension() {
+						Some(ext) if ext == filter_ext => files.push(path),
+						_ => (),
+					},
 				}
 			}
 		}
@@ -245,7 +248,11 @@ struct StellarisSave {
 impl StellarisSave {
 	fn from_path(path: &PathBuf) -> anyhow::Result<Self> {
 		let file = fs::File::open(path)?;
-		let modified = file.metadata()?.modified()?.duration_since(UNIX_EPOCH)?.as_millis();
+		let modified = file
+			.metadata()?
+			.modified()?
+			.duration_since(UNIX_EPOCH)?
+			.as_millis();
 		let reader = io::BufReader::new(file);
 		let mut archive = zip::ZipArchive::new(reader)?;
 		let meta = archive.by_name("meta")?;
@@ -283,14 +290,16 @@ fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 		.unwrap_or(Vec::new())
 		.iter()
 		.map(|path| path.join("281990").join("remote").join("save games"))
-		.chain(std::iter::once(get_stellaris_user_data_dir().join("save games")))
+		.chain(std::iter::once(
+			get_stellaris_user_data_dir().join("save games"),
+		))
 		.flat_map(|path| get_sub_dirs(&path).unwrap_or_default())
 		.map(|path| {
 			let files = Vec::from_iter(
 				get_files_matching_filter(&path, &FileFilter::Extension(OsString::from("sav")), 1)
 					.unwrap_or(Vec::new())
 					.iter()
-					.map(|path| StellarisSave::from_path_or_default(path))
+					.map(|path| StellarisSave::from_path_or_default(path)),
 			);
 			return files;
 		})
@@ -302,7 +311,7 @@ fn get_stellaris_data_paths(
 	install_path: PathBuf,
 	data_relative_dir: PathBuf,
 	filter: FileFilter,
-	depth: u8
+	depth: u8,
 ) -> Vec<PathBuf> {
 	let data_root_dirs = get_stellaris_data_dirs(install_path);
 	let mut file_path_to_root_dir: HashMap<PathBuf, PathBuf> = HashMap::new();
@@ -316,7 +325,7 @@ fn get_stellaris_data_paths(
 							.strip_prefix(&data_root_dir)
 							.expect("data file is not descendant of data root dir")
 							.to_path_buf(),
-						data_root_dir.clone()
+						data_root_dir.clone(),
 					);
 				}
 			}
@@ -336,7 +345,7 @@ fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
 		Path::new(&path).to_path_buf(),
 		Path::new("localisation").to_path_buf(),
 		FileFilter::Extension(OsString::from("yml")),
-		8
+		8,
 	);
 	if loc_file_paths.is_empty() {
 		return Err(anyhow::anyhow!("No localisation files found"));

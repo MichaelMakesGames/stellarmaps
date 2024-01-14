@@ -1,20 +1,21 @@
 {
-  "editor.formatOnSave": true,
-  "cSpell.words": [
-    "hyperlane",
-    "hyperlanes",
-    "localisation",
-    "Megastructure",
-    "megastructures",
-    "Orbitron",
-    "polylabel",
-    "skeletonlabs",
-    "Starbase",
-    "starbases",
-    "steamapps",
-    "stellaris",
-    "stellarmaps",
-    "tauri",
-    "voronoi"
-  ]
+	"editor.formatOnSave": true,
+	"cSpell.words": [
+		"hyperlane",
+		"hyperlanes",
+		"localisation",
+		"Megastructure",
+		"megastructures",
+		"Orbitron",
+		"polylabel",
+		"skeletonlabs",
+		"Starbase",
+		"starbases",
+		"steamapps",
+		"stellaris",
+		"stellarmaps",
+		"tauri",
+		"voronoi"
+	],
+	"typescript.tsdk": "node_modules/typescript/lib"
 }

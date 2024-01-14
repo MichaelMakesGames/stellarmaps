@@ -57,12 +57,13 @@
 				mapSettings: $mapSettings,
 				colors,
 				colorStack: [$mapSettings.backgroundColor],
-		  })
+			})
 		: 'rgb(17,17,17)'}
 	bind:this={svg}
 >
 	<defs>
 		{#if exportMode}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html styles}
 		{/if}
 		{#if data}
@@ -102,7 +103,7 @@
 					mapSettings: $mapSettings,
 					colors,
 					colorStack: [$mapSettings.backgroundColor],
-			  })
+				})
 			: 'rgb(17,17,17)'}
 	/>
 	<g bind:this={g}>
@@ -123,8 +124,8 @@
 						stroke={circle.type === 'outlier'
 							? 'green'
 							: circle.type.startsWith('outer')
-							? 'blue'
-							: 'red'}
+								? 'blue'
+								: 'red'}
 						fill="transparent"
 					/>
 				{/each}

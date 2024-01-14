@@ -24,7 +24,7 @@ export default function processSystemCoordinates(gameState: GameState, settings:
 					],
 					[Math.round(originalCoordinates[0] / 5) * 5, Math.round(originalCoordinates[1] / 5) * 5],
 					originalCoordinates,
-			  ]
+				]
 			: [];
 		const coordinates =
 			preferredCoordinates.find((coords) => !usedCoordinates.has(positionToString(coords))) ??

@@ -71,7 +71,7 @@ export default function processLabels(
 										ratio: textAspectRatio,
 										iterations: 8,
 										xBuffer: settings.borderStroke.width / SCALE,
-								  })
+									})
 								: null;
 							if (
 								textWidth &&
@@ -94,7 +94,7 @@ export default function processLabels(
 										relativePointType: textWidth ? 'bottom' : 'middle',
 										ratio: emblemAspectRatio,
 										iterations: 8,
-								  })
+									})
 								: null;
 							if (
 								emblemWidth &&

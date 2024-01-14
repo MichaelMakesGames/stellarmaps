@@ -59,7 +59,7 @@
 	$: {
 		colorsOrNull = null;
 		dataOrNull = null;
-		allAsyncDataPromise.then(([colors, gameState, data]) => {
+		allAsyncDataPromise.then(([colors, _gameState, data]) => {
 			colorsOrNull = colors;
 			dataOrNull = data;
 		});

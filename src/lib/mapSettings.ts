@@ -117,7 +117,7 @@ export interface IdAndName {
 type RequiresReprocessingFunc<T> = (prev: T, next: T) => boolean;
 
 interface MapSettingConfigBase extends IdAndName {
-	requiresReprocessing?: boolean | RequiresReprocessingFunc<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+	requiresReprocessing?: boolean | RequiresReprocessingFunc<any>;
 	hideIf?: (settings: MapSettings) => boolean;
 }
 
@@ -1070,7 +1070,6 @@ export function validateAndResetSettings(unvalidatedSettings: MapSettings): MapS
 			const valid = validateSetting(settings[key as keyof MapSettings], config);
 			if (!valid) {
 				console.warn(`invalid value for setting ${key}; setting default`);
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				(settings as any)[key] = (defaultMapSettings as any)[key];
 			}
 		}
@@ -1078,7 +1077,6 @@ export function validateAndResetSettings(unvalidatedSettings: MapSettings): MapS
 	for (const config of configs) {
 		if (!Object.hasOwn(settings, config.id)) {
 			console.warn(`missing value for setting ${config.id}; setting default`);
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			(settings as any)[config.id] = (defaultMapSettings as any)[config.id];
 		}
 	}

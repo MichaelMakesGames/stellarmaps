@@ -1,11 +1,6 @@
 <script lang="ts">
 	import HeroiconArrowPathRoundedSquareMini from './icons/HeroiconArrowPathRoundedSquareMini.svelte';
-	import {
-		lastProcessedMapSettings,
-		mapSettingConfig,
-		mapSettings,
-		settingsAreDifferent,
-	} from './mapSettings';
+	import { lastProcessedMapSettings, mapSettings, settingsAreDifferent } from './mapSettings';
 
 	$: shouldShow = settingsAreDifferent($lastProcessedMapSettings, $mapSettings, {
 		requiresReprocessingOnly: true,

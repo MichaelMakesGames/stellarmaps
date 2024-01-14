@@ -170,6 +170,7 @@
 			{#if selectedSave == null}
 				<option value={null} disabled hidden />
 			{/if}
+			<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 			{#await savesPromise then saves}
 				{#if selectedSaveGroup}
 					{#each selectedSaveGroup as save}
@@ -270,7 +271,7 @@
 	</div>
 	<div class="flex-shrink flex-grow overflow-y-auto">
 		<Accordion>
-			{#each mapSettingConfig as settingGroup, i (settingGroup.id)}
+			{#each mapSettingConfig as settingGroup (settingGroup.id)}
 				<AccordionItem>
 					<svelte:fragment slot="summary">
 						<h3 class="h4 font-bold">

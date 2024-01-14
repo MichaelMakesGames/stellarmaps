@@ -1,20 +1,12 @@
 <script lang="ts">
-	import { get, readable, type Readable } from 'svelte/store';
+	import { get, type Readable } from 'svelte/store';
 	import {
 		mapSettings,
 		type MapSettingConfig,
 		type SelectOption,
-		colorDynamicOptions,
 		emptyOptions,
-		colorOptions,
 	} from './mapSettings';
-	import {
-		Accordion,
-		AccordionItem,
-		popup,
-		RangeSlider,
-		SlideToggle,
-	} from '@skeletonlabs/skeleton';
+	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
 	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
 	import type { FormEventHandler } from 'svelte/elements';
 	import { slide } from 'svelte/transition';

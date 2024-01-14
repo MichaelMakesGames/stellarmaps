@@ -14,11 +14,11 @@ export default function processBypassLinks(
 
 	const [lGateNexusId, lGateNexus] = Object.entries(gameState.galactic_object)
 		.map(parseNumberEntry)
-		.find(([id, object]) => object.flags?.lcluster1) ?? [null, null];
+		.find(([_id, object]) => object.flags?.lcluster1) ?? [null, null];
 
 	const [shroudTunnelNexusId, shroudTunnelNexus] = Object.entries(gameState.galactic_object)
 		.map(parseNumberEntry)
-		.find(([id, object]) => object.flags?.shroud_tunnel_nexus) ?? [null, null];
+		.find(([_id, object]) => object.flags?.shroud_tunnel_nexus) ?? [null, null];
 
 	Object.entries(gameState.galactic_object)
 		.map(parseNumberEntry)
@@ -36,7 +36,7 @@ export default function processBypassLinks(
 			const wormholeIsKnown = wormholeBypassId != null && knownWormholes.has(wormholeBypassId);
 			const wormholeLinksTo: undefined | number = Object.entries(gameState.galactic_object)
 				.map(parseNumberEntry)
-				.filter(([id, go]) => go.bypasses?.includes(wormholeBypass?.linked_to as number))
+				.filter(([_id, go]) => go.bypasses?.includes(wormholeBypass?.linked_to as number))
 				.map(([id]) => id)[0];
 			const key = `wormhole-${[systemId, wormholeLinksTo].sort()}`;
 			if (wormholeLinksTo != null && !bypassLinks[key]) {

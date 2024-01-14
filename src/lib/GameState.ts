@@ -5,7 +5,7 @@ gameStatePromise.subscribe(
 	(promise) =>
 		promise &&
 		promise.then((gameState) => {
-			(window as any).gameState = gameState; // eslint-disable-line
+			(window as any).gameState = gameState;
 		}),
 );
 
