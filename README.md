@@ -11,6 +11,7 @@ Stylized and customizable Stellaris maps
 - Sector borders
 - Capital / sector capital / populated system icons
 - Hyperlanes and hyper relays
+- Gateways and wormholes
 - Unions mode
 - Terra incognita
 - PNG and SVG export
@@ -20,7 +21,6 @@ Stylized and customizable Stellaris maps
 ## Planned
 
 - Nebulae
-- Gateways and wormholes
 - Legend
 - Time-lapses
 
@@ -42,3 +42,12 @@ Other interface icons from [Heroicons](https://heroicons.com), licensed under th
 # Local Development
 
 [Follow the tauri prerequisites guide](https://tauri.app/v1/guides/getting-started/prerequisites). Install a recent version of Node.js. Then, in the root directory, run `npm run tauri dev`.
+
+## Electron
+
+There is an Electron version available for local development. Some changes to the package.json are required. You can run `electron-on.sh` to make those changes, then run `npm run dev`. When you are finished, run `electron-off.sh` to revert the changes to package.json.
+
+This exists mostly for debugging in Chromium. The release builds all use Tauri. Currently, the Electron version lacks the following features:
+
+- loading data (localization, emblems, colors) from Stellaris mods
+- production builds

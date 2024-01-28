@@ -1,18 +1,21 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
+	"extends": "@electron-toolkit/tsconfig/tsconfig.json",
+	"include": [
+		"src/renderer/src/env.d.ts",
+		"src/renderer/src/**/*",
+		"src/renderer/src/**/*.svelte",
+		"src/preload/*.d.ts",
+		"src/shared/StellarMapsApi.ts"
+	],
 	"compilerOptions": {
+		"noUnusedParameters": false,
+		"noUnusedLocals": false,
+		"verbatimModuleSyntax": true,
+		"useDefineForClassFields": true,
+		"strict": false,
 		"allowJs": true,
 		"checkJs": true,
-		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"moduleResolution": "Node10",
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"strict": true
-	}
-	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
-	//
-	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
-	// from the referenced tsconfig.json - TypeScript does not merge them in
+		"lib": ["ESNext", "DOM", "DOM.Iterable"]
+	},
+	"references": [{ "path": "./tsconfig.node.json" }]
 }

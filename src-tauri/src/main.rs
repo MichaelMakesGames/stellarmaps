@@ -2,14 +2,17 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use anyhow;
+use base64::prelude::*;
+use ddsfile::Dds;
 use font_kit::source::SystemSource;
+use image_dds;
 use regex::Regex;
 use std::collections::HashMap;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
+use std::io::{self, BufRead, Cursor};
 use std::io::Read;
-use std::io::{self, BufRead};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
@@ -66,7 +69,7 @@ async fn get_stellaris_save_cmd(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn get_emblem_cmd(path: String, category: String, file: String) -> Result<Vec<u8>, String> {
+async fn get_emblem_cmd(path: String, category: String, file: String) -> Result<String, String> {
 	return get_emblem(Path::new(&path).to_path_buf(), category, file).map_err(|err| err.to_string());
 }
 
@@ -367,14 +370,18 @@ fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
 	return Ok(locs);
 }
 
-fn get_emblem(install_path: PathBuf, category: String, file: String) -> anyhow::Result<Vec<u8>> {
+fn get_emblem(install_path: PathBuf, category: String, file: String) -> anyhow::Result<String> {
 	let mut dirs = get_stellaris_data_dirs(install_path).to_owned();
 	dirs.reverse();
 	for dir in dirs {
 		let path = dir.join("flags").join(&category).join("map").join(&file);
 		if path.exists() {
-			let binary_data = fs::read(path)?;
-			return Ok(binary_data);
+			let mut reader = std::fs::File::open(path)?;
+			let dds = Dds::read(&mut reader)?;
+			let img = image_dds::image_from_dds(&dds, 0)?;
+			let mut bytes: Vec<u8> = Vec::new();
+			img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
+			return Ok(format!("data:image/png;base64,{}", BASE64_STANDARD.encode(bytes)));
 		}
 	}
 	return Err(anyhow::anyhow!("No data dir contained emblem"));

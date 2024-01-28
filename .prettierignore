@@ -1,7 +1,8 @@
 .DS_Store
 node_modules
 /src-tauri
-/static/
+/out
+/dist
 /build
 /.svelte-kit
 /package
