@@ -115,7 +115,20 @@
 	let container: HTMLDivElement;
 	let outputWidth = container?.clientWidth ?? 0;
 	let outputHeight = container?.clientHeight ?? 0;
-	const resizeObserver = new ResizeObserver(debounce(renderMap, 100));
+
+	let resizing = false;
+	const onResizeEnd = debounce(() => {
+		resetZoom();
+		renderMap().then(() => {
+			resizing = false;
+		});
+	}, 250);
+	const resizeObserver = new ResizeObserver(() => {
+		resizing = true;
+		pngDataUrl = '';
+		zoomedPngDataUrl = '';
+		onResizeEnd();
+	});
 	$: if (container) {
 		resizeObserver.observe(container);
 	} else {
@@ -240,6 +253,10 @@
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">
 				Select a save in the top left
 			</div>
+		</div>
+	{:else if resizing}
+		<div class="h-full w-full flex items-center">
+			<div class="h1 w-full text-center" style="lineHeight: 100%;">Resizing...</div>
 		</div>
 	{:else}
 		{#await allAsyncDataPromise}
