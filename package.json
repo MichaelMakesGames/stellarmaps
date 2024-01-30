@@ -2,9 +2,9 @@
 	"name": "stellarmaps",
 	"version": "0.9.0-dev",
 	"private": true,
-	"type": "commonjs",
+	"type": "module",
 	"scripts": {
-		"dev": "electron-vite dev --watch",
+		"dev": "tauri dev",
 		"vite:dev": "vite dev",
 		"vite:build": "vite build",
 		"format": "prettier --plugin prettier-plugin-svelte --write .",
@@ -90,6 +90,5 @@
 		"rambda": "^8.6.0",
 		"steam-path": "^1.0.2",
 		"zod": "^3.22.4"
-	},
-	"main": "./out/main/index.js"
+	}
 }
