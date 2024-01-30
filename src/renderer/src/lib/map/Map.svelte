@@ -1,19 +1,17 @@
 <script lang="ts">
-	import { select } from 'd3-selection';
-	import { zoom, zoomIdentity } from 'd3-zoom';
 	import { afterUpdate, createEventDispatcher } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { mapSettings } from '../mapSettings';
+	import BypassLinks from './BypassLinks.svelte';
 	import CountryBorders from './CountryBorders.svelte';
 	import CountryLabels from './CountryLabels.svelte';
 	import Hyperlanes from './Hyperlanes.svelte';
+	import Icons from './Icons.svelte';
 	import SystemIcons from './SystemIcons.svelte';
 	import TerraIncognita from './TerraIncognita.svelte';
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
 	import type { MapData } from './data/processMapData';
 	import { resolveColor } from './mapUtils';
-	import BypassLinks from './BypassLinks.svelte';
-	import Icons from './Icons.svelte';
 
 	export let id: string = '';
 	export let data: null | MapData;

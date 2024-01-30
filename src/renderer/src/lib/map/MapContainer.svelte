@@ -75,9 +75,12 @@
 		orbitronDataUrl = url;
 	});
 
-	$: allAsyncDataPromise = wait(3_000).then(() =>
-		Promise.all([colorsPromise, $gameStatePromise, mapDataPromise, orbitronPromise]),
-	);
+	$: allAsyncDataPromise = Promise.all([
+		colorsPromise,
+		$gameStatePromise,
+		mapDataPromise,
+		orbitronPromise,
+	]);
 	let colorsOrNull: null | Awaited<typeof colorsPromise> = null;
 	let dataOrNull: null | Awaited<typeof mapDataPromise> = null;
 	$: {
@@ -154,6 +157,7 @@
 		transform = null;
 	}
 
+	let pngDataUrlPromise = Promise.resolve('');
 	async function renderMap(onlyRenderZoomed = false) {
 		if (!container) return;
 		outputWidth = container.clientWidth;
@@ -178,10 +182,13 @@
 		let newPngDataUrlPromise = onlyRenderZoomed
 			? Promise.resolve(pngDataUrl)
 			: dataOrNull == null || colorsOrNull == null
-				? Promise.resolve('')
+				? Promise.resolve(pngDataUrl)
 				: convertSvgToPng(mapSvg, { left, top, width, height, outputWidth, outputHeight }).then(
 						convertBlobToDataUrl,
 					);
+		if (!onlyRenderZoomed) {
+			pngDataUrlPromise = newPngDataUrlPromise;
+		}
 
 		const translateRatio = outputWidth < outputHeight ? 1000 / outputWidth : 1000 / outputHeight;
 		left -= ((transform?.x ?? 0) * translateRatio) / (transform?.k ?? 1);
@@ -214,22 +221,21 @@
 		renderOnTransformChange();
 	}
 
+	$: bg =
+		colorsOrNull == null || dataOrNull == null
+			? ADDITIONAL_COLORS.very_black
+			: resolveColor({
+					mapSettings: $mapSettings,
+					colors: colorsOrNull ?? {},
+					colorStack: [$mapSettings.backgroundColor],
+				});
+
 	onDestroy(() => {
 		map.$destroy();
 	});
 </script>
 
-<div
-	class="w-full h-full relative"
-	style:background={colorsOrNull == null || dataOrNull == null
-		? ADDITIONAL_COLORS.very_black
-		: resolveColor({
-				mapSettings: $mapSettings,
-				colors: colorsOrNull ?? {},
-				colorStack: [$mapSettings.backgroundColor],
-			})}
-	bind:this={container}
->
+<div class="w-full h-full relative" style:background={bg} bind:this={container}>
 	{#if transform != null}
 		<button
 			type="button"
@@ -249,43 +255,40 @@
 		Export
 	</button>
 	{#if !$gameStatePromise}
-		<div class="h-full w-full flex items-center">
+		<div class="h-full w-full flex items-center" style:background={bg}>
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">
 				Select a save in the top left
 			</div>
 		</div>
 	{:else if resizing}
-		<div class="h-full w-full flex items-center">
+		<div class="h-full w-full flex items-center" style:background={bg}>
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">Resizing...</div>
 		</div>
 	{:else}
-		{#await allAsyncDataPromise}
+		{#await Promise.all([pngDataUrlPromise, allAsyncDataPromise])}
 			<div
-				class="h-full w-full flex items-center absolute top-0 left-0"
-				style:background="transparent"
+				class="h-full w-full flex items-center absolute top-0 left-0 backdrop-blur backdrop-brightness-75"
 			>
 				<div class="h1 w-full text-center" style="lineHeight: 100%;">
 					This could take a few seconds...
 				</div>
 			</div>
 		{/await}
-		{#if pngDataUrl}
-			<svg
-				bind:this={svg}
-				width={outputWidth}
-				height={outputHeight}
-				viewBox="0 0 {outputWidth} {outputHeight}"
-				class="w-full h-full"
-			>
+		<svg
+			bind:this={svg}
+			width={outputWidth}
+			height={outputHeight}
+			viewBox="0 0 {outputWidth} {outputHeight}"
+			class="w-full h-full"
+		>
+			<g bind:this={g}>
 				{#if pngDataUrl}
-					<g bind:this={g}>
-						<image x="0" y="0" width={outputWidth} height={outputHeight} href={pngDataUrl} />
-					</g>
+					<image x="0" y="0" width={outputWidth} height={outputHeight} href={pngDataUrl} />
 				{/if}
-				{#if zoomedPngDataUrl}
-					<image x="0" y="0" width={outputWidth} height={outputHeight} href={zoomedPngDataUrl} />
-				{/if}
-			</svg>
-		{/if}
+			</g>
+			{#if zoomedPngDataUrl}
+				<image x="0" y="0" width={outputWidth} height={outputHeight} href={zoomedPngDataUrl} />
+			{/if}
+		</svg>
 	{/if}
 </div>

@@ -1,29 +1,29 @@
 <script lang="ts">
+	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
+	import { onDestroy } from 'svelte';
+	import type { FormEventHandler } from 'svelte/elements';
 	import { get, type Readable } from 'svelte/store';
+	import { slide } from 'svelte/transition';
+	import ColorSettingControl from './ColorSettingControl.svelte';
+	import IconSettingControl from './IconSettingControl.svelte';
 	import {
-		mapSettings,
+		editedMapSettings,
+		emptyOptions,
 		type MapSettingConfig,
 		type SelectOption,
-		emptyOptions,
 	} from './mapSettings';
-	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
-	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
-	import type { FormEventHandler } from 'svelte/elements';
-	import { slide } from 'svelte/transition';
-	import { isDefined } from './utils';
-	import ColorSettingControl from './ColorSettingControl.svelte';
 	import StrokeSettingControl from './StrokeSettingControl.svelte';
-	import IconSettingControl from './IconSettingControl.svelte';
+	import { isDefined } from './utils';
 
 	export let config: MapSettingConfig;
 
-	let value: any = get(mapSettings)[config.id];
-	mapSettings.subscribe((values) => {
+	let value: any = get(editedMapSettings)[config.id];
+	let unsubscribe = editedMapSettings.subscribe((values) => {
 		value = values[config.id];
 	});
 	$: {
-		if (value !== $mapSettings[config.id]) {
-			mapSettings.update((prev) => ({
+		if (value !== $editedMapSettings[config.id]) {
+			editedMapSettings.update((prev) => ({
 				...prev,
 				[config.id]: value,
 			}));
@@ -39,7 +39,7 @@
 		}
 	};
 
-	$: hidden = config.hideIf?.($mapSettings);
+	$: hidden = config.hideIf?.($editedMapSettings);
 
 	const dynamicOptions: Readable<SelectOption[]> =
 		config.type === 'select' && config.dynamicOptions ? config.dynamicOptions : emptyOptions;
@@ -50,17 +50,16 @@
 	function handleStrokeToggle(e: Event) {
 		value = { ...value, enabled: (e.currentTarget as HTMLInputElement).checked };
 	}
+
+	onDestroy(() => {
+		unsubscribe();
+	});
 </script>
 
 {#if !hidden}
 	<label class="label" for={config.id} transition:slide>
 		<div class="flex items-center">
 			{config.name}
-			{#if config.requiresReprocessing}
-				<span class="relative top-1 start-1">
-					<ReprocessMapBadge />
-				</span>
-			{/if}
 			<div class="grow" />
 			{#if config.type === 'stroke' || config.type === 'icon'}
 				<div class="inline-block relative top-1">

@@ -863,14 +863,25 @@ export const defaultMapSettings: MapSettings = {
 	},
 };
 
-export const mapSettings = localStorageStore('mapSettings', defaultMapSettings, {});
+export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);
+export const editedMapSettings = localStorageStore('editedMapSettings', get(mapSettings));
 export const lastProcessedMapSettings = localStorageStore(
 	'lastProcessedMapSettings',
 	defaultMapSettings,
 );
 mapSettings.set(validateAndResetSettings(get(mapSettings)));
+editedMapSettings.set(validateAndResetSettings(get(editedMapSettings)));
 lastProcessedMapSettings.set(validateAndResetSettings(get(lastProcessedMapSettings)));
-export const reprocessMap = () => lastProcessedMapSettings.set(get(mapSettings));
+export const applyMapSettings = () => {
+	mapSettings.set(get(editedMapSettings));
+	if (
+		settingsAreDifferent(get(mapSettings), get(lastProcessedMapSettings), {
+			requiresReprocessingOnly: true,
+		})
+	) {
+		lastProcessedMapSettings.set(get(mapSettings));
+	}
+};
 
 export interface SavedMapSettings {
 	name: string;

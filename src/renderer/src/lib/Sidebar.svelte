@@ -16,13 +16,13 @@
 		mapSettingConfig,
 		mapSettings,
 		presetMapSettings,
-		reprocessMap,
+		applyMapSettings,
 		settingsAreDifferent,
 		type SavedMapSettings,
+		editedMapSettings,
 	} from './mapSettings';
 	import parseSave from './parseSave';
-	import ReprocessMapBadge from './ReprocessMapBadge.svelte';
-	import ReprocessButton from './ReprocessButton.svelte';
+	import ApplyChangesButton from './ApplyChangesButton.svelte';
 	import { timeItAsync, toastError, wait } from './utils';
 	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import stellarMapsApi, { type StellarisSaveMetadata } from './stellarMapsApi';
@@ -63,7 +63,7 @@
 			? presetMapSettings.find((preset) => preset.name === loadedSettingsName)
 			: $customSavedSettings.find((saved) => saved.name === loadedSettingsName);
 		let confirmed = true;
-		if (!loadedSettings || settingsAreDifferent(loadedSettings.settings, $mapSettings)) {
+		if (!loadedSettings || settingsAreDifferent(loadedSettings.settings, $editedMapSettings)) {
 			confirmed = await new Promise<boolean>((resolve) => {
 				modalStore.trigger({
 					type: 'confirm',
@@ -76,7 +76,7 @@
 		if (confirmed) {
 			loadedSettingsKey.set(`${type}|${savedSettings.name}`);
 			if (settingsAreDifferent(savedSettings.settings, $mapSettings)) {
-				await wait(100);
+				editedMapSettings.set(savedSettings.settings);
 				mapSettings.set(savedSettings.settings);
 				lastProcessedMapSettings.set(savedSettings.settings);
 			}
@@ -116,7 +116,7 @@
 <form
 	id="sidebar-left"
 	class="flex flex-col h-full w-96"
-	on:submit|preventDefault={reprocessMap}
+	on:submit|preventDefault={applyMapSettings}
 	novalidate
 >
 	<form
@@ -131,6 +131,10 @@
 				gameStatePromise.set(promise);
 
 				// update settings that depend on save-specific options
+				editedMapSettings.update((prev) => ({
+					...prev,
+					terraIncognitaPerspectiveCountry: 'player',
+				}));
 				mapSettings.update((prev) => ({
 					...prev,
 					terraIncognitaPerspectiveCountry: 'player',
@@ -264,10 +268,6 @@
 		</div>
 	</div>
 
-	<div class="px-4 pb-2 flex align-middle text-sm">
-		<ReprocessMapBadge />
-		<span class="ms-1">= requires reprocessing</span>
-	</div>
 	<div class="flex-shrink flex-grow overflow-y-auto">
 		<Accordion>
 			{#each mapSettingConfig as settingGroup (settingGroup.id)}
@@ -286,5 +286,5 @@
 			{/each}
 		</Accordion>
 	</div>
-	<ReprocessButton />
+	<ApplyChangesButton />
 </form>
