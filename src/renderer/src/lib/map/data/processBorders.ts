@@ -237,7 +237,7 @@ export default function processBorders(
 			if (settings.borderStroke.smoothing) {
 				smoothedOuterBorderGeoJSON = smoothGeojson(outerBorderGeoJSON, 2);
 			}
-			const smoothedInnerBorderGeoJSON = buffer(
+			const smoothedInnerBorderGeoJSON: null | ReturnType<typeof buffer> = buffer(
 				smoothedOuterBorderGeoJSON,
 				-settings.borderStroke.width / SCALE,
 				{ units: 'degrees' },
@@ -246,11 +246,14 @@ export default function processBorders(
 				smoothedOuterBorderGeoJSON,
 				settings.borderStroke.smoothing,
 			);
-			const innerPath = multiPolygonToPath(
-				smoothedInnerBorderGeoJSON,
-				settings.borderStroke.smoothing,
-			);
-			const borderOnlyGeoJSON = difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
+			const innerPath =
+				smoothedInnerBorderGeoJSON == null
+					? ''
+					: multiPolygonToPath(smoothedInnerBorderGeoJSON, settings.borderStroke.smoothing);
+			const borderOnlyGeoJSON =
+				smoothedInnerBorderGeoJSON == null
+					? smoothedOuterBorderGeoJSON
+					: difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
 			const borderPath = borderOnlyGeoJSON
 				? multiPolygonToPath(borderOnlyGeoJSON, settings.borderStroke.smoothing)
 				: '';
