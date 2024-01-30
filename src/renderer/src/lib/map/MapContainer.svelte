@@ -130,6 +130,8 @@
 		resizing = true;
 		pngDataUrl = '';
 		zoomedPngDataUrl = '';
+		lastRenderedTransformPngDataUrl = '';
+		lastRenderedTransform = null;
 		onResizeEnd();
 	});
 	$: if (container) {
@@ -141,6 +143,8 @@
 	let g: SVGGElement;
 	let svg: SVGElement;
 	let transform: ZoomTransform | null = null;
+	let lastRenderedTransform: ZoomTransform | null = null;
+	let lastRenderedTransformPngDataUrl = '';
 	let zoomHandler = zoom().on('zoom', (e) => {
 		zoomedPngDataUrl = '';
 		zoomedPngDataUrlRequestId = null;
@@ -195,6 +199,7 @@
 		top -= ((transform?.y ?? 0) * translateRatio) / (transform?.k ?? 1);
 		width /= transform?.k ?? 1;
 		height /= transform?.k ?? 1;
+		let newRenderedTransform = transform;
 		const newZoomedPngDataUrlPromise = transform
 			? convertSvgToPng(mapSvg, { left, top, width, height, outputWidth, outputHeight }).then(
 					convertBlobToDataUrl,
@@ -210,6 +215,8 @@
 				}
 				let newZoomedPngDataUrl = await newZoomedPngDataUrlPromise;
 				if ((newZoomedPngDataUrlRequestId = zoomedPngDataUrlRequestId)) {
+					lastRenderedTransform = newRenderedTransform;
+					lastRenderedTransformPngDataUrl = newZoomedPngDataUrl;
 					zoomedPngDataUrl = newZoomedPngDataUrl;
 				}
 			},
@@ -288,6 +295,18 @@
 			</g>
 			{#if zoomedPngDataUrl}
 				<image x="0" y="0" width={outputWidth} height={outputHeight} href={zoomedPngDataUrl} />
+			{:else if lastRenderedTransformPngDataUrl}
+				<g transform={transform.toString()}>
+					<image
+						x="0"
+						y="0"
+						width={outputWidth}
+						height={outputHeight}
+						href={lastRenderedTransformPngDataUrl}
+						transform="scale({1 /
+							lastRenderedTransform.k}) translate({-lastRenderedTransform.x},{-lastRenderedTransform.y})"
+					/>
+				</g>
 			{/if}
 		</svg>
 	{/if}

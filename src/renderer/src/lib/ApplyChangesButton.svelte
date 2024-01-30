@@ -1,5 +1,5 @@
 <script lang="ts">
-	import HeroiconArrowPathRoundedSquareMini from './icons/HeroiconArrowPathRoundedSquareMini.svelte';
+	import HeroiconPaintBrushMini from './icons/HeroiconPaintBrushMini.svelte';
 	import { editedMapSettings, mapSettings, settingsAreDifferent } from './mapSettings';
 
 	$: shouldShow = settingsAreDifferent($editedMapSettings, $mapSettings);
@@ -7,7 +7,8 @@
 
 {#if shouldShow}
 	<button type="submit" class="btn btn-lg variant-filled-primary w-full rounded-none">
-		<span><HeroiconArrowPathRoundedSquareMini /></span>
+		<span><HeroiconPaintBrushMini /></span>
 		<span>Apply Changes</span>
+		<span class="invisible"><HeroiconPaintBrushMini /></span>
 	</button>
 {/if}
