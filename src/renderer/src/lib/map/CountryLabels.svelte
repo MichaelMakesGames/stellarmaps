@@ -4,7 +4,6 @@
 
 	export let data: MapData;
 	export let debug: boolean;
-	export let exportMode: boolean;
 </script>
 
 {#each data.labels.filter((label) => label.isKnown || !$mapSettings.terraIncognita) as label}
@@ -29,24 +28,6 @@
 				height={emblemHeight}
 				xlink:href={data.emblems[label.emblemKey]}
 			/>
-			{#if !exportMode}
-				<!-- This lets the user right-click "Copy Image" to paste into an external program -->
-				<!-- <foreignObject
-					x={point[0] - emblemWidth / 2}
-					y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
-					width={emblemWidth}
-					height={emblemHeight}
-					href={data.emblems[label.emblemKey]}
-					opacity="0"
-				>
-					<img
-						width={emblemWidth}
-						height={emblemHeight}
-						src={data.emblems[label.emblemKey]}
-						alt="Country Emblem"
-					/>
-				</foreignObject> -->
-			{/if}
 			{#if label.isUnionLeader}
 				<text
 					transform="translate({point[0]},{point[1] -

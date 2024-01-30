@@ -34,14 +34,16 @@ export default function processSystemOwnership(
 			const polygon = voronoi.cellPolygon(i);
 			systemIdToPolygon[goId] = polygon;
 			if (ownerId != null && owner) {
-				const unionLeaderId = getUnionLeaderId(ownerId, gameState, settings);
+				const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, [
+					'joinedBorders',
+				]);
 				ownedSystemPoints.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[goId])).geometry);
 				if (!countryToOwnedSystemIds[ownerId]) {
 					countryToOwnedSystemIds[ownerId] = [];
 				}
 				countryToOwnedSystemIds[ownerId].push(goId);
 				systemIdToCountry[goId] = ownerId;
-				systemIdToUnionLeader[goId] = unionLeaderId;
+				systemIdToUnionLeader[goId] = joinedUnionLeaderId;
 
 				if (polygon == null) {
 					console.warn(`null polygon for system at ${systemIdToCoordinates[goId]}`);
@@ -50,14 +52,14 @@ export default function processSystemOwnership(
 						countryToSystemPolygons[ownerId] = [];
 					}
 					countryToSystemPolygons[ownerId].push(polygon);
-					if (!unionLeaderToSystemPolygons[unionLeaderId]) {
-						unionLeaderToSystemPolygons[unionLeaderId] = [];
+					if (!unionLeaderToSystemPolygons[joinedUnionLeaderId]) {
+						unionLeaderToSystemPolygons[joinedUnionLeaderId] = [];
 					}
-					unionLeaderToSystemPolygons[unionLeaderId].push(polygon);
-					if (!unionLeaderToUnionMembers[unionLeaderId]) {
-						unionLeaderToUnionMembers[unionLeaderId] = new Set();
+					unionLeaderToSystemPolygons[joinedUnionLeaderId].push(polygon);
+					if (!unionLeaderToUnionMembers[joinedUnionLeaderId]) {
+						unionLeaderToUnionMembers[joinedUnionLeaderId] = new Set();
 					}
-					unionLeaderToUnionMembers[unionLeaderId].add(ownerId);
+					unionLeaderToUnionMembers[joinedUnionLeaderId].add(ownerId);
 				}
 			}
 		});

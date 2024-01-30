@@ -56,3 +56,16 @@ export async function timeItAsync<Args extends unknown[], ReturnValue>(
 	console.timeEnd(`END:   ${message}`);
 	return result;
 }
+
+export function debounce(fn: () => void, ms: number) {
+	let timeoutId: ReturnType<typeof setTimeout> | null = null;
+	return () => {
+		if (timeoutId != null) {
+			clearTimeout(timeoutId);
+		}
+		timeoutId = setTimeout(() => {
+			fn();
+			timeoutId = null;
+		}, ms);
+	};
+}

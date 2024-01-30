@@ -6,18 +6,19 @@
 		getToastStore,
 		localStorageStore,
 	} from '@skeletonlabs/skeleton';
-	import { mapSettings } from './mapSettings';
-	import Map from './map/Map.svelte';
-	import { toastError, wait } from './utils';
-	import { getFillColorAttributes, resolveColor } from './map/mapUtils';
+	import convertSvgToPng from './convertSvgToPng';
 	import type { MapData } from './map/data/processMapData';
+	import { getFillColorAttributes, resolveColor } from './map/mapUtils';
+	import { mapSettings } from './mapSettings';
 	import stellarMapsApi from './stellarMapsApi';
+	import { toastError } from './utils';
+
+	const _props = $$props; // this suppresses warning about unknown prop 'parent'
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
+	const svg: SVGGElement = $modalStore[0].meta?.svg;
 	const colors: Record<string, string> = $modalStore[0].meta?.colors;
 	const mapData: MapData = $modalStore[0].meta?.mapData;
-
-	let hiddenDiv: HTMLDivElement;
 
 	const defaultExportSettings = {
 		lockAspectRatio: true,
@@ -94,79 +95,53 @@
 	}
 
 	async function exportPng() {
-		const svg = document.querySelector('#export-svg')?.outerHTML;
-		const canvas = document.createElement('canvas');
-		canvas.height = imageHeight;
-		canvas.width = imageWidth;
-		const ctx = canvas.getContext('2d');
-		if (!svg || !ctx) {
-			console.error('no svg and/or no ctx');
+		const buffer = await convertSvgToPng(svg, {
+			left: mapLeft,
+			top: mapTop,
+			width: mapWidth,
+			height: mapHeight,
+			outputWidth: imageWidth,
+			outputHeight: imageHeight,
+		}).then((blob) => blob.arrayBuffer());
+		const savePath = await stellarMapsApi.dialog.save({
+			defaultPath: await stellarMapsApi.path.join(
+				await stellarMapsApi.path.pictureDir(),
+				'map.png',
+			),
+			filters: [{ extensions: ['png'], name: 'Image' }],
+		});
+		if (savePath && svg) {
+			await stellarMapsApi.fs.writeBinaryFile(savePath, buffer).then(() => {
+				toastStore.trigger({
+					background: 'variant-filled-success',
+					message: 'Export Successful',
+					timeout: 10000,
+					action: {
+						label: `
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
+							</svg>
+						`,
+						response: () => stellarMapsApi.revealFile(savePath),
+					},
+				});
+			});
+			return;
+		} else {
 			return;
 		}
-		const svgUrl = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-		const img = document.createElement('img');
-		img.height = imageHeight;
-		img.width = imageWidth;
-		hiddenDiv.appendChild(img);
-		const promise = new Promise<void>((resolve, reject) => {
-			img.addEventListener(
-				'load',
-				async function () {
-					// the data url images within the SVG haven't necessarily loaded at this point
-					// wait a bit to give them time to render
-					await wait(500);
-					ctx.drawImage(img, 0, 0);
-					canvas.toBlob(
-						async (b) => {
-							if (b == null) {
-								reject('canvas.toBlob failed');
-							} else {
-								console.log('opening save dialog');
-								const savePath = await stellarMapsApi.dialog.save({
-									defaultPath: await stellarMapsApi.path.join(
-										await stellarMapsApi.path.pictureDir(),
-										'map.png',
-									),
-									filters: [{ extensions: ['png'], name: 'Image' }],
-								});
-								if (savePath) {
-									await stellarMapsApi.fs
-										.writeBinaryFile(savePath, await b.arrayBuffer())
-										.then(() => {
-											toastStore.trigger({
-												background: 'variant-filled-success',
-												message: 'Export Successful',
-												timeout: 10000,
-												action: {
-													label: `
-													<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-														<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
-													</svg>
-												`,
-													response: () => stellarMapsApi.revealFile(savePath),
-												},
-											});
-										});
-									resolve();
-								} else {
-									resolve();
-								}
-							}
-						},
-						'image/png',
-						0.95,
-					);
-					hiddenDiv.removeChild(img);
-				},
-				{ once: true },
-			);
-		});
-		img.src = svgUrl;
-		await promise;
 	}
 
 	async function exportSvg() {
-		const svg = document.querySelector('#export-svg')?.outerHTML;
+		svg.setAttribute('width', imageWidth.toString());
+		svg.setAttribute('height', imageHeight.toString());
+		svg.setAttribute('viewBox', `${mapLeft} ${mapTop} ${mapWidth} ${mapHeight}`);
+		const bgRect = svg.firstChild as SVGRectElement;
+		bgRect.setAttribute('x', mapLeft.toString());
+		bgRect.setAttribute('y', mapTop.toString());
+		bgRect.setAttribute('width', mapWidth.toString());
+		bgRect.setAttribute('height', mapHeight.toString());
+		const svgString = svg.outerHTML;
 		const savePath = await stellarMapsApi.dialog.save({
 			defaultPath: await stellarMapsApi.path.join(
 				await stellarMapsApi.path.pictureDir(),
@@ -175,7 +150,7 @@
 			filters: [{ extensions: ['svg'], name: 'Image' }],
 		});
 		if (savePath && svg) {
-			await stellarMapsApi.fs.writeFile(savePath, svg).then(() => {
+			await stellarMapsApi.fs.writeFile(savePath, svgString).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
 					message: 'Export Successful',
@@ -217,7 +192,10 @@
 	class="modal block overflow-y-auto bg-surface-100-800-token w-[60rem] h-auto p-4 space-y-4 rounded-container-token shadow-xl"
 	role="dialog"
 	aria-modal="true"
-	on:submit={() => onSubmit(exportPng)}
+	on:submit={(e) => {
+		e.preventDefault();
+		onSubmit(exportPng);
+	}}
 	novalidate
 >
 	<header class="modal-header text-2xl font-bold">Export PNG</header>
@@ -381,17 +359,6 @@
 				/>
 			</svg>
 		</aside>
-		<div class="hidden" bind:this={hiddenDiv}>
-			<Map
-				id="export-svg"
-				data={mapData}
-				{colors}
-				exportMode
-				exportModeViewBox="{mapLeft} {mapTop} {mapWidth} {mapHeight}"
-				exportWidth={imageWidth}
-				exportHeight={imageHeight}
-			/>
-		</div>
 	</article>
 	<footer class="modal-footer flex justify-end space-x-2">
 		<button

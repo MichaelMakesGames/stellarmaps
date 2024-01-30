@@ -29,7 +29,6 @@ Stylized and customizable Stellaris maps
 - Does not work with mod packs using Irony's "Compressed" merge
 - Exported SVGs are tested with Inkscape and web browsers. Other viewers/editors may or may not work
 - If viewing an SVG with Inkscape, the default Orbitron font will not work unless installed on your computer. [You can download it here.](https://fonts.google.com/specimen/Orbitron)
-- Performance is choppy (but usable) on Linux
 
 # Credits
 
@@ -41,7 +40,7 @@ Other interface icons from [Heroicons](https://heroicons.com), licensed under th
 
 # Local Development
 
-[Follow the tauri prerequisites guide](https://tauri.app/v1/guides/getting-started/prerequisites). Install a recent version of Node.js. Then, in the root directory, run `npm run tauri dev`.
+[Follow the tauri prerequisites guide](https://tauri.app/v1/guides/getting-started/prerequisites). Install a recent version of Node.js. Then, in the root directory, run `npm run dev`.
 
 ## Electron
 

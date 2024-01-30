@@ -33,7 +33,9 @@ export function getUnionLeaderId(
 	countryId: number,
 	gameState: GameState,
 	settings: MapSettings,
+	values: ('joinedBorders' | 'separateBorders' | 'off')[],
 ): number {
+	const isIncludedValue = (value: string) => (values as string[]).includes(value);
 	const country = gameState.country[countryId];
 	const overlordId = country.overlord;
 	const overlord = overlordId != null ? gameState.country[overlordId] : null;
@@ -43,14 +45,14 @@ export function getUnionLeaderId(
 	if (!settings.unionMode) {
 		return countryId;
 	} else if (
-		settings.unionFederations === 'joinedBorders' &&
-		settings.unionSubjects === 'joinedBorders' &&
+		isIncludedValue(settings.unionFederations) &&
+		isIncludedValue(settings.unionSubjects) &&
 		overlordFederation
 	) {
 		return overlordFederation.leader;
-	} else if (settings.unionFederations === 'joinedBorders' && federation) {
+	} else if (isIncludedValue(settings.unionFederations) && federation) {
 		return federation.leader;
-	} else if (settings.unionSubjects === 'joinedBorders' && overlord && overlordId != null) {
+	} else if (isIncludedValue(settings.unionSubjects) && overlord && overlordId != null) {
 		return overlordId;
 	} else {
 		return countryId;
@@ -215,7 +217,9 @@ export function getPolygons(
 }
 
 export function getCountryColors(countryId: number, gameState: GameState, settings: MapSettings) {
-	return gameState.country[getUnionLeaderId(countryId, gameState, settings)]?.flag?.colors;
+	return gameState.country[
+		getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
+	]?.flag?.colors;
 }
 
 export function positionToString(p: helpers.Position): string {
