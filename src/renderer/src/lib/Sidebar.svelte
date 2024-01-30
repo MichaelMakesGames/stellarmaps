@@ -68,7 +68,7 @@
 				modalStore.trigger({
 					type: 'confirm',
 					title: 'Are you sure?',
-					body: 'Your unsaved changes will be lost.',
+					body: 'You have customized your map setting that you have not saved. These changes will be lost.',
 					response: resolve,
 				});
 			});
@@ -221,7 +221,10 @@
 							group={$loadedSettingsKey}
 							name="loadSettings"
 							value="CUSTOM|{saved.name}"
-							on:click={() => loadSettings('CUSTOM', saved)}
+							on:click={(e) => {
+								e.preventDefault();
+								loadSettings('CUSTOM', saved);
+							}}
 						>
 							{saved.name}
 							<svelte:fragment slot="trail">
@@ -258,7 +261,10 @@
 						group={$loadedSettingsKey}
 						name="loadSettings"
 						value="PRESET|{preset.name}"
-						on:click={() => loadSettings('PRESET', preset)}
+						on:click={(e) => {
+							e.preventDefault();
+							loadSettings('PRESET', preset);
+						}}
 					>
 						{preset.name}
 					</ListBoxItem>
