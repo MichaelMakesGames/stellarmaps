@@ -9,7 +9,7 @@
 	import { ADDITIONAL_COLORS } from '../colors';
 	import convertBlobToDataUrl from '../convertBlobToDataUrl';
 	import convertSvgToPng from '../convertSvgToPng';
-	import HeroiconArrowPathOutline from '../icons/HeroiconArrowPathOutline.svelte';
+	import HeroiconArrowsPointingOut from '../icons/HeroiconArrowsPointingOut.svelte';
 	import {
 		loadStellarisData,
 		stellarisDataPromiseStore,
@@ -17,7 +17,7 @@
 	} from '../loadStellarisData';
 	import { lastProcessedMapSettings, mapSettings } from '../mapSettings';
 	import stellarMapsApi from '../stellarMapsApi';
-	import { debounce, timeItAsync, toastError, wait } from '../utils';
+	import { debounce, timeItAsync, toastError } from '../utils';
 	import Map from './Map.svelte';
 	import processMapData from './data/processMapData';
 	import { resolveColor } from './mapUtils';
@@ -243,7 +243,7 @@
 			transition:fade
 			on:click={resetZoom}
 		>
-			<HeroiconArrowPathOutline />
+			<HeroiconArrowsPointingOut />
 		</button>
 	{/if}
 	<button

@@ -45,6 +45,7 @@ export default async function convertSvgToPng(
 					0.95,
 				);
 				document.body.removeChild(img);
+				canvas.remove();
 			},
 			{ once: true },
 		);
