@@ -49,9 +49,11 @@ export function getUnionLeaderId(
 		isIncludedValue(settings.unionSubjects) &&
 		overlordFederation
 	) {
-		return overlordFederation.leader;
+		return settings.unionFederationsColor === 'leader'
+			? overlordFederation.leader
+			: overlordFederation.members[0];
 	} else if (isIncludedValue(settings.unionFederations) && federation) {
-		return federation.leader;
+		return settings.unionFederationsColor === 'leader' ? federation.leader : federation.members[0];
 	} else if (isIncludedValue(settings.unionSubjects) && overlord && overlordId != null) {
 		return overlordId;
 	} else {

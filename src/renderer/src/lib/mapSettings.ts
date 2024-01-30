@@ -18,6 +18,7 @@ export type StringMapSettings =
 	| 'labelsAvoidHoles'
 	| 'countryNamesFont'
 	| 'unionFederations'
+	| 'unionFederationsColor'
 	| 'unionSubjects'
 	| 'unionLeaderSymbol'
 	| 'terraIncognitaPerspectiveCountry'
@@ -262,8 +263,8 @@ export const colorDynamicOptions = derived<typeof stellarisDataPromiseStore, Sel
 );
 
 const unionOptions: IdAndName[] = [
-	{ id: 'joinedBorders', name: 'Joined Borders' },
-	{ id: 'separateBorders', name: 'Separate Borders' },
+	{ id: 'joinedBorders', name: 'Same Color, Joined Borders' },
+	{ id: 'separateBorders', name: 'Same Color, Separate Borders' },
 	{ id: 'off', name: 'Off' },
 ];
 
@@ -327,6 +328,14 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				requiresReprocessing: true,
 			},
 			{
+				id: 'unionSubjects',
+				name: 'Subjects',
+				requiresReprocessing: true,
+				type: 'select',
+				options: unionOptions,
+				hideIf: (settings) => !settings.unionMode,
+			},
+			{
 				id: 'unionFederations',
 				name: 'Federations',
 				requiresReprocessing: true,
@@ -335,12 +344,15 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				hideIf: (settings) => !settings.unionMode,
 			},
 			{
-				id: 'unionSubjects',
-				name: 'Subjects',
+				id: 'unionFederationsColor',
+				name: 'Federation Member Color',
 				requiresReprocessing: true,
 				type: 'select',
-				options: unionOptions,
-				hideIf: (settings) => !settings.unionMode,
+				options: [
+					{ id: 'founder', name: 'Founder' },
+					{ id: 'leader', name: 'Current Leader' },
+				],
+				hideIf: (settings) => !settings.unionMode || settings.unionFederations === 'off',
 			},
 			{
 				id: 'unionLeaderSymbol',
@@ -806,6 +818,7 @@ export const defaultMapSettings: MapSettings = {
 	},
 	unionMode: false,
 	unionFederations: 'joinedBorders',
+	unionFederationsColor: 'founder',
 	unionSubjects: 'joinedBorders',
 	unionLeaderSymbol: '✶',
 	unionLeaderSymbolSize: 0.3,
