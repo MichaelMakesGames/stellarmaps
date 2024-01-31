@@ -26,6 +26,7 @@ export interface GameState {
 }
 
 export interface GalacticObject {
+	name?: LocalizedText;
 	coordinate: { x: number; y: number; origin: number; randomized: boolean };
 	starbases: number[];
 	hyperlane?: { to: number; length: number }[] | Record<string, never>;

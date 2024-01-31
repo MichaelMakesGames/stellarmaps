@@ -157,7 +157,7 @@ function findLargestContainedRect({
 	xBuffer?: number;
 }) {
 	let bestWidth: null | number = null;
-	let failedWidth = null;
+	let failedWidth: null | number = null;
 	let testWidth = 1;
 	for (let i = 0; i < iterations; i++) {
 		const testRect = makeRect(

@@ -5,7 +5,7 @@
 	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import orbitronPath from '../../static/Orbitron-VariableFont_wght.ttf';
-	import { gameStatePromise } from '../GameState';
+	import { gameStatePromise, type GalacticObject } from '../GameState';
 	import { ADDITIONAL_COLORS } from '../colors';
 	import convertBlobToDataUrl from '../convertBlobToDataUrl';
 	import convertSvgToPng from '../convertSvgToPng';
@@ -21,6 +21,7 @@
 	import Map from './Map.svelte';
 	import processMapData from './data/processMapData';
 	import { resolveColor } from './mapUtils';
+	import MapTooltip from './MapTooltip.svelte';
 
 	const modalStore = getModalStore();
 
@@ -116,8 +117,8 @@
 	map.$on('map-updated', () => renderMap());
 
 	let container: HTMLDivElement;
-	let outputWidth = container?.clientWidth ?? 0;
-	let outputHeight = container?.clientHeight ?? 0;
+	let outputWidth = 0;
+	let outputHeight = 0;
 
 	let resizing = false;
 	const onResizeEnd = debounce(() => {
@@ -149,14 +150,14 @@
 		zoomedPngDataUrl = '';
 		zoomedPngDataUrlRequestId = null;
 		transform = e.transform;
-		if (g) g.setAttribute('transform', transform.toString());
+		if (g) g.setAttribute('transform', e.transform.toString());
 	});
 	$: if (svg) {
-		select(svg).call(zoomHandler);
+		select(svg).call(zoomHandler as any);
 	}
 	function resetZoom() {
 		if (svg) {
-			select(svg).call(zoomHandler.transform, zoomIdentity);
+			select(svg).call(zoomHandler.transform as any, zoomIdentity);
 		}
 		transform = null;
 	}
@@ -214,7 +215,7 @@
 					pngDataUrl = newPngDataUrl;
 				}
 				let newZoomedPngDataUrl = await newZoomedPngDataUrlPromise;
-				if ((newZoomedPngDataUrlRequestId = zoomedPngDataUrlRequestId)) {
+				if (newZoomedPngDataUrlRequestId === zoomedPngDataUrlRequestId) {
 					lastRenderedTransform = newRenderedTransform;
 					lastRenderedTransformPngDataUrl = newZoomedPngDataUrl;
 					zoomedPngDataUrl = newZoomedPngDataUrl;
@@ -240,6 +241,46 @@
 	onDestroy(() => {
 		map.$destroy();
 	});
+
+	let tooltip: {
+		x: number;
+		y: number;
+		system: GalacticObject;
+	} | null = null;
+	function onMouseMove(e: MouseEvent) {
+		if (dataOrNull != null) {
+			let viewBoxWidth = 1000;
+			let viewBoxHeight = 1000;
+			if (outputHeight > outputWidth) {
+				viewBoxHeight *= outputHeight / outputWidth;
+			} else {
+				viewBoxWidth *= outputWidth / outputHeight;
+			}
+			const svgPoint = [
+				((transform || zoomIdentity).invertX(e.offsetX) * viewBoxWidth) / outputWidth -
+					viewBoxWidth / 2,
+				((transform || zoomIdentity).invertY(e.offsetY) * viewBoxHeight) / outputHeight -
+					viewBoxHeight / 2,
+			];
+			const system = dataOrNull.findClosestSystem(-svgPoint[0], svgPoint[1]);
+			if (system) {
+				const systemPoint = [-system.coordinate.x, system.coordinate.y];
+				const tooltipPoint = [
+					(transform || zoomIdentity).applyX(
+						((systemPoint[0] + viewBoxWidth / 2) * outputWidth) / viewBoxWidth,
+					),
+					(transform || zoomIdentity).applyY(
+						((systemPoint[1] + viewBoxHeight / 2) * outputHeight) / viewBoxHeight,
+					),
+				];
+				tooltip = {
+					x: tooltipPoint[0],
+					y: tooltipPoint[1],
+					system: system,
+				};
+			}
+		}
+	}
 </script>
 
 <div class="w-full h-full relative" style:background={bg} bind:this={container}>
@@ -261,6 +302,9 @@
 	>
 		Export
 	</button>
+	{#if tooltip != null}
+		<MapTooltip {...tooltip} />
+	{/if}
 	{#if !$gameStatePromise}
 		<div class="h-full w-full flex items-center" style:background={bg}>
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">
@@ -286,6 +330,8 @@
 			width={outputWidth}
 			height={outputHeight}
 			viewBox="0 0 {outputWidth} {outputHeight}"
+			role="presentation"
+			on:mousemove={debounce(onMouseMove, 250)}
 			class="w-full h-full"
 		>
 			<g bind:this={g}>
@@ -296,15 +342,18 @@
 			{#if zoomedPngDataUrl}
 				<image x="0" y="0" width={outputWidth} height={outputHeight} href={zoomedPngDataUrl} />
 			{:else if lastRenderedTransformPngDataUrl}
-				<g transform={transform.toString()}>
+				<g transform={transform?.toString()}>
 					<image
 						x="0"
 						y="0"
 						width={outputWidth}
 						height={outputHeight}
 						href={lastRenderedTransformPngDataUrl}
-						transform="scale({1 /
-							lastRenderedTransform.k}) translate({-lastRenderedTransform.x},{-lastRenderedTransform.y})"
+						transform={lastRenderedTransform
+							? `scale(${
+									1 / lastRenderedTransform.k
+								}) translate(${-lastRenderedTransform.x},${-lastRenderedTransform.y})`
+							: undefined}
 					/>
 				</g>
 			{/if}

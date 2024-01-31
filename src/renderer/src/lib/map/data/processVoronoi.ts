@@ -35,5 +35,14 @@ export default function processVoronoi(
 		MAX_BORDER_DISTANCE,
 		MAX_BORDER_DISTANCE,
 	]);
-	return voronoi;
+	const systemIds = Object.keys(systemIdToCoordinates);
+	function findClosestSystem(x: number, y: number) {
+		const index = delaunay.find(x, y);
+		if (index < systemIds.length) {
+			return gameState.galactic_object[parseInt(systemIds[index])];
+		} else {
+			return null;
+		}
+	}
+	return { voronoi, findClosestSystem };
 }

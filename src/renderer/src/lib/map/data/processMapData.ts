@@ -26,7 +26,13 @@ export default async function processMapData(gameState: GameState, settings: Map
 		gameState,
 		settings,
 	);
-	const voronoi = timeIt('voronoi', processVoronoi, gameState, settings, systemIdToCoordinates);
+	const { voronoi, findClosestSystem } = timeIt(
+		'voronoi',
+		processVoronoi,
+		gameState,
+		settings,
+		systemIdToCoordinates,
+	);
 	const {
 		countryToOwnedSystemIds,
 		countryToSystemPolygons,
@@ -128,6 +134,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		labels,
 		terraIncognitaPath,
 		galaxyBorderCircles,
+		findClosestSystem,
 	};
 }
 

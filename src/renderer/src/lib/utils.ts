@@ -57,14 +57,14 @@ export async function timeItAsync<Args extends unknown[], ReturnValue>(
 	return result;
 }
 
-export function debounce(fn: () => void, ms: number) {
+export function debounce<T extends any[]>(fn: (...args: T) => void, ms: number) {
 	let timeoutId: ReturnType<typeof setTimeout> | null = null;
-	return () => {
+	return (...args: T) => {
 		if (timeoutId != null) {
 			clearTimeout(timeoutId);
 		}
 		timeoutId = setTimeout(() => {
-			fn();
+			fn(...args);
 			timeoutId = null;
 		}, ms);
 	};
