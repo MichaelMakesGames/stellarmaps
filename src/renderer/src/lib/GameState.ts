@@ -23,10 +23,13 @@ export interface GameState {
 	galaxy: {
 		shape: string;
 	};
+	planets: {
+		planet: Record<number, Planet>;
+	};
 }
 
 export interface GalacticObject {
-	name?: LocalizedText;
+	name: LocalizedText;
 	coordinate: { x: number; y: number; origin: number; randomized: boolean };
 	starbases: number[];
 	hyperlane?: { to: number; length: number }[] | Record<string, never>;
@@ -34,6 +37,13 @@ export interface GalacticObject {
 	colonies?: number[];
 	bypasses?: number[];
 	flags?: Record<string, number | undefined>;
+}
+
+export interface Planet {
+	name: LocalizedText;
+	controller?: number;
+	owner?: number;
+	num_sapient_pops?: number;
 }
 
 export interface Bypass {

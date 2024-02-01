@@ -5,7 +5,7 @@
 	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import orbitronPath from '../../static/Orbitron-VariableFont_wght.ttf';
-	import { gameStatePromise, type GalacticObject } from '../GameState';
+	import { gameStatePromise, type GalacticObject, type GameState } from '../GameState';
 	import { ADDITIONAL_COLORS } from '../colors';
 	import convertBlobToDataUrl from '../convertBlobToDataUrl';
 	import convertSvgToPng from '../convertSvgToPng';
@@ -83,12 +83,15 @@
 		orbitronPromise,
 	]);
 	let colorsOrNull: null | Awaited<typeof colorsPromise> = null;
+	let gameStateOrNull: null | GameState = null;
 	let dataOrNull: null | Awaited<typeof mapDataPromise> = null;
 	$: {
 		colorsOrNull = null;
+		gameStateOrNull = null;
 		dataOrNull = null;
-		allAsyncDataPromise.then(([colors, _gameState, data]) => {
+		allAsyncDataPromise.then(([colors, gameState, data]) => {
 			colorsOrNull = colors;
+			gameStateOrNull = gameState;
 			dataOrNull = data;
 		});
 	}
@@ -303,7 +306,7 @@
 		Export
 	</button>
 	{#if tooltip != null}
-		<MapTooltip {...tooltip} />
+		<MapTooltip {...tooltip} gameState={gameStateOrNull} />
 	{/if}
 	{#if !$gameStatePromise}
 		<div class="h-full w-full flex items-center" style:background={bg}>
