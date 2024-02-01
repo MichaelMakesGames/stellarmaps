@@ -58,7 +58,7 @@ export default function processBorders(
 				};
 			}
 
-			const countrySectors = Object.values(gameState.sectors).filter(
+			const countrySectors = Object.values(gameState.sectors ?? {}).filter(
 				(sector) =>
 					sector.owner != null &&
 					getUnionLeaderId(sector.owner, gameState, settings, ['joinedBorders']) === countryId,

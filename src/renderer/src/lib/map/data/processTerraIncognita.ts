@@ -27,7 +27,7 @@ export default function processTerraIncognita(
 		.map((key) => parseInt(key))
 		.filter((id) => !knownSystems.has(id));
 	const wormholeIds = new Set(
-		Object.entries(gameState.bypasses)
+		Object.entries(gameState.bypasses ?? {})
 			.map(parseNumberEntry)
 			.filter(([_id, bypass]) => bypass.type === 'wormhole')
 			.map(([id]) => id),

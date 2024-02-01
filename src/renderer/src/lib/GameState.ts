@@ -15,9 +15,9 @@ export interface GameState {
 	ships: Record<number, Ship>;
 	fleet: Record<number, Fleet>;
 	starbase_mgr: { starbases: Record<number, Starbase> };
-	bypasses: Record<number, Bypass>;
+	bypasses?: Record<number, Bypass>;
 	megastructures: Record<number, Megastructure>;
-	sectors: Record<number, Sector>;
+	sectors?: Record<number, Sector>;
 	federation: Record<number, Federation>;
 	player?: { name: string; country: number }[];
 	galaxy: {

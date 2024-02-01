@@ -23,7 +23,7 @@ export default function processSystems(
 
 			const isOwned = country != null;
 			const isColonized = isOwned && Boolean(system.colonies?.length);
-			const isSectorCapital = Object.values(gameState.sectors).some((sector) =>
+			const isSectorCapital = Object.values(gameState.sectors ?? {}).some((sector) =>
 				system.colonies?.includes(sector.local_capital as number),
 			);
 			const isCountryCapital = system.colonies?.includes(country?.capital as number);
@@ -34,7 +34,7 @@ export default function processSystems(
 			const systemIsKnown = knownSystems.has(systemId);
 
 			const bypassTypes = new Set(
-				system.bypasses?.map((bypassId) => gameState.bypasses[bypassId]?.type),
+				system.bypasses?.map((bypassId) => gameState.bypasses?.[bypassId]?.type),
 			);
 			const hasWormhole = bypassTypes.has('wormhole');
 			const hasGateway = bypassTypes.has('gateway');
