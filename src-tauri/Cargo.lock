@@ -3086,7 +3086,7 @@ dependencies = [
 
 [[package]]
 name = "stellarmaps"
-version = "0.9.0-dev"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "base64 0.21.7",

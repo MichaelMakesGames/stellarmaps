@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "StellarMaps",
-    "version": "0.9.0-dev"
+    "version": "0.9.0"
   },
   "tauri": {
     "allowlist": {
