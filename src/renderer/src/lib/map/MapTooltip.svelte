@@ -1,13 +1,52 @@
 <script lang="ts">
+	import { onDestroy, onMount } from 'svelte';
 	import type { GalacticObject, GameState } from '../GameState';
 	import HeroiconUserMicro from '../icons/HeroiconUserMicro.svelte';
 	import { isDefined } from '../utils';
 	import { localizeText } from './data/locUtils';
+	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 
 	export let x: number;
 	export let y: number;
 	export let system: GalacticObject;
 	export let gameState: null | GameState;
+
+	let targetEl: HTMLDivElement;
+	let popupEl: HTMLDivElement;
+	let arrowEl: HTMLDivElement;
+
+	function updatePopupPos() {
+		computePosition(targetEl, popupEl, {
+			placement: 'right-start',
+			middleware: [offset(4), flip(), shift(), arrow({ element: arrowEl, padding: 12 })],
+		}).then((pos) => {
+			popupEl.style.left = `${pos.x}px`;
+			popupEl.style.top = `${pos.y}px`;
+			popupEl.style.display = 'block';
+			const arrowData = pos.middlewareData.arrow;
+
+			const staticSide = {
+				top: 'bottom',
+				right: 'left',
+				bottom: 'top',
+				left: 'right',
+			}[pos.placement.split('-')[0]];
+
+			Object.assign(arrowEl.style, {
+				left: arrowData?.x != null ? `${arrowData.x}px` : '',
+				top: arrowData?.y != null ? `${arrowData.y}px` : '',
+				right: '',
+				bottom: '',
+				...(staticSide ? { [staticSide]: '-5px' } : {}),
+			});
+		});
+	}
+
+	let cleanup: null | (() => void) = null;
+	onMount(() => {
+		cleanup = autoUpdate(targetEl, popupEl, updatePopupPos);
+	});
+	onDestroy(() => cleanup?.());
 
 	$: planets = system.colonies
 		?.map((planetId) => gameState?.planets.planet[planetId])
@@ -16,11 +55,19 @@
 </script>
 
 <div
-	class="bg-surface-900 py-1 px-2 absolute shadow-sm border border-surface-700 rounded"
+	class="absolute w-2 h-4 -ms-1 -mt-2 pointer-events-none"
 	style:top="{y}px"
 	style:left="{x}px"
-	style:transform="translate(0.5rem, -50%)"
+	tabindex="-1"
+	bind:this={targetEl}
+></div>
+
+<div
+	data-popup="map-tooltip"
+	class="bg-surface-600 py-1 px-2 shadow-sm border border-surface-500 rounded pointer-events-none"
+	bind:this={popupEl}
 >
+	<div class="arrow bg-surface-600" bind:this={arrowEl} />
 	{#await localizeText(system.name)}
 		Loading...
 	{:then name}

@@ -1,4 +1,4 @@
-import type { GameState } from '../../GameState';
+import type { GalacticObject, GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { Delaunay } from 'd3-delaunay';
 
@@ -36,12 +36,13 @@ export default function processVoronoi(
 		MAX_BORDER_DISTANCE,
 	]);
 	const systemIds = Object.keys(systemIdToCoordinates);
-	function findClosestSystem(x: number, y: number) {
+	function findClosestSystem(x: number, y: number): [number, GalacticObject] | [null, null] {
 		const index = delaunay.find(x, y);
+		const systemId = parseInt(systemIds[index]);
 		if (index < systemIds.length) {
-			return gameState.galactic_object[parseInt(systemIds[index])];
+			return [systemId, gameState.galactic_object[systemId]];
 		} else {
-			return null;
+			return [null, null];
 		}
 	}
 	return { voronoi, findClosestSystem };

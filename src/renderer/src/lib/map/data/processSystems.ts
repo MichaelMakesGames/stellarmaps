@@ -42,6 +42,7 @@ export default function processSystems(
 			const hasShroudTunnel = bypassTypes.has('shroud_tunnel');
 
 			return {
+				id: systemId,
 				primaryColor,
 				secondaryColor,
 				isColonized,

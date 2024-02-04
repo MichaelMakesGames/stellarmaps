@@ -22,6 +22,7 @@
 	import processMapData from './data/processMapData';
 	import { resolveColor } from './mapUtils';
 	import MapTooltip from './MapTooltip.svelte';
+	import { get } from 'svelte/store';
 
 	const modalStore = getModalStore();
 
@@ -131,6 +132,7 @@
 		});
 	}, 250);
 	const resizeObserver = new ResizeObserver(() => {
+		tooltip = null;
 		resizing = true;
 		pngDataUrl = '';
 		zoomedPngDataUrl = '';
@@ -149,7 +151,14 @@
 	let transform: ZoomTransform | null = null;
 	let lastRenderedTransform: ZoomTransform | null = null;
 	let lastRenderedTransformPngDataUrl = '';
+	let zooming = false;
+	let endZooming = debounce(() => {
+		zooming = false;
+	}, 100);
 	let zoomHandler = zoom().on('zoom', (e) => {
+		tooltip = null;
+		zooming = true;
+		endZooming();
 		zoomedPngDataUrl = '';
 		zoomedPngDataUrlRequestId = null;
 		transform = e.transform;
@@ -251,7 +260,7 @@
 		system: GalacticObject;
 	} | null = null;
 	function onMouseMove(e: MouseEvent) {
-		if (dataOrNull != null) {
+		if (dataOrNull != null && !resizing && !zooming) {
 			let viewBoxWidth = 1000;
 			let viewBoxHeight = 1000;
 			if (outputHeight > outputWidth) {
@@ -265,8 +274,11 @@
 				((transform || zoomIdentity).invertY(e.offsetY) * viewBoxHeight) / outputHeight -
 					viewBoxHeight / 2,
 			];
-			const system = dataOrNull.findClosestSystem(-svgPoint[0], svgPoint[1]);
+			const [systemId, system] = dataOrNull.findClosestSystem(-svgPoint[0], svgPoint[1]);
 			if (system) {
+				const settings = get(mapSettings);
+				const processedSystem = dataOrNull?.systems.find((s) => s.id === systemId);
+
 				const systemPoint = [-system.coordinate.x, system.coordinate.y];
 				const tooltipPoint = [
 					(transform || zoomIdentity).applyX(
@@ -276,11 +288,18 @@
 						((systemPoint[1] + viewBoxHeight / 2) * outputHeight) / viewBoxHeight,
 					),
 				];
-				tooltip = {
-					x: tooltipPoint[0],
-					y: tooltipPoint[1],
-					system: system,
-				};
+
+				if (settings.terraIncognita && !processedSystem?.systemIsKnown) {
+					tooltip = null;
+				} else if (Math.hypot(tooltipPoint[0] - e.offsetX, tooltipPoint[1] - e.offsetY) > 32) {
+					tooltip = null;
+				} else {
+					tooltip = {
+						x: tooltipPoint[0],
+						y: tooltipPoint[1],
+						system: system,
+					};
+				}
 			}
 		}
 	}
@@ -305,8 +324,10 @@
 	>
 		Export
 	</button>
-	{#if tooltip != null}
-		<MapTooltip {...tooltip} gameState={gameStateOrNull} />
+	{#if tooltip != null && !zooming && !resizing}
+		<div class="h-full w-full overflow-hidden absolute top-0 left-0 pointer-events-none">
+			<MapTooltip {...tooltip} gameState={gameStateOrNull} />
+		</div>
 	{/if}
 	{#if !$gameStatePromise}
 		<div class="h-full w-full flex items-center" style:background={bg}>
@@ -334,7 +355,7 @@
 			height={outputHeight}
 			viewBox="0 0 {outputWidth} {outputHeight}"
 			role="presentation"
-			on:mousemove={debounce(onMouseMove, 250)}
+			on:mousemove={debounce(onMouseMove, 100)}
 			class="w-full h-full"
 		>
 			<g bind:this={g}>
