@@ -17,7 +17,7 @@ export function tokenize(gameState: string): string[] {
 			if (char === '\n') {
 				comment = false;
 			}
-		} else if (token && quoteOpen) {
+		} else if (token != null && quoteOpen) {
 			token = token.concat(char);
 			if (char === '"') {
 				tokens.push(token);
@@ -25,21 +25,21 @@ export function tokenize(gameState: string): string[] {
 				quoteOpen = false;
 			}
 		} else if (char === '#') {
-			if (token) tokens.push(token);
+			if (token != null) tokens.push(token);
 			token = null;
 			comment = true;
 		} else if (char.match(/\s/)) {
-			if (token) tokens.push(token);
+			if (token != null) tokens.push(token);
 			token = null;
 		} else if (char === '{' || char === '}' || char === '=') {
-			if (token) tokens.push(token);
+			if (token != null) tokens.push(token);
 			token = null;
 			tokens.push(char);
 		} else if (char === '"') {
 			token = char;
 			quoteOpen = true;
 		} else {
-			if (token) {
+			if (token != null) {
 				token = token.concat(char);
 			} else {
 				token = char;
@@ -60,7 +60,7 @@ export function jsonify(tokens: string[]): Record<string, any> {
 	for (const token of tokens) {
 		if (token === '{') {
 			if (assigning) {
-				if (key) {
+				if (key != null) {
 					const newObject = {};
 					const strippedKey = stripQuotes(key);
 					if (current[strippedKey] != undefined) {
@@ -80,7 +80,7 @@ export function jsonify(tokens: string[]): Record<string, any> {
 					return gameState;
 				}
 			} else {
-				if (key) {
+				if (key != null) {
 					assignToArray(current, parseValue(key));
 					key = null;
 				}
@@ -94,7 +94,7 @@ export function jsonify(tokens: string[]): Record<string, any> {
 				console.error('closing object, but currently assigning', current);
 				return gameState;
 			} else {
-				if (key) {
+				if (key != null) {
 					assignToArray(current, parseValue(key));
 					key = null;
 				}
@@ -103,7 +103,7 @@ export function jsonify(tokens: string[]): Record<string, any> {
 					const array = current[ARRAY_KEY];
 					current = stack.pop() ?? {};
 					const arrayKey = Object.keys(current).find((key) => current[key][ARRAY_KEY] === array);
-					if (arrayKey) current[arrayKey] = array;
+					if (arrayKey != null) current[arrayKey] = array;
 				} else {
 					current = stack.pop() ?? {};
 				}
@@ -112,14 +112,14 @@ export function jsonify(tokens: string[]): Record<string, any> {
 			if (assigning) {
 				console.error('already assigning', key, current);
 				return gameState;
-			} else if (key) {
+			} else if (key != null) {
 				assigning = true;
 			} else {
 				console.error('no key to assign', current);
 				return gameState;
 			}
 		} else {
-			if (assigning && key) {
+			if (assigning && key != null) {
 				const strippedKey = stripQuotes(key);
 				if (current[strippedKey] != undefined) {
 					if (!Array.isArray(current[strippedKey])) {
@@ -131,7 +131,7 @@ export function jsonify(tokens: string[]): Record<string, any> {
 				}
 				key = null;
 				assigning = false;
-			} else if (key) {
+			} else if (key != null) {
 				assignToArray(current, parseValue(key));
 				key = token;
 			} else {
@@ -147,7 +147,7 @@ function stripQuotes(s: string) {
 	return s;
 }
 function assignToArray(obj: any, value: any) {
-	if (!obj[ARRAY_KEY]) obj[ARRAY_KEY] = [];
+	if (obj[ARRAY_KEY] == null) obj[ARRAY_KEY] = [];
 	obj[ARRAY_KEY].push(value);
 }
 function parseValue(token: string): string | number | boolean {

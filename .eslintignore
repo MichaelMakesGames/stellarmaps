@@ -10,6 +10,17 @@ node_modules
 .env.*
 !.env.example
 
+# Ignore config files
+tailwind.config.ts
+.eslintrc.cjs
+vite.config.ts
+postcss.config.cjs
+electron.vite.config.ts
+svelte.config.mjs
+
+# not sure why this file causes issues
+src/shared/*
+
 # Ignore files for PNPM, NPM and YARN
 pnpm-lock.yaml
 package-lock.json

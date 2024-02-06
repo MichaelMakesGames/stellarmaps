@@ -60,7 +60,7 @@ export default function processCircularGalaxyBorders(
 			if (nextId == null) break; // this shouldn't be possible, here for type inference
 			edgeSet.delete(nextId);
 			const next = gameState.galactic_object[nextId];
-			if (next && !cluster.systems.has(nextId)) {
+			if (next != null && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
 				cluster.points.features.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[nextId])));
 				const nextHyperlanes = getGameStateValueAsArray(next.hyperlane);

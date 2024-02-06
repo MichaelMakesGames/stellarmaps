@@ -39,7 +39,7 @@ export default function processBypassLinks(
 				.filter(([_id, go]) => go.bypasses?.includes(wormholeBypass?.linked_to as number))
 				.map(([id]) => id)[0];
 			const key = `wormhole-${[systemId, wormholeLinksTo].sort()}`;
-			if (wormholeLinksTo != null && !bypassLinks[key]) {
+			if (wormholeLinksTo != null && bypassLinks[key] != null) {
 				const toX = -systemIdToCoordinates[wormholeLinksTo][0];
 				const toY = systemIdToCoordinates[wormholeLinksTo][1];
 				bypassLinks[key] = {

@@ -37,7 +37,7 @@ function createWindow(): void {
 
 	// HMR for renderer base on electron-vite cli.
 	// Load the remote URL for development or the local html file for production.
-	if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+	if (is.dev && process.env['ELECTRON_RENDERER_URL'] != null) {
 		mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
 	} else {
 		mainWindow.loadFile(join(__dirname, '../renderer/index.html'));

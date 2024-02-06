@@ -12,6 +12,8 @@ module.exports = {
 		sourceType: 'module',
 		ecmaVersion: 2020,
 		extraFileExtensions: ['.svelte'],
+		project: ['./tsconfig.json', './tsconfig.node.json'],
+		tsconfigRootDir: __dirname,
 	},
 	env: {
 		browser: true,
@@ -30,5 +32,7 @@ module.exports = {
 	rules: {
 		'@typescript-eslint/no-explicit-any': 'off',
 		'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+		'@typescript-eslint/prefer-nullish-coalescing': 'error',
+		'@typescript-eslint/strict-boolean-expressions': ['error', { allowNullableBoolean: true }],
 	},
 };

@@ -29,7 +29,8 @@ export default function processSystemOwnership(
 		.map(parseNumberEntry)
 		.forEach(([goId, go], i) => {
 			const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
-			const ownerId = starbase ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
+			const ownerId =
+				starbase != null ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
 			const owner = ownerId != null ? gameState.country[ownerId] : null;
 			const polygon = voronoi.cellPolygon(i);
 			systemIdToPolygon[goId] = polygon;
@@ -38,7 +39,7 @@ export default function processSystemOwnership(
 					'joinedBorders',
 				]);
 				ownedSystemPoints.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[goId])).geometry);
-				if (!countryToOwnedSystemIds[ownerId]) {
+				if (countryToOwnedSystemIds[ownerId] == null) {
 					countryToOwnedSystemIds[ownerId] = [];
 				}
 				countryToOwnedSystemIds[ownerId].push(goId);
@@ -48,15 +49,15 @@ export default function processSystemOwnership(
 				if (polygon == null) {
 					console.warn(`null polygon for system at ${systemIdToCoordinates[goId]}`);
 				} else {
-					if (!countryToSystemPolygons[ownerId]) {
+					if (countryToSystemPolygons[ownerId] == null) {
 						countryToSystemPolygons[ownerId] = [];
 					}
 					countryToSystemPolygons[ownerId].push(polygon);
-					if (!unionLeaderToSystemPolygons[joinedUnionLeaderId]) {
+					if (unionLeaderToSystemPolygons[joinedUnionLeaderId] == null) {
 						unionLeaderToSystemPolygons[joinedUnionLeaderId] = [];
 					}
 					unionLeaderToSystemPolygons[joinedUnionLeaderId].push(polygon);
-					if (!unionLeaderToUnionMembers[joinedUnionLeaderId]) {
+					if (unionLeaderToUnionMembers[joinedUnionLeaderId] == null) {
 						unionLeaderToUnionMembers[joinedUnionLeaderId] = new Set();
 					}
 					unionLeaderToUnionMembers[joinedUnionLeaderId].add(ownerId);

@@ -74,15 +74,15 @@ export default function processLabels(
 									})
 								: null;
 							if (
-								textWidth &&
-								settings.countryNamesMinSize &&
+								textWidth != null &&
+								settings.countryNamesMinSize != null &&
 								textWidth * textAspectRatio * SCALE < settings.countryNamesMinSize
 							) {
 								textWidth = null;
 							}
 							if (
-								textWidth &&
-								settings.countryNamesMaxSize &&
+								textWidth != null &&
+								settings.countryNamesMaxSize != null &&
 								textWidth * textAspectRatio * SCALE > settings.countryNamesMaxSize
 							) {
 								textWidth = settings.countryNamesMaxSize / SCALE / textAspectRatio;
@@ -91,31 +91,31 @@ export default function processLabels(
 								? findLargestContainedRect({
 										polygon,
 										relativePoint: point,
-										relativePointType: textWidth ? 'bottom' : 'middle',
+										relativePointType: textWidth != null ? 'bottom' : 'middle',
 										ratio: emblemAspectRatio,
 										iterations: 8,
 									})
 								: null;
 							if (
-								emblemWidth &&
-								settings.countryEmblemsMinSize &&
+								emblemWidth != null &&
+								settings.countryEmblemsMinSize != null &&
 								emblemWidth * SCALE < settings.countryEmblemsMinSize
 							) {
 								emblemWidth = null;
 							}
 							if (
-								emblemWidth &&
-								settings.countryEmblemsMaxSize &&
+								emblemWidth != null &&
+								settings.countryEmblemsMaxSize != null &&
 								emblemWidth * SCALE > settings.countryEmblemsMaxSize
 							) {
 								emblemWidth = settings.countryEmblemsMaxSize / SCALE;
 							}
 							return {
 								point: inverseX(pointFromGeoJSON(point)),
-								emblemWidth: emblemWidth ? emblemWidth * SCALE : null,
-								emblemHeight: emblemWidth ? emblemWidth * emblemAspectRatio * SCALE : null,
-								textWidth: textWidth ? textWidth * SCALE : null,
-								textHeight: textWidth ? textWidth * textAspectRatio * SCALE : null,
+								emblemWidth: emblemWidth != null ? emblemWidth * SCALE : null,
+								emblemHeight: emblemWidth != null ? emblemWidth * emblemAspectRatio * SCALE : null,
+								textWidth: textWidth != null ? textWidth * SCALE : null,
+								textHeight: textWidth != null ? textWidth * textAspectRatio * SCALE : null,
 							};
 						})
 				: [];
@@ -168,14 +168,14 @@ function findLargestContainedRect({
 		);
 		if (contains(polygon, testRect)) {
 			bestWidth = testWidth;
-			if (!failedWidth) {
+			if (failedWidth == null) {
 				testWidth *= 2;
 			} else {
 				testWidth = (testWidth + failedWidth) / 2;
 			}
 		} else {
 			failedWidth = testWidth;
-			if (!bestWidth) {
+			if (bestWidth == null) {
 				testWidth /= 2;
 			} else {
 				testWidth = (testWidth + bestWidth) / 2;

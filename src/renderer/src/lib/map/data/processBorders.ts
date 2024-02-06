@@ -47,15 +47,7 @@ export default function processBorders(
 			const secondaryColor = colors?.[1] ?? 'black';
 			const outerBorderGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
 			if (!outerBorderGeoJSON) {
-				console.warn('outerBorderGeoJSON failed');
-				return {
-					countryId,
-					primaryColor,
-					secondaryColor,
-					outerPath: '',
-					innerPath: '',
-					sectorBorders: [],
-				};
+				throw new Error('outerBorderGeoJSON failed');
 			}
 
 			const countrySectors = Object.values(gameState.sectors ?? {}).filter(
