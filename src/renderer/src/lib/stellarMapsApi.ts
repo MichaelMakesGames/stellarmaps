@@ -1,5 +1,9 @@
-import { dialog, fs, invoke, path } from '@tauri-apps/api';
+import { path, core } from '@tauri-apps/api';
+import * as fs from '@tauri-apps/plugin-fs';
+import * as dialog from '@tauri-apps/plugin-dialog';
 import type { StellarMapsAPI } from '../../../shared/StellarMapsApi';
+
+const { invoke } = core;
 
 let stellarMapsApi: StellarMapsAPI = (window as any).api; // this is from electron preload
 if (stellarMapsApi == null) {

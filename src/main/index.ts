@@ -72,7 +72,13 @@ app.whenReady().then(() => {
 					if (filePaths.length === 0) {
 						return null;
 					} else {
-						return options.multiple ? filePaths : filePaths[0];
+						if (options.directory) {
+							return options.multiple ? filePaths : filePaths[0];
+						} else {
+							return options.multiple
+								? filePaths.map((p) => ({ path: p }))
+								: { path: filePaths[0] };
+						}
 					}
 				});
 		},

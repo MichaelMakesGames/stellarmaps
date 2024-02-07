@@ -11,16 +11,19 @@ use std::collections::HashMap;
 use std::env;
 use std::ffi::OsString;
 use std::fs;
-use std::io::{self, BufRead, Cursor};
 use std::io::Read;
+use std::io::{self, BufRead, Cursor};
 use std::path::Path;
 use std::path::PathBuf;
 use std::time::UNIX_EPOCH;
 use steamlocate::SteamDir;
+use tauri::Manager;
 use zip;
 
-fn main() {
+pub fn main() {
 	tauri::Builder::default()
+		.plugin(tauri_plugin_dialog::init())
+		.plugin(tauri_plugin_fs::init())
 		.invoke_handler(tauri::generate_handler![
 			get_stellaris_colors_cmd,
 			get_stellaris_loc_cmd,
@@ -36,8 +39,9 @@ fn main() {
 }
 
 #[tauri::command]
-async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
+async fn get_stellaris_colors_cmd(app: tauri::AppHandle, path: String) -> Result<Vec<String>, String> {
 	let paths = get_stellaris_data_paths(
+		&app,
 		Path::new(&path).to_path_buf(),
 		Path::new("flags").to_path_buf(),
 		FileFilter::Name(OsString::from("colors.txt")),
@@ -54,13 +58,13 @@ async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-async fn get_stellaris_loc_cmd(path: String) -> Result<HashMap<String, String>, String> {
-	return get_stellaris_loc(path).map_err(|err| err.to_string());
+async fn get_stellaris_loc_cmd(app: tauri::AppHandle, path: String) -> Result<HashMap<String, String>, String> {
+	return get_stellaris_loc(&app, path).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
-async fn get_stellaris_save_metadata_cmd() -> Result<Vec<Vec<StellarisSave>>, String> {
-	get_stellaris_save_metadata().map_err(|err| err.to_string())
+async fn get_stellaris_save_metadata_cmd(app: tauri::AppHandle) -> Result<Vec<Vec<StellarisSave>>, String> {
+	get_stellaris_save_metadata(&app).map_err(|err| err.to_string())
 }
 
 #[tauri::command]
@@ -69,8 +73,8 @@ async fn get_stellaris_save_cmd(path: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-async fn get_emblem_cmd(path: String, category: String, file: String) -> Result<String, String> {
-	return get_emblem(Path::new(&path).to_path_buf(), category, file).map_err(|err| err.to_string());
+async fn get_emblem_cmd(app: tauri::AppHandle, path: String, category: String, file: String) -> Result<String, String> {
+	return get_emblem(&app, Path::new(&path).to_path_buf(), category, file).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
@@ -107,19 +111,19 @@ fn get_stellaris_install_dir() -> anyhow::Result<PathBuf> {
 	}
 }
 
-fn get_stellaris_user_data_dir() -> PathBuf {
+fn get_stellaris_user_data_dir(app: &tauri::AppHandle) -> PathBuf {
 	match env::consts::OS {
 		"linux" => {
 			let home_dir = env::var("HOME").unwrap();
 			return Path::new(home_dir.as_str()).join(".local/share/Paradox Interactive/Stellaris");
 		}
 		"macos" => {
-			return tauri::api::path::document_dir()
+			return app.path().document_dir()
 				.unwrap()
 				.join("Paradox Interactive/Stellaris");
 		}
 		"windows" => {
-			return tauri::api::path::document_dir()
+			return app.path().document_dir()
 				.unwrap()
 				.join("Paradox Interactive\\Stellaris");
 		}
@@ -132,8 +136,8 @@ fn get_steam_user_data_dirs() -> anyhow::Result<Vec<PathBuf>> {
 	return get_sub_dirs(&steam_user_data_dir);
 }
 
-fn get_mod_path(enabled_mod: &serde_json::Value) -> anyhow::Result<PathBuf> {
-	let user_data_dir = get_stellaris_user_data_dir();
+fn get_mod_path(app: &tauri::AppHandle, enabled_mod: &serde_json::Value) -> anyhow::Result<PathBuf> {
+	let user_data_dir = get_stellaris_user_data_dir(&app);
 	let enabled_mod_descriptor = user_data_dir.join(
 		enabled_mod
 			.as_str()
@@ -149,8 +153,8 @@ fn get_mod_path(enabled_mod: &serde_json::Value) -> anyhow::Result<PathBuf> {
 	return Ok(Path::new(&mod_path).to_path_buf());
 }
 
-fn get_enabled_mod_dirs() -> anyhow::Result<Vec<PathBuf>> {
-	let user_data_dir = get_stellaris_user_data_dir();
+fn get_enabled_mod_dirs(app: &tauri::AppHandle) -> anyhow::Result<Vec<PathBuf>> {
+	let user_data_dir = get_stellaris_user_data_dir(app);
 	let dlc_load = user_data_dir.join("dlc_load.json");
 	let dlc_load = fs::File::open(dlc_load)?;
 	let dlc_load: serde_json::Value = serde_json::from_reader(dlc_load)?;
@@ -162,7 +166,7 @@ fn get_enabled_mod_dirs() -> anyhow::Result<Vec<PathBuf>> {
 		.as_array()
 		.ok_or(anyhow::anyhow!("Expected enabled_mods to be string array"))?
 	{
-		match get_mod_path(enabled_mod) {
+		match get_mod_path(app, enabled_mod) {
 			Ok(mod_path) => mod_dirs.push(mod_path),
 			_ => (),
 		}
@@ -170,9 +174,9 @@ fn get_enabled_mod_dirs() -> anyhow::Result<Vec<PathBuf>> {
 	return Ok(mod_dirs);
 }
 
-fn get_stellaris_data_dirs(install_path: PathBuf) -> Vec<PathBuf> {
+fn get_stellaris_data_dirs(app: &tauri::AppHandle, install_path: PathBuf) -> Vec<PathBuf> {
 	let mut dirs = vec![install_path];
-	match get_enabled_mod_dirs() {
+	match get_enabled_mod_dirs(app) {
 		Ok(mod_dirs) => {
 			for dir in mod_dirs {
 				dirs.push(dir);
@@ -288,13 +292,13 @@ impl StellarisSave {
 	}
 }
 
-fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
+fn get_stellaris_save_metadata(app: &tauri::AppHandle) -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 	let saves: Vec<Vec<StellarisSave>> = get_steam_user_data_dirs()
 		.unwrap_or(Vec::new())
 		.iter()
 		.map(|path| path.join("281990").join("remote").join("save games"))
 		.chain(std::iter::once(
-			get_stellaris_user_data_dir().join("save games"),
+			get_stellaris_user_data_dir(app).join("save games"),
 		))
 		.flat_map(|path| get_sub_dirs(&path).unwrap_or_default())
 		.map(|path| {
@@ -311,12 +315,13 @@ fn get_stellaris_save_metadata() -> anyhow::Result<Vec<Vec<StellarisSave>>> {
 }
 
 fn get_stellaris_data_paths(
+	app: &tauri::AppHandle,
 	install_path: PathBuf,
 	data_relative_dir: PathBuf,
 	filter: FileFilter,
 	depth: u8,
 ) -> Vec<PathBuf> {
-	let data_root_dirs = get_stellaris_data_dirs(install_path);
+	let data_root_dirs = get_stellaris_data_dirs(app, install_path);
 	let mut file_path_to_root_dir: HashMap<PathBuf, PathBuf> = HashMap::new();
 	for data_root_dir in data_root_dirs {
 		let dir = data_root_dir.join(&data_relative_dir);
@@ -343,8 +348,9 @@ fn get_stellaris_data_paths(
 		.collect();
 }
 
-fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
+fn get_stellaris_loc(app: &tauri::AppHandle, path: String) -> anyhow::Result<HashMap<String, String>> {
 	let loc_file_paths = get_stellaris_data_paths(
+		app,
 		Path::new(&path).to_path_buf(),
 		Path::new("localisation").to_path_buf(),
 		FileFilter::Extension(OsString::from("yml")),
@@ -370,8 +376,8 @@ fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
 	return Ok(locs);
 }
 
-fn get_emblem(install_path: PathBuf, category: String, file: String) -> anyhow::Result<String> {
-	let mut dirs = get_stellaris_data_dirs(install_path).to_owned();
+fn get_emblem(app: &tauri::AppHandle, install_path: PathBuf, category: String, file: String) -> anyhow::Result<String> {
+	let mut dirs = get_stellaris_data_dirs(app, install_path).to_owned();
 	dirs.reverse();
 	for dir in dirs {
 		let path = dir.join("flags").join(&category).join("map").join(&file);
@@ -381,7 +387,10 @@ fn get_emblem(install_path: PathBuf, category: String, file: String) -> anyhow::
 			let img = image_dds::image_from_dds(&dds, 0)?;
 			let mut bytes: Vec<u8> = Vec::new();
 			img.write_to(&mut Cursor::new(&mut bytes), image::ImageOutputFormat::Png)?;
-			return Ok(format!("data:image/png;base64,{}", BASE64_STANDARD.encode(bytes)));
+			return Ok(format!(
+				"data:image/png;base64,{}",
+				BASE64_STANDARD.encode(bytes)
+			));
 		}
 	}
 	return Err(anyhow::anyhow!("No data dir contained emblem"));

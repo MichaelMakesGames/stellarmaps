@@ -1,90 +1,65 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
-  "build": {
-    "beforeBuildCommand": "npm run vite:build",
-    "beforeDevCommand": "npm run vite:dev",
-    "devPath": "http://localhost:5173",
-    "distDir": "../build"
-  },
-  "package": {
-    "productName": "StellarMaps",
-    "version": "0.10.0-dev"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "dialog": {
-        "all": false,
-        "ask": false,
-        "confirm": false,
-        "message": false,
-        "open": true,
-        "save": true
-      },
-      "fs": {
-        "scope": ["$PICTURE/*"],
-        "writeFile": true
-      },
-      "os": {
-        "all": true
-      },
-      "path": {
-        "all": true
-      },
-      "shell": {
-        "open": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "StrategyGame",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "icon": [
-        "../resources/32x32.png",
-        "../resources/128x128.png",
-        "../resources/128x128@2x.png",
-        "../resources/icon.icns",
-        "../resources/icon.ico"
-      ],
-      "identifier": "games.michaelmakes.stellarmaps",
-      "longDescription": "",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
-    },
+  "app": {
     "security": {
       "csp": null
-    },
-    "updater": {
-      "active": false
     },
     "windows": [
       {
         "fullscreen": false,
         "height": 768,
-        "resizable": true,
         "maximizable": true,
-        "minimizable": true,
         "maximized": true,
+        "minimizable": true,
+        "resizable": true,
         "title": "StellarMaps",
         "width": 1366
       }
     ]
-  }
+  },
+  "build": {
+    "beforeBuildCommand": "npm run vite:build",
+    "beforeDevCommand": "npm run vite:dev",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../build"
+  },
+  "bundle": {
+    "active": true,
+    "category": "StrategyGame",
+    "copyright": "",
+    "externalBin": [],
+    "icon": [
+      "../resources/32x32.png",
+      "../resources/128x128.png",
+      "../resources/128x128@2x.png",
+      "../resources/icon.icns",
+      "../resources/icon.ico"
+    ],
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    },
+    "longDescription": "",
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "resources": [],
+    "shortDescription": "",
+    "targets": "all",
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
+  },
+  "identifier": "games.michaelmakes.stellarmaps",
+  "plugins": {
+  },
+  "productName": "StellarMaps",
+  "version": "0.10.0-dev"
 }
