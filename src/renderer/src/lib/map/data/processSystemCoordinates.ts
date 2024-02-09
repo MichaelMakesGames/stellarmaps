@@ -1,6 +1,5 @@
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import { parseNumberEntry } from '../../utils';
 import { positionToString } from './utils';
 
 export default function processSystemCoordinates(gameState: GameState, settings: MapSettings) {
@@ -10,7 +9,7 @@ export default function processSystemCoordinates(gameState: GameState, settings:
 			positionToString([go.coordinate.x, go.coordinate.y]),
 		),
 	);
-	for (const [id, go] of Object.entries(gameState.galactic_object).map(parseNumberEntry)) {
+	for (const go of Object.values(gameState.galactic_object)) {
 		const originalCoordinates: [number, number] = [go.coordinate.x, go.coordinate.y];
 		const preferredCoordinates: [number, number][] = settings.alignStarsToGrid
 			? [
@@ -30,7 +29,7 @@ export default function processSystemCoordinates(gameState: GameState, settings:
 			preferredCoordinates.find((coords) => !usedCoordinates.has(positionToString(coords))) ??
 			originalCoordinates;
 		usedCoordinates.add(positionToString(coordinates));
-		systemIdToCoordinates[id] = coordinates;
+		systemIdToCoordinates[go.id] = coordinates;
 	}
 	return systemIdToCoordinates;
 }

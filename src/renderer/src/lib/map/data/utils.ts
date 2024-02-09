@@ -8,7 +8,7 @@ import type { Delaunay } from 'd3-delaunay';
 // @ts-ignore
 import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
-import { isDefined, parseNumberEntry } from '../../utils';
+import { isDefined } from '../../utils';
 import explode from '@turf/explode';
 
 export const SCALE = 100;
@@ -257,33 +257,31 @@ export function createHyperlanePaths(
 ) {
 	const hyperlanes = new Set<string>();
 	const relayHyperlanes = new Set<string>();
-	Object.entries(gameState.galactic_object)
-		.map(parseNumberEntry)
-		.forEach(([goId, go]) => {
-			for (const hyperlane of getGameStateValueAsArray(go.hyperlane).filter((lane) => {
-				if (owner != null) {
-					return systemIdToUnionLeader[goId] === owner && systemIdToUnionLeader[lane.to] === owner;
-				} else {
-					return (
-						systemIdToUnionLeader[goId] == null ||
-						systemIdToUnionLeader[lane.to] == null ||
-						systemIdToUnionLeader[goId] !== systemIdToUnionLeader[lane.to]
-					);
-				}
-			})) {
-				const isRelay =
-					go.megastructures?.some((id) => relayMegastructures.has(id)) &&
-					gameState.galactic_object[hyperlane.to].megastructures?.some((id) =>
-						relayMegastructures.has(id),
-					);
-				const key = [goId, hyperlane.to].sort().join(',');
-				if (isRelay) {
-					relayHyperlanes.add(key);
-				} else {
-					hyperlanes.add(key);
-				}
+	Object.values(gameState.galactic_object).forEach((go) => {
+		for (const hyperlane of getGameStateValueAsArray(go.hyperlane).filter((lane) => {
+			if (owner != null) {
+				return systemIdToUnionLeader[go.id] === owner && systemIdToUnionLeader[lane.to] === owner;
+			} else {
+				return (
+					systemIdToUnionLeader[go.id] == null ||
+					systemIdToUnionLeader[lane.to] == null ||
+					systemIdToUnionLeader[go.id] !== systemIdToUnionLeader[lane.to]
+				);
 			}
-		});
+		})) {
+			const isRelay =
+				go.megastructures?.some((id) => relayMegastructures.has(id)) &&
+				gameState.galactic_object[hyperlane.to].megastructures?.some((id) =>
+					relayMegastructures.has(id),
+				);
+			const key = [go.id, hyperlane.to].sort().join(',');
+			if (isRelay) {
+				relayHyperlanes.add(key);
+			} else {
+				hyperlanes.add(key);
+			}
+		}
+	});
 
 	const RADIUS = 3;
 	const RADIUS_45 = Math.sqrt(RADIUS ** 2 / 2);

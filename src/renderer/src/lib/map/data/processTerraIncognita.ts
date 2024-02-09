@@ -3,7 +3,6 @@ import type { MapSettings } from '../../mapSettings';
 import * as helpers from '@turf/helpers';
 import { getGameStateValueAsArray, joinSystemPolygons, multiPolygonToPath } from './utils';
 import type { Delaunay } from 'd3-delaunay';
-import { parseNumberEntry } from '../../utils';
 
 export default function processTerraIncognita(
 	gameState: GameState,
@@ -27,10 +26,9 @@ export default function processTerraIncognita(
 		.map((key) => parseInt(key))
 		.filter((id) => !knownSystems.has(id));
 	const wormholeIds = new Set(
-		Object.entries(gameState.bypasses)
-			.map(parseNumberEntry)
-			.filter(([_id, bypass]) => bypass.type === 'wormhole')
-			.map(([id]) => id),
+		Object.values(gameState.bypasses)
+			.filter((bypass) => bypass.type === 'wormhole')
+			.map((bypass) => bypass.id),
 	);
 	const knownWormholes = terraIncognitaPerspectiveCountry
 		? new Set(

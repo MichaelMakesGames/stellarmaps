@@ -2,6 +2,8 @@ import { writable } from 'svelte/store';
 import { z } from 'zod';
 import { saveToWindow } from './utils';
 
+type WithId<T> = T & { id: number };
+
 export const gameStatePromise = writable<Promise<GameState> | null>(null);
 gameStatePromise.subscribe(
 	(promise) =>
@@ -49,7 +51,7 @@ const galacticObjectSchema = z.object({
 		)
 		.optional(),
 });
-export type GalacticObject = z.infer<typeof galacticObjectSchema>;
+export type GalacticObject = WithId<z.infer<typeof galacticObjectSchema>>;
 
 const planetSchema = z.object({
 	name: localizedTextSchema,
@@ -57,19 +59,19 @@ const planetSchema = z.object({
 	owner: z.number().optional(),
 	num_sapient_pops: z.number().optional(),
 });
-export type Planet = z.infer<typeof planetSchema>;
+export type Planet = WithId<z.infer<typeof planetSchema>>;
 
 const bypassSchema = z.object({
 	type: z.string(),
 	owner: z.object({ type: z.number(), id: z.number() }).optional(),
 	linked_to: z.number().optional(),
 });
-export type Bypass = z.infer<typeof bypassSchema>;
+export type Bypass = WithId<z.infer<typeof bypassSchema>>;
 
 const megastructureSchema = z.object({
 	type: z.string(),
 });
-export type Megastructure = z.infer<typeof megastructureSchema>;
+export type Megastructure = WithId<z.infer<typeof megastructureSchema>>;
 
 const relationSchema = z.object({
 	owner: z.number(),
@@ -109,39 +111,44 @@ const countrySchema = z.object({
 		.optional(),
 	relations_manager: z.object({ relation: z.array(relationSchema).optional() }).optional(),
 });
-export type Country = z.infer<typeof countrySchema>;
+export type Country = WithId<z.infer<typeof countrySchema>>;
 
 const starbaseSchema = z.object({
 	station: z.number(),
 });
-export type Starbase = z.infer<typeof starbaseSchema>;
+export type Starbase = WithId<z.infer<typeof starbaseSchema>>;
 
 const shipSchema = z.object({
 	fleet: z.number(),
 });
-export type Ship = z.infer<typeof shipSchema>;
+export type Ship = WithId<z.infer<typeof shipSchema>>;
 
 const fleetSchema = z.object({
 	station: z.boolean().optional(),
 });
-export type Fleet = z.infer<typeof fleetSchema>;
+export type Fleet = WithId<z.infer<typeof fleetSchema>>;
 
 const sectorSchema = z.object({
 	owner: z.number().optional(),
 	local_capital: z.number().optional(),
 	systems: z.array(z.number()),
 });
-export type Sector = z.infer<typeof sectorSchema>;
+export type Sector = WithId<z.infer<typeof sectorSchema>>;
 
 const federationSchema = z.object({
 	leader: z.number(),
 	members: z.array(z.number()),
 	name: localizedTextSchema,
 });
-export type Federation = z.infer<typeof federationSchema>;
+export type Federation = WithId<z.infer<typeof federationSchema>>;
 
+function addIds<T>(db: Record<number, T>): Record<number, WithId<T>> {
+	return Object.fromEntries(
+		Object.entries(db).map(([id, obj]) => [id, { ...obj, id: parseInt(id) }]),
+	);
+}
 function stellarisDb<T extends z.ZodType>(schema: T) {
-	return z.record(z.coerce.number(), schema).default({});
+	return z.record(z.coerce.number(), schema).default({}).transform(addIds);
 }
 
 export const gameStateSchema = z.object({
@@ -169,6 +176,8 @@ function convertSchemaToGameStateFilter(schema: z.ZodType): boolean | Record<str
 		return convertSchemaToGameStateFilter(schema.unwrap());
 	} else if (schema instanceof z.ZodNullable) {
 		return convertSchemaToGameStateFilter(schema.unwrap());
+	} else if (schema instanceof z.ZodEffects) {
+		return convertSchemaToGameStateFilter(schema.innerType());
 	} else if (schema instanceof z.ZodUnion) {
 		const unionPaths = (schema.options as z.ZodType[]).map((option) =>
 			convertSchemaToGameStateFilter(option),
@@ -192,8 +201,15 @@ function convertSchemaToGameStateFilter(schema: z.ZodType): boolean | Record<str
 		return [convertSchemaToGameStateFilter(schema.element)];
 	} else if (schema instanceof z.ZodRecord) {
 		return { '*': convertSchemaToGameStateFilter(schema.valueSchema) };
-	} else {
+	} else if (
+		schema instanceof z.ZodNumber ||
+		schema instanceof z.ZodString ||
+		schema instanceof z.ZodBoolean
+	) {
 		return false;
+	} else {
+		console.error('Unhandled ZodType', schema);
+		throw new Error(`Unhandled ZodType`);
 	}
 }
 export const gameStateFilter = convertSchemaToGameStateFilter(gameStateSchema);

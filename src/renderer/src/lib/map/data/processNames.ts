@@ -11,9 +11,7 @@ export default async function processNames(gameState: GameState) {
 function localizeCountryNames(countries: Record<number, Country>) {
 	return get(stellarisDataPromiseStore).then(({ loc }) => {
 		return Object.fromEntries<string | undefined>(
-			Object.entries(countries)
-				.map<[number, Country]>(([id, c]) => [parseInt(id), c])
-				.map(([id, c]) => [id, localizeTextSync(c.name, loc)]),
+			Object.values(countries).map((c) => [c.id, localizeTextSync(c.name, loc)] as const),
 		);
 	});
 }

@@ -2,7 +2,6 @@
 // TODO re-enable the above, after making safer
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import { parseNumberEntry } from '../../utils';
 import { interpolateBasis } from 'd3-interpolate';
 import { SCALE, getGameStateValueAsArray, pointFromGeoJSON, pointToGeoJSON } from './utils';
 import * as helpers from '@turf/helpers';
@@ -40,19 +39,19 @@ export default function processCircularGalaxyBorders(
 		points: helpers.FeatureCollection<helpers.Point>;
 	}[] = [];
 
-	for (const [goId, go] of Object.entries(gameState.galactic_object).map(parseNumberEntry)) {
-		if (clusters.some((cluster) => cluster.systems.has(goId))) continue;
+	for (const go of Object.values(gameState.galactic_object)) {
+		if (clusters.some((cluster) => cluster.systems.has(go.id))) continue;
 		const cluster: (typeof clusters)[0] = {
-			systems: new Set<number>([goId]),
+			systems: new Set<number>([go.id]),
 			outliers: new Set<number>(),
 			bBox: {
-				xMin: systemIdToCoordinates[goId][0],
-				xMax: systemIdToCoordinates[goId][0],
-				yMin: systemIdToCoordinates[goId][1],
-				yMax: systemIdToCoordinates[goId][1],
+				xMin: systemIdToCoordinates[go.id][0],
+				xMax: systemIdToCoordinates[go.id][0],
+				yMin: systemIdToCoordinates[go.id][1],
+				yMax: systemIdToCoordinates[go.id][1],
 			},
 			points: helpers.featureCollection([
-				helpers.point(pointToGeoJSON(systemIdToCoordinates[goId])),
+				helpers.point(pointToGeoJSON(systemIdToCoordinates[go.id])),
 			]),
 		};
 		const edge = go.hyperlane?.map((hyperlane) => hyperlane.to) ?? [];

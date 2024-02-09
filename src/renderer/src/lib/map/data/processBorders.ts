@@ -58,6 +58,7 @@ export default function processBorders(
 			);
 			for (const unionMemberId of unionLeaderToUnionMembers[countryId].values()) {
 				const frontierSector: Sector = {
+					id: -unionMemberId, // negative so it doesn't conflict w/ any real sector ids
 					systems: Object.values(countryToOwnedSystemIds[unionMemberId]).filter((systemId) =>
 						countrySectors.every((s) => !s.systems.includes(systemId)),
 					),

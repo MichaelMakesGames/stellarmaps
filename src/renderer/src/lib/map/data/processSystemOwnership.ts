@@ -5,7 +5,6 @@ import type { MapSettings } from '../../mapSettings';
 import type { Delaunay, Voronoi } from 'd3-delaunay';
 import { getUnionLeaderId, pointToGeoJSON } from './utils';
 import * as helpers from '@turf/helpers';
-import { parseNumberEntry } from '../../utils';
 
 export default function processSystemOwnership(
 	gameState: GameState,
@@ -14,9 +13,9 @@ export default function processSystemOwnership(
 	systemIdToCoordinates: Record<number, [number, number]>,
 ) {
 	const fleetToCountry: Record<string, number> = {};
-	Object.entries(gameState.country).forEach(([countryId, country]) => {
+	Object.values(gameState.country).forEach((country) => {
 		country.fleets_manager?.owned_fleets?.forEach((owned_fleet) => {
-			fleetToCountry[owned_fleet.fleet] = parseFloat(countryId);
+			fleetToCountry[owned_fleet.fleet] = country.id;
 		});
 	});
 	const countryToOwnedSystemIds: Record<string, number[]> = {};
@@ -27,45 +26,41 @@ export default function processSystemOwnership(
 	const systemIdToPolygon: Record<string, Delaunay.Polygon> = {};
 	const systemIdToCountry: Record<string, number | undefined> = {};
 	const systemIdToUnionLeader: Record<string, number | undefined> = {};
-	Object.entries(gameState.galactic_object)
-		.map(parseNumberEntry)
-		.forEach(([goId, go], i) => {
-			const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
-			const ownerId =
-				starbase != null ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
-			const owner = ownerId != null ? gameState.country[ownerId] : null;
-			const polygon = voronoi.cellPolygon(i);
-			systemIdToPolygon[goId] = polygon;
-			if (ownerId != null && owner) {
-				const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, [
-					'joinedBorders',
-				]);
-				ownedSystemPoints.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[goId])).geometry);
-				if (countryToOwnedSystemIds[ownerId] == null) {
-					countryToOwnedSystemIds[ownerId] = [];
-				}
-				countryToOwnedSystemIds[ownerId].push(goId);
-				systemIdToCountry[goId] = ownerId;
-				systemIdToUnionLeader[goId] = joinedUnionLeaderId;
-
-				if (polygon == null) {
-					console.warn(`null polygon for system at ${systemIdToCoordinates[goId]}`);
-				} else {
-					if (countryToSystemPolygons[ownerId] == null) {
-						countryToSystemPolygons[ownerId] = [];
-					}
-					countryToSystemPolygons[ownerId].push(polygon);
-					if (unionLeaderToSystemPolygons[joinedUnionLeaderId] == null) {
-						unionLeaderToSystemPolygons[joinedUnionLeaderId] = [];
-					}
-					unionLeaderToSystemPolygons[joinedUnionLeaderId].push(polygon);
-					if (unionLeaderToUnionMembers[joinedUnionLeaderId] == null) {
-						unionLeaderToUnionMembers[joinedUnionLeaderId] = new Set();
-					}
-					unionLeaderToUnionMembers[joinedUnionLeaderId].add(ownerId);
-				}
+	Object.values(gameState.galactic_object).forEach((go, i) => {
+		const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
+		const ownerId =
+			starbase != null ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
+		const owner = ownerId != null ? gameState.country[ownerId] : null;
+		const polygon = voronoi.cellPolygon(i);
+		systemIdToPolygon[go.id] = polygon;
+		if (ownerId != null && owner) {
+			const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, ['joinedBorders']);
+			ownedSystemPoints.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[go.id])).geometry);
+			if (countryToOwnedSystemIds[ownerId] == null) {
+				countryToOwnedSystemIds[ownerId] = [];
 			}
-		});
+			countryToOwnedSystemIds[ownerId].push(go.id);
+			systemIdToCountry[go.id] = ownerId;
+			systemIdToUnionLeader[go.id] = joinedUnionLeaderId;
+
+			if (polygon == null) {
+				console.warn(`null polygon for system at ${systemIdToCoordinates[go.id]}`);
+			} else {
+				if (countryToSystemPolygons[ownerId] == null) {
+					countryToSystemPolygons[ownerId] = [];
+				}
+				countryToSystemPolygons[ownerId].push(polygon);
+				if (unionLeaderToSystemPolygons[joinedUnionLeaderId] == null) {
+					unionLeaderToSystemPolygons[joinedUnionLeaderId] = [];
+				}
+				unionLeaderToSystemPolygons[joinedUnionLeaderId].push(polygon);
+				if (unionLeaderToUnionMembers[joinedUnionLeaderId] == null) {
+					unionLeaderToUnionMembers[joinedUnionLeaderId] = new Set();
+				}
+				unionLeaderToUnionMembers[joinedUnionLeaderId].add(ownerId);
+			}
+		}
+	});
 
 	return {
 		countryToOwnedSystemIds,
