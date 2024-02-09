@@ -101,8 +101,12 @@ fn parse_object<'source>(
 				}
 			}
 			Some(e @ Err(_)) => anyhow::bail!("Lexing error: {:#?}", e),
-			Some(Ok(Token::Close)) => panic!("This should not be reachable!"),
-			None => panic!("TODO"),
+			Some(Ok(Token::Close)) => {
+				anyhow::bail!("This is not reachable (see while condition)")
+			}
+			None => {
+				anyhow::bail!("This is not reachable (see while condition)")
+			}
 		}
 		token = lex.next();
 	}
@@ -188,7 +192,7 @@ fn skip_value<'source>(
 				}
 			}
 			Some(e @ Err(_)) => anyhow::bail!("Lexing error: {:#?}", e),
-			None => panic!("This should not be reachable"),
+			None => anyhow::bail!("This is not reachable (see while condition)"),
 		}
 		token = lex.next();
 	}

@@ -20,12 +20,14 @@
 		settingsAreDifferent,
 		type SavedMapSettings,
 		editedMapSettings,
+		countryOptions,
 	} from './mapSettings';
 	import parseSave from './parseSave';
 	import ApplyChangesButton from './ApplyChangesButton.svelte';
-	import { saveToWindow, timeIt, timeItAsync, toastError, wait } from './utils';
+	import { parseNumberEntry, saveToWindow, timeIt, timeItAsync, toastError, wait } from './utils';
 	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import stellarMapsApi, { type StellarisSaveMetadata } from './stellarMapsApi';
+	import { localizeText } from './map/data/locUtils';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -132,6 +134,13 @@
 							gameStateSchema.parse(saveToWindow('unvalidatedGameState', unvalidated)),
 						),
 					);
+				promise.then(async (gameState) => {
+					Promise.all(
+						Object.entries(gameState.country)
+							.filter(([_id, country]) => country.type === 'default')
+							.map(([id, country]) => localizeText(country.name).then((name) => ({ id, name }))),
+					).then(countryOptions.set);
+				});
 				gameStatePromise.set(promise);
 
 				// update settings that depend on save-specific options

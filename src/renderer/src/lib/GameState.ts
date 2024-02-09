@@ -80,7 +80,7 @@ export type Relation = z.infer<typeof relationSchema>;
 
 const countrySchema = z.object({
 	type: z.string(),
-	name: localizedTextSchema.optional(),
+	name: localizedTextSchema,
 	flag: z
 		.object({
 			colors: z.array(z.string()),

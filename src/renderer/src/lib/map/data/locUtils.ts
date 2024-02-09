@@ -7,9 +7,10 @@ export function localizeText(text: LocalizedText) {
 }
 
 export function localizeTextSync(
-	text: LocalizedText,
+	text: null | LocalizedText,
 	loc: Record<string, string | undefined>,
 ): string {
+	if (text == null) return 'null';
 	if (text.key === '%ADJECTIVE%') {
 		try {
 			const var0 = text.variables?.[0];
