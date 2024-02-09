@@ -51,7 +51,7 @@ export default function processBorders(
 				return null;
 			}
 
-			const countrySectors = Object.values(gameState.sectors ?? {}).filter(
+			const countrySectors = Object.values(gameState.sectors).filter(
 				(sector) =>
 					sector.owner != null &&
 					getUnionLeaderId(sector.owner, gameState, settings, ['joinedBorders']) === countryId,
@@ -70,7 +70,7 @@ export default function processBorders(
 			const sectorOuterPolygons = countrySectors.flatMap((sector) => {
 				const systemPolygons = sector.systems
 					.map((systemId) => systemIdToPolygon[systemId])
-					.filter((polygon) => polygon != null);
+					.filter(isDefined);
 				const sectorGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
 				if (sectorGeoJSON && sectorGeoJSON.geometry.type === 'Polygon') {
 					return [helpers.polygon([sectorGeoJSON.geometry.coordinates[0]]).geometry];
@@ -87,7 +87,7 @@ export default function processBorders(
 				.map((unionMemberId) => {
 					const systemPolygons = countryToOwnedSystemIds[unionMemberId]
 						.map((systemId) => systemIdToPolygon[systemId])
-						.filter((polygon) => polygon != null);
+						.filter(isDefined);
 					const unionMemberGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
 					if (unionMemberGeoJSON && unionMemberGeoJSON.geometry.type === 'Polygon') {
 						return [helpers.polygon([unionMemberGeoJSON.geometry.coordinates[0]]).geometry];
@@ -230,11 +230,11 @@ export default function processBorders(
 			if (settings.borderStroke.smoothing) {
 				smoothedOuterBorderGeoJSON = smoothGeojson(outerBorderGeoJSON, 2);
 			}
-			const smoothedInnerBorderGeoJSON: null | ReturnType<typeof buffer> = buffer(
+			const smoothedInnerBorderGeoJSON = buffer(
 				smoothedOuterBorderGeoJSON,
 				-settings.borderStroke.width / SCALE,
 				{ units: 'degrees' },
-			);
+			) as ReturnType<typeof buffer> | null;
 			const outerPath = multiPolygonToPath(
 				smoothedOuterBorderGeoJSON,
 				settings.borderStroke.smoothing,

@@ -76,7 +76,8 @@ export function smoothGeojson<T extends GeoJSON.GeoJSON>(geojson: T, iterations:
 			...geojson,
 			coordinates: geojson.coordinates.map((ring) => smoothPositionArray(ring, iterations, true)),
 		};
-	} else if (geojson.type === 'MultiPolygon') {
+	} else {
+		// geojson.type === 'MultiPolygon'
 		return {
 			...geojson,
 			coordinates: geojson.coordinates.map((polygon) =>

@@ -41,7 +41,7 @@ export function getUnionLeaderId(
 	const overlord = overlordId != null ? gameState.country[overlordId] : null;
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
 	const overlordFederation =
-		overlord?.federation != null ? gameState.federation[overlord?.federation] : null;
+		overlord?.federation != null ? gameState.federation[overlord.federation] : null;
 	if (!settings.unionMode) {
 		return countryId;
 	} else if (
@@ -221,7 +221,7 @@ export function getPolygons(
 export function getCountryColors(countryId: number, gameState: GameState, settings: MapSettings) {
 	return gameState.country[
 		getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
-	]?.flag?.colors;
+	].flag?.colors;
 }
 
 export function positionToString(p: helpers.Position): string {

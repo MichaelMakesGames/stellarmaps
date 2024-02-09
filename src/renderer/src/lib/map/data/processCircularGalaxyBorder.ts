@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+// TODO re-enable the above, after making safer
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { parseNumberEntry } from '../../utils';

@@ -6,13 +6,16 @@ export function localizeText(text: LocalizedText) {
 	return get(stellarisDataPromiseStore).then(({ loc }) => localizeTextSync(text, loc));
 }
 
-export function localizeTextSync(text: LocalizedText, loc: Record<string, string>): string {
+export function localizeTextSync(
+	text: LocalizedText,
+	loc: Record<string, string | undefined>,
+): string {
 	if (text.key === '%ADJECTIVE%') {
 		try {
 			const var0 = text.variables?.[0];
 			const var1 = text.variables?.[1];
 			if (!var0) throw new Error();
-			return loc['adj_format']
+			return (loc['adj_format'] ?? 'adj $1$')
 				.replace('adj', localizeTextSync(var0.value, loc))
 				.replace('$1$', var1 ? localizeTextSync(var1.value, loc) : '');
 		} catch {
@@ -27,7 +30,7 @@ export function localizeTextSync(text: LocalizedText, loc: Record<string, string
 			if (adj.includes('$1$')) {
 				return localizeTextSync(var0.value, loc);
 			} else {
-				return loc['adj_format']
+				return (loc['adj_format'] ?? 'adj $1$')
 					.replace('adj', adj)
 					.replace('$1$', localizeTextSync(var0.value.variables[0].value, loc));
 			}
@@ -36,12 +39,12 @@ export function localizeTextSync(text: LocalizedText, loc: Record<string, string
 			return 'LOCALIZATION FAILED';
 		}
 	}
-	if (!loc[text.key]) return text.key;
 	let value = loc[text.key];
+	if (value == null) return text.key;
 	if (text.variables) {
 		text.variables.forEach((variable) => {
 			const localizedVariable = localizeTextSync(variable.value, loc);
-			value = value
+			value = (value as string)
 				.replace(`$${variable.key}$`, localizedVariable)
 				.replace(`[${variable.key}]`, localizedVariable)
 				.replace(`<${variable.key}>`, localizedVariable);

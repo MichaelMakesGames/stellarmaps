@@ -25,14 +25,14 @@ export function resolveColor({
 	resolveToOpaqueColor,
 }: {
 	mapSettings: MapSettings;
-	colors: Record<string, string>;
+	colors: Record<string, string | undefined>;
 	countryColors?: null | { primaryColor: string; secondaryColor: string };
 	colorStack: ColorSetting[];
 	resolveToOpaqueColor?: boolean;
 }): string {
 	if (colorStack.length === 0) {
 		console.error(`resolveColor called with empty colorSettingStack; falling back to black`);
-		return colors['black'];
+		return colors['black'] ?? 'rgb(0, 0, 0)';
 	}
 	let colorString = colorStack[0].color;
 	const backgroundSettingStack =
@@ -50,7 +50,7 @@ export function resolveColor({
 	} else {
 		if (colorString === 'primary') colorString = countryColors?.primaryColor ?? 'black';
 		if (colorString === 'secondary') colorString = countryColors?.secondaryColor ?? 'black';
-		colorString = colors[colorString] ?? colors['black'];
+		colorString = colors[colorString] ?? colors['black'] ?? 'rgb(0, 0, 0)';
 	}
 
 	for (const adjustment of sortColorAdjustments(colorStack[0].colorAdjustments)) {

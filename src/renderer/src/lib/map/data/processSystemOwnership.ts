@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+// TODO re-enable the above rule and update db to Record<number, T | undefined>
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import type { Delaunay, Voronoi } from 'd3-delaunay';
@@ -25,7 +27,7 @@ export default function processSystemOwnership(
 	const systemIdToPolygon: Record<string, Delaunay.Polygon> = {};
 	const systemIdToCountry: Record<string, number | undefined> = {};
 	const systemIdToUnionLeader: Record<string, number | undefined> = {};
-	Object.entries(gameState?.galactic_object ?? {})
+	Object.entries(gameState.galactic_object)
 		.map(parseNumberEntry)
 		.forEach(([goId, go], i) => {
 			const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];

@@ -13,7 +13,7 @@ export default function processTerraIncognita(
 ) {
 	const terraIncognitaPerspectiveCountryId =
 		settings.terraIncognitaPerspectiveCountry === 'player'
-			? gameState.player?.filter((p) => gameState.country[p?.country])[0]?.country
+			? gameState.player?.filter((p) => gameState.country[p.country])[0]?.country
 			: parseInt(settings.terraIncognitaPerspectiveCountry);
 	const terraIncognitaPerspectiveCountry =
 		terraIncognitaPerspectiveCountryId != null
@@ -27,14 +27,14 @@ export default function processTerraIncognita(
 		.map((key) => parseInt(key))
 		.filter((id) => !knownSystems.has(id));
 	const wormholeIds = new Set(
-		Object.entries(gameState.bypasses ?? {})
+		Object.entries(gameState.bypasses)
 			.map(parseNumberEntry)
 			.filter(([_id, bypass]) => bypass.type === 'wormhole')
 			.map(([id]) => id),
 	);
 	const knownWormholes = terraIncognitaPerspectiveCountry
 		? new Set(
-				getGameStateValueAsArray(terraIncognitaPerspectiveCountry?.usable_bypasses).filter((id) =>
+				getGameStateValueAsArray(terraIncognitaPerspectiveCountry.usable_bypasses).filter((id) =>
 					wormholeIds.has(id),
 				),
 			)

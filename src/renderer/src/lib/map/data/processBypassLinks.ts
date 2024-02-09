@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+// TODO re-enable the above, after making safer
 import type { Bypass, GameState } from '../../GameState';
 import { parseNumberEntry } from '../../utils';
 
@@ -27,12 +29,12 @@ export default function processBypassLinks(
 			const fromY = systemIdToCoordinates[systemId][1];
 
 			const bypassTypes = new Set(
-				system.bypasses?.map((bypassId) => gameState.bypasses?.[bypassId]?.type),
+				system.bypasses?.map((bypassId) => gameState.bypasses[bypassId].type),
 			);
 
 			const [wormholeBypassId, wormholeBypass] = system.bypasses
-				?.map((bypassId) => [bypassId, gameState.bypasses?.[bypassId]] as [number, Bypass])
-				.find((b) => b[1]?.type === 'wormhole') ?? [null, null];
+				?.map((bypassId) => [bypassId, gameState.bypasses[bypassId]] as [number, Bypass])
+				.find((b) => b[1].type === 'wormhole') ?? [null, null];
 			const wormholeIsKnown = wormholeBypassId != null && knownWormholes.has(wormholeBypassId);
 			const wormholeLinksTo: undefined | number = Object.entries(gameState.galactic_object)
 				.map(parseNumberEntry)

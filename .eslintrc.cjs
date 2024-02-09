@@ -34,5 +34,6 @@ module.exports = {
 		'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 		'@typescript-eslint/prefer-nullish-coalescing': 'error',
 		'@typescript-eslint/strict-boolean-expressions': ['error', { allowNullableBoolean: true }],
+		'@typescript-eslint/no-unnecessary-condition': 'error',
 	},
 };

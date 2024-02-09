@@ -6,17 +6,18 @@ import { localizeTextSync } from './locUtils';
 
 export default async function processNames(gameState: GameState) {
 	const countryNames = await localizeCountryNames(gameState.country);
+	// TODO move this to on save load
 	countryOptions.set(
 		Object.entries(countryNames)
-			.map(([id, name]) => ({ id, name }))
-			.filter(({ id }) => gameState.country[parseInt(id)]?.type === 'default'),
+			.map(([id, name]) => ({ id, name: name ?? 'LOCALIZATION FAILED' }))
+			.filter(({ id }) => gameState.country[parseInt(id)].type === 'default'),
 	);
 	return countryNames;
 }
 
 function localizeCountryNames(countries: Record<number, Country>) {
 	return get(stellarisDataPromiseStore).then(({ loc }) => {
-		return Object.fromEntries(
+		return Object.fromEntries<string | undefined>(
 			Object.entries(countries)
 				.map<[number, Country]>(([id, c]) => [parseInt(id), c])
 				.filter(

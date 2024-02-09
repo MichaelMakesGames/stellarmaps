@@ -2,7 +2,7 @@ import type { GameState } from './GameState';
 import { timeIt } from './utils';
 
 export default async function parseSave(rawGameState: string): Promise<GameState> {
-	const tokens = timeIt('tokenize', tokenize, rawGameState ?? '');
+	const tokens = timeIt('tokenize', tokenize, rawGameState);
 	const state = timeIt('jsonify', jsonify, tokens) as GameState;
 	return state;
 }

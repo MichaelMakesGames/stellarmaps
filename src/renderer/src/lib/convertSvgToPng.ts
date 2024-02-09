@@ -16,8 +16,8 @@ export default async function convertSvgToPng(
 	canvas.width = outputWidth;
 	canvas.height = outputHeight;
 	const ctx = canvas.getContext('2d');
-	if (svg == null || ctx == null) {
-		throw new Error('no svg and/or no ctx');
+	if (ctx == null) {
+		throw new Error('no canvas ctx');
 	}
 
 	const img = document.createElement('img');
