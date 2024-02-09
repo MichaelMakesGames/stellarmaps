@@ -10,7 +10,7 @@ export interface StellarMapsAPI {
 	loadLoc(installPath: string): Promise<Record<string, string>>;
 	loadColors(installPath: string): Promise<string[]>;
 	loadStellarisInstallDir(): Promise<string>;
-	loadSave(savePath: string): Promise<string>;
+	loadSave(savePath: string): Promise<unknown>;
 	loadFonts(): Promise<string[]>;
 	loadEmblem(installPath: string, category: string, file: string): Promise<string>;
 	dialog: {

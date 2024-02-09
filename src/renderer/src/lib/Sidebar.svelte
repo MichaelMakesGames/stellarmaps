@@ -10,7 +10,7 @@
 		popup,
 	} from '@skeletonlabs/skeleton';
 	import MapSettingControl from './MapSettingControl.svelte';
-	import { gameStatePromise } from './GameState';
+	import { gameStatePromise, gameStateSchema } from './GameState';
 	import {
 		lastProcessedMapSettings,
 		mapSettingConfig,
@@ -23,7 +23,7 @@
 	} from './mapSettings';
 	import parseSave from './parseSave';
 	import ApplyChangesButton from './ApplyChangesButton.svelte';
-	import { timeItAsync, toastError, wait } from './utils';
+	import { saveToWindow, timeIt, timeItAsync, toastError, wait } from './utils';
 	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import stellarMapsApi, { type StellarisSaveMetadata } from './stellarMapsApi';
 
@@ -127,7 +127,11 @@
 				const { path } = selectedSave;
 				const promise = wait(100)
 					.then(() => timeItAsync('loadSave', stellarMapsApi.loadSave, path))
-					.then(parseSave);
+					.then((unvalidated) =>
+						timeIt('validateSave', () =>
+							gameStateSchema.parse(saveToWindow('unvalidatedGameState', unvalidated)),
+						),
+					);
 				gameStatePromise.set(promise);
 
 				// update settings that depend on save-specific options

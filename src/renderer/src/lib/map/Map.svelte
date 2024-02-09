@@ -12,6 +12,7 @@
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
 	import type { MapData } from './data/processMapData';
 	import { resolveColor } from './mapUtils';
+	import { saveToWindow } from '../utils';
 
 	export let id: string = '';
 	export let data: null | MapData;
@@ -25,7 +26,7 @@
 	</style>`;
 
 	const debug = writable(false);
-	(window as any).debug = debug;
+	saveToWindow('debug', debug);
 
 	const dispatch = createEventDispatcher();
 	afterUpdate(() => {

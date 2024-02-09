@@ -2,6 +2,7 @@ import { path, core } from '@tauri-apps/api';
 import * as fs from '@tauri-apps/plugin-fs';
 import * as dialog from '@tauri-apps/plugin-dialog';
 import type { StellarMapsAPI } from '../../../shared/StellarMapsApi';
+import { gameStateFilter } from './GameState';
 
 const { invoke } = core;
 
@@ -17,7 +18,7 @@ if (stellarMapsApi == null) {
 				.sort((a, b) => b[0].modified - a[0].modified);
 		},
 		loadSave(path) {
-			return invoke('get_stellaris_save_cmd', { path });
+			return invoke('get_stellaris_save_cmd', { path, filter: gameStateFilter });
 		},
 		loadFonts() {
 			return invoke('get_fonts_cmd');

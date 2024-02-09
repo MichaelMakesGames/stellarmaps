@@ -33,6 +33,11 @@ export function isDefined<T>(value: T | null | undefined): value is T {
 	return value != null;
 }
 
+export function saveToWindow<T>(key: string, value: T): T {
+	(window as any)[key] = value;
+	return value;
+}
+
 export function timeIt<Args extends unknown[], ReturnValue>(
 	message: string,
 	fn: (...args: Args) => ReturnValue,
