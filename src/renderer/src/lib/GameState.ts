@@ -94,8 +94,9 @@ const countrySchema = z.object({
 		.optional(),
 	capital: z.number().optional(),
 	subjects: z.array(z.number()).optional(),
-	overload: z.number().optional(),
+	overlord: z.number().optional(),
 	federation: z.number().optional(),
+	usable_bypasses: z.array(z.number()).default([]),
 	fleets_manager: z
 		.object({
 			owned_fleets: z.array(z.object({ fleet: z.number() })).optional(),
