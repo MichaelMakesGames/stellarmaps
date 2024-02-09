@@ -1,6 +1,6 @@
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import { parseNumberEntry } from '../../utils';
+import { isDefined, parseNumberEntry } from '../../utils';
 import explode from '@turf/explode';
 import type processCircularGalaxyBorders from './processCircularGalaxyBorder';
 import type processSystemOwnership from './processSystemOwnership';
@@ -47,7 +47,8 @@ export default function processBorders(
 			const secondaryColor = colors?.[1] ?? 'black';
 			const outerBorderGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
 			if (!outerBorderGeoJSON) {
-				throw new Error('outerBorderGeoJSON failed');
+				console.warn(`outerBorderGeoJSON failed; skipping country ${countryId}`);
+				return null;
 			}
 
 			const countrySectors = Object.values(gameState.sectors ?? {}).filter(
@@ -277,6 +278,7 @@ export default function processBorders(
 				})),
 				isKnown: knownCountries.has(countryId),
 			};
-		});
+		})
+		.filter(isDefined);
 	return borders;
 }

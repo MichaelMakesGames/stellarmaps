@@ -145,98 +145,88 @@ export default function processCircularGalaxyBorders(
 		}
 	}
 
-	const galaxyBorderCircles = clusters.flatMap((cluster) => {
-		const isStarburstCluster = cluster === mainCluster && gameState.galaxy.shape === 'starburst';
-		let cx = (cluster.bBox.xMin + cluster.bBox.xMax) / 2;
-		let cy = (cluster.bBox.yMin + cluster.bBox.yMax) / 2;
-		if (cluster === mainCluster) {
-			cx = 0;
-			cy = 0;
-		} else {
-			const hull = convex(cluster.points);
-			if (hull) {
-				const hullCenter = centerOfMass(hull);
-				const point = pointFromGeoJSON(hullCenter.geometry.coordinates);
-				cx = point[0];
-				cy = point[1];
+	const galaxyBorderCircles = clusters
+		.map((cluster) => {
+			const isStarburstCluster = cluster === mainCluster && gameState.galaxy.shape === 'starburst';
+			let cx = (cluster.bBox.xMin + cluster.bBox.xMax) / 2;
+			let cy = (cluster.bBox.yMin + cluster.bBox.yMax) / 2;
+			if (cluster === mainCluster) {
+				cx = 0;
+				cy = 0;
+			} else {
+				const hull = convex(cluster.points);
+				if (hull) {
+					const hullCenter = centerOfMass(hull);
+					const point = pointFromGeoJSON(hullCenter.geometry.coordinates);
+					cx = point[0];
+					cy = point[1];
+				}
 			}
-		}
-		const [minR, maxR] = getMinMaxSystemRadii(
-			Array.from(cluster.systems).filter((id) => !cluster.outliers.has(id)),
-			cx,
-			cy,
-			gameState,
-			systemIdToCoordinates,
-		);
-		const clusterCircles = [
-			{
+			const [minR, maxR] = getMinMaxSystemRadii(
+				Array.from(cluster.systems).filter((id) => !cluster.outliers.has(id)),
 				cx,
 				cy,
-				r: maxR,
-				type: 'outer',
-			},
-			{
-				cx,
-				cy,
-				r: maxR + CIRCLE_OUTER_PADDING,
-				type: 'outer-padded',
-			},
-		];
-		if (minR > 0) {
-			clusterCircles.push({ cx, cy, r: minR, type: 'inner' });
-		}
-		if (minR > CIRCLE_OUTER_PADDING) {
-			clusterCircles.push({
-				cx,
-				cy,
-				r: minR - CIRCLE_INNER_PADDING,
-				type: 'inner-padded',
-			});
-		}
-		// inner/outer borders are specially handled for starburst
-		// we only want the following outlier circles for starburst
-		if (isStarburstCluster) clusterCircles.length = 0;
-		clusterCircles.push(
-			...Array.from(cluster.outliers).map((outlierId) => ({
-				cx: systemIdToCoordinates[outlierId][0],
-				cy: systemIdToCoordinates[outlierId][1],
-				r: OUTLIER_RADIUS,
-				type: 'outlier',
-			})),
-		);
-		return clusterCircles;
-	});
+				gameState,
+				systemIdToCoordinates,
+			);
+			const clusterCircles = [
+				{
+					cx,
+					cy,
+					r: maxR,
+					type: 'outer',
+				},
+				{
+					cx,
+					cy,
+					r: maxR + CIRCLE_OUTER_PADDING,
+					type: 'outer-padded',
+				},
+			];
+			if (minR > 0) {
+				clusterCircles.push({ cx, cy, r: minR, type: 'inner' });
+			}
+			if (minR > CIRCLE_OUTER_PADDING) {
+				clusterCircles.push({
+					cx,
+					cy,
+					r: minR - CIRCLE_INNER_PADDING,
+					type: 'inner-padded',
+				});
+			}
+			// inner/outer borders are specially handled for starburst
+			// we only want the following outlier circles for starburst
+			if (isStarburstCluster) clusterCircles.length = 0;
+			clusterCircles.push(
+				...Array.from(cluster.outliers).map((outlierId) => ({
+					cx: systemIdToCoordinates[outlierId][0],
+					cy: systemIdToCoordinates[outlierId][1],
+					r: OUTLIER_RADIUS,
+					type: 'outlier',
+				})),
+			);
+			return clusterCircles;
+		})
+		// sort biggest to smallest, so if an inner circle contains a smaller cluster, the smaller one isn't erased
+		.sort((a, b) => b[0].r - a[0].r)
+		.flat();
 	let galaxyBorderCirclesGeoJSON: null | helpers.Feature<helpers.Polygon | helpers.MultiPolygon> =
 		starburstGeoJSON;
-	for (const circle of galaxyBorderCircles.filter((circle) => circle.type === 'outer-padded')) {
+	for (const circle of galaxyBorderCircles) {
 		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
 			units: 'degrees',
 			steps: Math.ceil(circle.r),
 		});
-		if (galaxyBorderCirclesGeoJSON == null) {
-			galaxyBorderCirclesGeoJSON = polygon;
-		} else {
-			galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
-		}
-	}
-	for (const circle of galaxyBorderCircles.filter((circle) => circle.type === 'inner-padded')) {
-		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
-			units: 'degrees',
-			steps: Math.ceil(circle.r),
-		});
-		if (galaxyBorderCirclesGeoJSON != null) {
-			galaxyBorderCirclesGeoJSON = difference(galaxyBorderCirclesGeoJSON, polygon);
-		}
-	}
-	for (const circle of galaxyBorderCircles.filter((circle) => circle.type === 'outlier')) {
-		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
-			units: 'degrees',
-			steps: Math.ceil(circle.r),
-		});
-		if (galaxyBorderCirclesGeoJSON == null) {
-			galaxyBorderCirclesGeoJSON = polygon;
-		} else {
-			galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
+		if (circle.type === 'outer-padded' || circle.type === 'outlier') {
+			if (galaxyBorderCirclesGeoJSON == null) {
+				galaxyBorderCirclesGeoJSON = polygon;
+			} else {
+				galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
+			}
+		} else if (circle.type === 'inner-padded') {
+			if (galaxyBorderCirclesGeoJSON != null) {
+				galaxyBorderCirclesGeoJSON = difference(galaxyBorderCirclesGeoJSON, polygon);
+			}
 		}
 	}
 	return { galaxyBorderCircles, galaxyBorderCirclesGeoJSON };
