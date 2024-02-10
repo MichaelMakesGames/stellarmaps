@@ -32,7 +32,7 @@
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 
-	let selectedSaveGroup: StellarisSaveMetadata[] | null = null;
+	let selectedSaveGroup: [StellarisSaveMetadata, ...StellarisSaveMetadata[]] | null = null;
 	let selectedSave: StellarisSaveMetadata | null = null;
 	$: if (
 		selectedSaveGroup != null &&
@@ -179,7 +179,7 @@
 			{/if}
 			{#await savesPromise then saves}
 				{#each saves as saveGroup}
-					<option value={saveGroup}>{saveGroup[0].name}</option>
+					<option value={saveGroup}>{saveGroup[0]?.name}</option>
 				{/each}
 			{/await}
 		</select>
@@ -191,7 +191,7 @@
 				{#if selectedSaveGroup}
 					{#each selectedSaveGroup as save}
 						<option value={save}>
-							{save.path.split(/[/\\]/).reverse()[0].split('.sav')[0]}
+							{save.path.split(/[/\\]/).reverse()[0]?.split('.sav')[0]}
 						</option>
 					{/each}
 				{/if}

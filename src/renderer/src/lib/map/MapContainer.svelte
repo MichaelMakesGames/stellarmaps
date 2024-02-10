@@ -268,19 +268,19 @@
 			} else {
 				viewBoxWidth *= outputWidth / outputHeight;
 			}
-			const svgPoint = [
+			const svgPoint: [number, number] = [
 				((transform || zoomIdentity).invertX(e.offsetX) * viewBoxWidth) / outputWidth -
 					viewBoxWidth / 2,
 				((transform || zoomIdentity).invertY(e.offsetY) * viewBoxHeight) / outputHeight -
 					viewBoxHeight / 2,
 			];
-			const [systemId, system] = dataOrNull.findClosestSystem(-svgPoint[0], svgPoint[1]);
+			const system = dataOrNull.findClosestSystem(-svgPoint[0], svgPoint[1]);
 			if (system) {
 				const settings = get(mapSettings);
-				const processedSystem = dataOrNull?.systems.find((s) => s.id === systemId);
+				const processedSystem = dataOrNull?.systems.find((s) => s.id === system.id);
 
-				const systemPoint = [-system.coordinate.x, system.coordinate.y];
-				const tooltipPoint = [
+				const systemPoint: [number, number] = [-system.coordinate.x, system.coordinate.y];
+				const tooltipPoint: [number, number] = [
 					(transform || zoomIdentity).applyX(
 						((systemPoint[0] + viewBoxWidth / 2) * outputWidth) / viewBoxWidth,
 					),

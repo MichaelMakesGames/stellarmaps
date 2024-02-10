@@ -74,3 +74,24 @@ export function debounce<T extends any[]>(fn: (...args: T) => void, ms: number) 
 		}, ms);
 	};
 }
+
+export type NonEmptyArray<T> = [T, ...T[]];
+
+export function getOrSetDefault<T>(
+	record: Record<string, NonNullable<T>>,
+	key: string | number,
+	defaultValue: NonNullable<T>,
+): NonNullable<T> {
+	const current = record[key];
+	if (current != null) return current;
+	record[key] = defaultValue;
+	return defaultValue;
+}
+
+export function getOrDefault<T>(
+	record: Record<string, T>,
+	key: string | number,
+	defaultValue: NonNullable<T>,
+): NonNullable<T> {
+	return record[key] ?? defaultValue;
+}

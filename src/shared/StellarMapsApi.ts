@@ -6,7 +6,7 @@ export interface StellarisSaveMetadata {
 }
 
 export interface StellarMapsAPI {
-	loadSaveMetadata(): Promise<StellarisSaveMetadata[][]>;
+	loadSaveMetadata(): Promise<[StellarisSaveMetadata, ...StellarisSaveMetadata[]][]>;
 	loadLoc(installPath: string): Promise<Record<string, string>>;
 	loadColors(installPath: string): Promise<string[]>;
 	loadStellarisInstallDir(): Promise<string>;

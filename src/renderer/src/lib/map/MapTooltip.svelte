@@ -30,7 +30,7 @@
 				right: 'left',
 				bottom: 'top',
 				left: 'right',
-			}[pos.placement.split('-')[0]];
+			}[pos.placement.split('-')[0] ?? 'right'];
 
 			Object.assign(arrowEl.style, {
 				left: arrowData?.x != null ? `${arrowData.x}px` : '',

@@ -37,6 +37,7 @@ export function getUnionLeaderId(
 ): number {
 	const isIncludedValue = (value: string) => (values as string[]).includes(value);
 	const country = gameState.country[countryId];
+	if (country == null) return countryId;
 	const overlordId = country.overlord;
 	const overlord = overlordId != null ? gameState.country[overlordId] : null;
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
@@ -51,9 +52,11 @@ export function getUnionLeaderId(
 	) {
 		return settings.unionFederationsColor === 'leader'
 			? overlordFederation.leader
-			: overlordFederation.members[0];
+			: overlordFederation.members[0] ?? countryId;
 	} else if (isIncludedValue(settings.unionFederations) && federation) {
-		return settings.unionFederationsColor === 'leader' ? federation.leader : federation.members[0];
+		return settings.unionFederationsColor === 'leader'
+			? federation.leader
+			: federation.members[0] ?? countryId;
 	} else if (isIncludedValue(settings.unionSubjects) && overlord && overlordId != null) {
 		return overlordId;
 	} else {
@@ -63,6 +66,7 @@ export function getUnionLeaderId(
 
 export function isUnionLeader(countryId: number, gameState: GameState, settings: MapSettings) {
 	const country = gameState.country[countryId];
+	if (country == null) return false;
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
 	if (!settings.unionMode) {
 		return false;
@@ -79,15 +83,6 @@ export function isUnionLeader(countryId: number, gameState: GameState, settings:
 	} else {
 		return false;
 	}
-}
-
-export function getGameStateValueAsArray<T>(
-	value: null | undefined | Record<string, never> | T | T[],
-): T[] {
-	if (value == null) return [];
-	if (Array.isArray(value)) return value;
-	if (typeof value === 'object' && Object.keys(value).length === 0) return [];
-	return [value as T];
 }
 
 export function multiPolygonToPath(
@@ -144,7 +139,10 @@ export function joinSystemPolygons(
 				allPositions[positionToString(position)] = position;
 				return position;
 			});
-			ring[ring.length - 1] = ring[0];
+			if (ring[0] != null) {
+				// should always be true
+				ring[ring.length - 1] = ring[0];
+			}
 			return [ring];
 		}),
 	);
@@ -175,8 +173,8 @@ function insertRedundantPositions(
 	if (geojson == null) return null;
 	getAllPositionArrays(geojson).forEach((positionArray) => {
 		for (let i = 0; i < positionArray.length - 1; i++) {
-			const pos = positionArray[i];
-			const nextPos = positionArray[i + 1];
+			const pos = positionArray[i] as helpers.Position;
+			const nextPos = positionArray[i + 1] as helpers.Position;
 			const maxX = Math.max(pos[0], nextPos[0]);
 			const minX = Math.min(pos[0], nextPos[0]);
 			const maxY = Math.max(pos[1], nextPos[1]);
@@ -221,7 +219,7 @@ export function getPolygons(
 export function getCountryColors(countryId: number, gameState: GameState, settings: MapSettings) {
 	return gameState.country[
 		getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
-	].flag?.colors;
+	]?.flag?.colors;
 }
 
 export function positionToString(p: helpers.Position): string {
@@ -251,14 +249,14 @@ export function createHyperlanePaths(
 	gameState: GameState,
 	settings: MapSettings,
 	relayMegastructures: Set<number>,
-	systemIdToUnionLeader: Record<number, number | undefined>,
+	systemIdToUnionLeader: Record<number, number>,
 	owner: null | number,
-	systemIdToCoordinates: Record<number, [number, number]>,
+	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	const hyperlanes = new Set<string>();
 	const relayHyperlanes = new Set<string>();
 	Object.values(gameState.galactic_object).forEach((go) => {
-		for (const hyperlane of getGameStateValueAsArray(go.hyperlane).filter((lane) => {
+		for (const hyperlane of (go.hyperlane ?? []).filter((lane) => {
 			if (owner != null) {
 				return systemIdToUnionLeader[go.id] === owner && systemIdToUnionLeader[lane.to] === owner;
 			} else {
@@ -271,7 +269,7 @@ export function createHyperlanePaths(
 		})) {
 			const isRelay =
 				go.megastructures?.some((id) => relayMegastructures.has(id)) &&
-				gameState.galactic_object[hyperlane.to].megastructures?.some((id) =>
+				gameState.galactic_object[hyperlane.to]?.megastructures?.some((id) =>
 					relayMegastructures.has(id),
 				);
 			const key = [go.id, hyperlane.to].sort().join(',');
@@ -286,7 +284,9 @@ export function createHyperlanePaths(
 	const RADIUS = 3;
 	const RADIUS_45 = Math.sqrt(RADIUS ** 2 / 2);
 	const makeHyperlanePath = (key: string) => {
-		const [a, b] = key.split(',').map((id) => systemIdToCoordinates[parseInt(id)]);
+		const [a, b] = key.split(',').map((id) => getSystemCoordinates(parseInt(id)));
+		if (a == null || b == null)
+			throw new Error(`Failed to parse system ids from hyperlane key ${key}`);
 		const simplePath = `M ${-a[0]} ${a[1]} L ${-b[0]} ${b[1]}`;
 		const dx = b[0] - a[0];
 		const dy = b[1] - a[1];

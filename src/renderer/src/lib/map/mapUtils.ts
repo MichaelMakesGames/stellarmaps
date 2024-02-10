@@ -25,12 +25,12 @@ export function resolveColor({
 	resolveToOpaqueColor,
 }: {
 	mapSettings: MapSettings;
-	colors: Record<string, string | undefined>;
+	colors: Record<string, string>;
 	countryColors?: null | { primaryColor: string; secondaryColor: string };
 	colorStack: ColorSetting[];
 	resolveToOpaqueColor?: boolean;
 }): string {
-	if (colorStack.length === 0) {
+	if (colorStack[0] == null) {
 		console.error(`resolveColor called with empty colorSettingStack; falling back to black`);
 		return colors['black'] ?? 'rgb(0, 0, 0)';
 	}

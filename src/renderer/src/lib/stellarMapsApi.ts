@@ -11,7 +11,9 @@ if (stellarMapsApi == null) {
 	// we're in tauri
 	stellarMapsApi = {
 		async loadSaveMetadata() {
-			const saves: StellarisSaveMetadata[][] = await invoke('get_stellaris_save_metadata_cmd');
+			const saves: [StellarisSaveMetadata, ...StellarisSaveMetadata[]][] = await invoke(
+				'get_stellaris_save_metadata_cmd',
+			);
 			return saves
 				.map((save) => save.sort((a, b) => b.modified - a.modified))
 				.filter((save) => save.length)

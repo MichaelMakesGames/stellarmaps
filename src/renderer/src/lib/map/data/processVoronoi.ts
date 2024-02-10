@@ -6,9 +6,11 @@ const MAX_BORDER_DISTANCE = 700; // systems further from the center than this wi
 export default function processVoronoi(
 	gameState: GameState,
 	settings: MapSettings,
-	systemIdToCoordinates: Record<number, [number, number]>,
+	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
-	const points = Object.values(systemIdToCoordinates);
+	const points = Object.values(gameState.galactic_object).map((system) =>
+		getSystemCoordinates(system.id),
+	);
 	const gridSize = 20;
 	const minDistanceSquared = 40 ** 2;
 	const extraPoints: [number, number][] = [];
@@ -35,15 +37,11 @@ export default function processVoronoi(
 		MAX_BORDER_DISTANCE,
 		MAX_BORDER_DISTANCE,
 	]);
-	const systemIds = Object.keys(systemIdToCoordinates);
-	function findClosestSystem(x: number, y: number): [number, GalacticObject] | [null, null] {
+	const systems = Object.values(gameState.galactic_object);
+	function findClosestSystem(x: number, y: number): GalacticObject | null {
 		const index = delaunay.find(x, y);
-		const systemId = parseInt(systemIds[index]);
-		if (index < systemIds.length) {
-			return [systemId, gameState.galactic_object[systemId]];
-		} else {
-			return [null, null];
-		}
+		const system = systems[index];
+		return system ?? null;
 	}
 	return { voronoi, findClosestSystem };
 }

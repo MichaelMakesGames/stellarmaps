@@ -1,6 +1,6 @@
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import { isDefined, parseNumberEntry } from '../../utils';
+import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
 import explode from '@turf/explode';
 import type processCircularGalaxyBorders from './processCircularGalaxyBorder';
 import type processSystemOwnership from './processSystemOwnership';
@@ -37,7 +37,7 @@ export default function processBorders(
 	galaxyBorderCirclesGeoJSON: ReturnType<
 		typeof processCircularGalaxyBorders
 	>['galaxyBorderCirclesGeoJSON'],
-	systemIdToCoordinates: Record<number, [number, number]>,
+	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	const borders = Object.entries(unionLeaderToSystemPolygons)
 		.map(parseNumberEntry)
@@ -56,11 +56,11 @@ export default function processBorders(
 					sector.owner != null &&
 					getUnionLeaderId(sector.owner, gameState, settings, ['joinedBorders']) === countryId,
 			);
-			for (const unionMemberId of unionLeaderToUnionMembers[countryId].values()) {
+			for (const unionMemberId of unionLeaderToUnionMembers[countryId]?.values() ?? []) {
 				const frontierSector: Sector = {
 					id: -unionMemberId, // negative so it doesn't conflict w/ any real sector ids
-					systems: Object.values(countryToOwnedSystemIds[unionMemberId]).filter((systemId) =>
-						countrySectors.every((s) => !s.systems.includes(systemId)),
+					systems: Object.values(getOrDefault(countryToOwnedSystemIds, unionMemberId, [])).filter(
+						(systemId) => countrySectors.every((s) => !s.systems.includes(systemId)),
 					),
 					owner: unionMemberId,
 				};
@@ -74,27 +74,29 @@ export default function processBorders(
 					.filter(isDefined);
 				const sectorGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
 				if (sectorGeoJSON && sectorGeoJSON.geometry.type === 'Polygon') {
-					return [helpers.polygon([sectorGeoJSON.geometry.coordinates[0]]).geometry];
+					return [helpers.polygon([sectorGeoJSON.geometry.coordinates[0] ?? []]).geometry];
 				} else if (sectorGeoJSON && sectorGeoJSON.geometry.type === 'MultiPolygon') {
 					return sectorGeoJSON.geometry.coordinates.map(
-						(singlePolygon) => helpers.polygon([singlePolygon[0]]).geometry,
+						(singlePolygon) => helpers.polygon([singlePolygon[0] ?? []]).geometry,
 					);
 				} else {
 					return [];
 				}
 			});
 
-			const unionMemberOuterPolygons = Array.from(unionLeaderToUnionMembers[countryId].values())
+			const unionMemberOuterPolygons = Array.from(
+				unionLeaderToUnionMembers[countryId]?.values() ?? [],
+			)
 				.map((unionMemberId) => {
-					const systemPolygons = countryToOwnedSystemIds[unionMemberId]
+					const systemPolygons = getOrDefault(countryToOwnedSystemIds, unionMemberId, [])
 						.map((systemId) => systemIdToPolygon[systemId])
 						.filter(isDefined);
 					const unionMemberGeoJSON = joinSystemPolygons(systemPolygons, galaxyBorderCirclesGeoJSON);
 					if (unionMemberGeoJSON && unionMemberGeoJSON.geometry.type === 'Polygon') {
-						return [helpers.polygon([unionMemberGeoJSON.geometry.coordinates[0]]).geometry];
+						return [helpers.polygon([unionMemberGeoJSON.geometry.coordinates[0] ?? []]).geometry];
 					} else if (unionMemberGeoJSON && unionMemberGeoJSON.geometry.type === 'MultiPolygon') {
 						return unionMemberGeoJSON.geometry.coordinates.map(
-							(singlePolygon) => helpers.polygon([singlePolygon[0]]).geometry,
+							(singlePolygon) => helpers.polygon([singlePolygon[0] ?? []]).geometry,
 						);
 					} else {
 						return [];
@@ -107,7 +109,7 @@ export default function processBorders(
 				helpers.featureCollection(unionMemberOuterPolygons.map((poly) => helpers.feature(poly))),
 			).forEach((positionArray) =>
 				positionArray.forEach((p, i) => {
-					const nextPosition = positionArray[(i + 1) % positionArray.length];
+					const nextPosition = positionArray[(i + 1) % positionArray.length] as helpers.Position;
 					unionMemberBorderLines.add(
 						[positionToString(p), positionToString(nextPosition)].sort().join(','),
 					);
@@ -126,17 +128,19 @@ export default function processBorders(
 					.map((positionArray) =>
 						positionArray.map((p, i) => {
 							const isLastPos = i === positionArray.length - 1;
-							const nextPosition = positionArray[(i + (isLastPos ? 2 : 1)) % positionArray.length];
+							const nextPosition = positionArray[
+								(i + (isLastPos ? 2 : 1)) % positionArray.length
+							] as helpers.Position;
 							return [positionToString(p), positionToString(nextPosition)].sort().join(',');
 						}),
 					)
 					.flat(),
 			);
-			let sectorSegments: helpers.Position[][] = [];
+			const sectorSegments: helpers.Position[][] = [];
 			sectorOuterPolygons.forEach((sectorPolygon, sectorIndex) => {
 				let currentSegment: helpers.Position[] = [];
 				const firstSegment = currentSegment;
-				sectorPolygon.coordinates[0].forEach((pos, posIndex, posArray) => {
+				(sectorPolygon.coordinates[0] ?? []).forEach((pos, posIndex, posArray) => {
 					const posString = positionToString(pos);
 					const posIsLast = posIndex === posArray.length - 1;
 					const posSharedSectors = sectorOuterPolygons
@@ -144,11 +148,11 @@ export default function processBorders(
 						.filter(
 							(otherSectorIndex) =>
 								otherSectorIndex !== sectorIndex &&
-								sectorOuterPoints[otherSectorIndex].has(posString),
+								sectorOuterPoints[otherSectorIndex]?.has(posString),
 						);
 
 					const nextPosIndex = (posIndex + (posIsLast ? 2 : 1)) % posArray.length;
-					const nextPos = posArray[nextPosIndex];
+					const nextPos = posArray[nextPosIndex] as helpers.Position;
 					const nextPosString = positionToString(nextPos);
 
 					const nextLineString = [posString, nextPosString].sort().join(',');
@@ -188,7 +192,7 @@ export default function processBorders(
 					if (
 						currentSegment.length &&
 						posIsLast &&
-						firstSegment.length &&
+						firstSegment[0] != null &&
 						positionToString(firstSegment[0]) === posString &&
 						firstSegment !== currentSegment
 					) {
@@ -204,9 +208,12 @@ export default function processBorders(
 				}
 			});
 			// make sure there are no 0 or 1 length segments
-			sectorSegments = sectorSegments.filter((segment) => segment.length > 1);
+			const nonEmptySectorSegments = sectorSegments.filter(
+				(segment): segment is [helpers.Position, helpers.Position, ...helpers.Position[]] =>
+					segment.length > 1,
+			);
 			// check for union border segments
-			const unionBorderSegments = sectorSegments.filter((segment) => {
+			const unionBorderSegments = nonEmptySectorSegments.filter((segment) => {
 				const firstLineString = [positionToString(segment[0]), positionToString(segment[1])]
 					.sort()
 					.join(',');
@@ -214,13 +221,15 @@ export default function processBorders(
 			});
 			// extend segments at border, so they reach the border (border can shift from smoothing in next step)
 			if (settings.borderStroke.smoothing) {
-				sectorSegments.forEach((segment) => {
+				nonEmptySectorSegments.forEach((segment) => {
 					if (allBorderPoints.has(positionToString(segment[0]))) {
 						segment[0] = getSmoothedPosition(segment[0], outerBorderGeoJSON);
 					}
-					if (allBorderPoints.has(positionToString(segment[segment.length - 1]))) {
+					if (
+						allBorderPoints.has(positionToString(segment[segment.length - 1] as helpers.Position))
+					) {
 						segment[segment.length - 1] = getSmoothedPosition(
-							segment[segment.length - 1],
+							segment[segment.length - 1] as helpers.Position,
 							outerBorderGeoJSON,
 						);
 					}
@@ -257,7 +266,7 @@ export default function processBorders(
 				relayMegastructures,
 				systemIdToUnionLeader,
 				countryId,
-				systemIdToCoordinates,
+				getSystemCoordinates,
 			);
 			return {
 				countryId,
@@ -268,7 +277,7 @@ export default function processBorders(
 				borderPath,
 				hyperlanesPath,
 				relayHyperlanesPath,
-				sectorBorders: sectorSegments.map((segment) => ({
+				sectorBorders: nonEmptySectorSegments.map((segment) => ({
 					path: segmentToPath(
 						segment,
 						unionBorderSegments.includes(segment)

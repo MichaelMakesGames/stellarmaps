@@ -1,7 +1,7 @@
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import * as helpers from '@turf/helpers';
-import { getGameStateValueAsArray, joinSystemPolygons, multiPolygonToPath } from './utils';
+import { joinSystemPolygons, multiPolygonToPath } from './utils';
 import type { Delaunay } from 'd3-delaunay';
 
 export default function processTerraIncognita(
@@ -31,16 +31,12 @@ export default function processTerraIncognita(
 			.map((bypass) => bypass.id),
 	);
 	const knownWormholes = terraIncognitaPerspectiveCountry
-		? new Set(
-				getGameStateValueAsArray(terraIncognitaPerspectiveCountry.usable_bypasses).filter((id) =>
-					wormholeIds.has(id),
-				),
-			)
+		? new Set(terraIncognitaPerspectiveCountry.usable_bypasses.filter((id) => wormholeIds.has(id)))
 		: wormholeIds;
 	const knownCountries = new Set(
 		terraIncognitaPerspectiveCountryId == null
 			? Object.keys(gameState.country).map((id) => parseInt(id))
-			: getGameStateValueAsArray(terraIncognitaPerspectiveCountry?.relations_manager?.relation)
+			: (terraIncognitaPerspectiveCountry?.relations_manager?.relation ?? [])
 					.filter((relation) => relation.communications)
 					.map((relation) => relation.country),
 	);

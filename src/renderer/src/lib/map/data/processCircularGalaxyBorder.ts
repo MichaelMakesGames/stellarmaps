@@ -1,15 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-// TODO re-enable the above, after making safer
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { interpolateBasis } from 'd3-interpolate';
-import { SCALE, getGameStateValueAsArray, pointFromGeoJSON, pointToGeoJSON } from './utils';
+import { SCALE, pointFromGeoJSON, pointToGeoJSON } from './utils';
 import * as helpers from '@turf/helpers';
 import difference from '@turf/difference';
 import turfCircle from '@turf/circle';
 import union from '@turf/union';
 import convex from '@turf/convex';
 import centerOfMass from '@turf/center-of-mass';
+import type { NonEmptyArray } from '../../utils';
 
 const CIRCLE_OUTER_PADDING = 20;
 const CIRCLE_INNER_PADDING = 10;
@@ -20,10 +19,16 @@ const STARBURST_LINES_PER_SLICE = 50;
 const STARBURST_SLICE_ANGLE = (Math.PI * 2) / STARBURST_NUM_SLICES;
 const ONE_DEGREE = Math.PI / 180;
 
+interface BorderCircle {
+	cx: number;
+	cy: number;
+	r: number;
+	type: 'inner' | 'outer' | 'inner-padded' | 'outer-padded' | 'outlier';
+}
 export default function processCircularGalaxyBorders(
 	gameState: GameState,
 	settings: MapSettings,
-	systemIdToCoordinates: Record<number, [number, number]>,
+	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	if (!settings.circularGalaxyBorders) {
 		return {
@@ -45,13 +50,13 @@ export default function processCircularGalaxyBorders(
 			systems: new Set<number>([go.id]),
 			outliers: new Set<number>(),
 			bBox: {
-				xMin: systemIdToCoordinates[go.id][0],
-				xMax: systemIdToCoordinates[go.id][0],
-				yMin: systemIdToCoordinates[go.id][1],
-				yMax: systemIdToCoordinates[go.id][1],
+				xMin: getSystemCoordinates(go.id)[0],
+				xMax: getSystemCoordinates(go.id)[0],
+				yMin: getSystemCoordinates(go.id)[1],
+				yMax: getSystemCoordinates(go.id)[1],
 			},
 			points: helpers.featureCollection([
-				helpers.point(pointToGeoJSON(systemIdToCoordinates[go.id])),
+				helpers.point(pointToGeoJSON(getSystemCoordinates(go.id))),
 			]),
 		};
 		const edge = go.hyperlane?.map((hyperlane) => hyperlane.to) ?? [];
@@ -63,21 +68,20 @@ export default function processCircularGalaxyBorders(
 			const next = gameState.galactic_object[nextId];
 			if (next != null && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
-				cluster.points.features.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[nextId])));
-				const nextHyperlanes = getGameStateValueAsArray(next.hyperlane);
-				const isOutlier =
-					nextHyperlanes.length === 1 && nextHyperlanes[0].length > OUTLIER_DISTANCE;
+				cluster.points.features.push(helpers.point(pointToGeoJSON(getSystemCoordinates(nextId))));
+				const nextHyperlanes = next.hyperlane ?? [];
+				const isOutlier = nextHyperlanes[0] != null && nextHyperlanes[0].length > OUTLIER_DISTANCE;
 				if (isOutlier) {
 					cluster.outliers.add(nextId);
 				} else {
-					if (systemIdToCoordinates[nextId][0] < cluster.bBox.xMin)
-						cluster.bBox.xMin = systemIdToCoordinates[nextId][0];
-					if (systemIdToCoordinates[nextId][0] > cluster.bBox.xMax)
-						cluster.bBox.xMax = systemIdToCoordinates[nextId][0];
-					if (systemIdToCoordinates[nextId][1] < cluster.bBox.yMin)
-						cluster.bBox.yMin = systemIdToCoordinates[nextId][1];
-					if (systemIdToCoordinates[nextId][1] > cluster.bBox.yMax)
-						cluster.bBox.yMax = systemIdToCoordinates[nextId][1];
+					if (getSystemCoordinates(nextId)[0] < cluster.bBox.xMin)
+						cluster.bBox.xMin = getSystemCoordinates(nextId)[0];
+					if (getSystemCoordinates(nextId)[0] > cluster.bBox.xMax)
+						cluster.bBox.xMax = getSystemCoordinates(nextId)[0];
+					if (getSystemCoordinates(nextId)[1] < cluster.bBox.yMin)
+						cluster.bBox.yMin = getSystemCoordinates(nextId)[1];
+					if (getSystemCoordinates(nextId)[1] > cluster.bBox.yMax)
+						cluster.bBox.yMax = getSystemCoordinates(nextId)[1];
 				}
 				for (const hyperlane of nextHyperlanes) {
 					if (!cluster.systems.has(hyperlane.to) && !edgeSet.has(hyperlane.to)) {
@@ -102,7 +106,7 @@ export default function processCircularGalaxyBorders(
 			const maxAngle = STARBURST_SLICE_ANGLE * (i + 1) + ONE_DEGREE;
 			const [minR, maxR] = getMinMaxSystemRadii(
 				Array.from(mainCluster.systems).filter((id) => {
-					let systemAngle = Math.atan2(systemIdToCoordinates[id][1], systemIdToCoordinates[id][0]);
+					let systemAngle = Math.atan2(getSystemCoordinates(id)[1], getSystemCoordinates(id)[0]);
 					if (systemAngle < 0) systemAngle = Math.PI * 2 + systemAngle;
 					return (
 						!mainCluster.outliers.has(id) && systemAngle >= minAngle && systemAngle <= maxAngle
@@ -111,7 +115,7 @@ export default function processCircularGalaxyBorders(
 				0,
 				0,
 				gameState,
-				systemIdToCoordinates,
+				getSystemCoordinates,
 			);
 			outerRadii.push(maxR);
 			innerRadii.push(minR);
@@ -168,9 +172,9 @@ export default function processCircularGalaxyBorders(
 				cx,
 				cy,
 				gameState,
-				systemIdToCoordinates,
+				getSystemCoordinates,
 			);
-			const clusterCircles = [
+			const clusterCircles: NonEmptyArray<BorderCircle> = [
 				{
 					cx,
 					cy,
@@ -200,10 +204,10 @@ export default function processCircularGalaxyBorders(
 			if (isStarburstCluster) clusterCircles.length = 0;
 			clusterCircles.push(
 				...Array.from(cluster.outliers).map((outlierId) => ({
-					cx: systemIdToCoordinates[outlierId][0],
-					cy: systemIdToCoordinates[outlierId][1],
+					cx: getSystemCoordinates(outlierId)[0],
+					cy: getSystemCoordinates(outlierId)[1],
 					r: OUTLIER_RADIUS,
-					type: 'outlier',
+					type: 'outlier' as const,
 				})),
 			);
 			return clusterCircles;
@@ -238,16 +242,16 @@ function getMinMaxSystemRadii(
 	cx: number,
 	cy: number,
 	gameState: GameState,
-	systemIdToCoordinates: Record<number, [number, number]>,
+	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ): [number, number] {
 	const sortedRadiusesSquared = systemIds
 		.map((id) => {
-			return (cx - systemIdToCoordinates[id][0]) ** 2 + (cy - systemIdToCoordinates[id][1]) ** 2;
+			return (cx - getSystemCoordinates(id)[0]) ** 2 + (cy - getSystemCoordinates(id)[1]) ** 2;
 		})
 		.sort((a, b) => a - b);
 	return [
-		Math.sqrt(sortedRadiusesSquared[0]),
-		Math.sqrt(sortedRadiusesSquared[sortedRadiusesSquared.length - 1]),
+		Math.sqrt(sortedRadiusesSquared[0] ?? 0),
+		Math.sqrt(sortedRadiusesSquared[sortedRadiusesSquared.length - 1] ?? 0),
 	];
 }
 
@@ -265,26 +269,24 @@ function smoothRadiiPass(radii: number[], minimums: number[], maximums: number[]
 	const newRadii: number[] = [];
 	radii.forEach((radius, i) => {
 		let proposedValue = radius;
-		if (i === 0) {
-			const next = radii[i + 1];
-			const nextNext = radii[i + 2];
-			const slope = next - radius;
-			const nextSlope = nextNext - next;
-			if (Math.abs(nextSlope) < Math.abs(slope)) {
-				proposedValue = next - nextSlope;
-			}
-		} else if (i === radii.length - 1) {
-			const prev = radii[i - 1];
-			const prevPrev = radii[i - 2];
+		const prevPrev = radii[i - 2];
+		const prev = radii[i - 1];
+		const next = radii[i + 1];
+		const nextNext = radii[i + 2];
+		if (prev != null && next != null) {
+			proposedValue = (prev + next) / 2;
+		} else if (prev != null && prevPrev != null) {
 			const slope = radius - prev;
 			const prevSlope = prev - prevPrev;
 			if (Math.abs(prevSlope) < Math.abs(slope)) {
 				proposedValue = prev + prevSlope;
 			}
-		} else {
-			const prev = radii[i - 1];
-			const next = radii[i + 1];
-			proposedValue = (prev + next) / 2;
+		} else if (next != null && nextNext != null) {
+			const slope = next - radius;
+			const nextSlope = nextNext - next;
+			if (Math.abs(nextSlope) < Math.abs(slope)) {
+				proposedValue = next - nextSlope;
+			}
 		}
 		const min = minimums[i];
 		const max = maximums[i];
@@ -300,12 +302,12 @@ function smoothRadiiPass(radii: number[], minimums: number[], maximums: number[]
 function findStarburstStartIndex(radii: number[]) {
 	const startRadius = radii.slice().sort((a, b) => {
 		const aPrevSliceIndex = (radii.indexOf(a) - 1 + radii.length) % radii.length;
-		const aDiff = a - radii[aPrevSliceIndex];
+		const aDiff = a - (radii[aPrevSliceIndex] as number); // type coercion is safe here
 		const bPrevSliceIndex = (radii.indexOf(b) - 1 + radii.length) % radii.length;
-		const bDiff = b - radii[bPrevSliceIndex];
+		const bDiff = b - (radii[bPrevSliceIndex] as number); // type coercion is safe here
 		return aDiff - bDiff;
 	})[0];
-	return radii.indexOf(startRadius);
+	return startRadius == null ? 0 : radii.indexOf(startRadius);
 }
 
 function makeStarburstPolygon(
@@ -328,6 +330,8 @@ function makeStarburstPolygon(
 			positions.push([Math.cos(angle) * radius, Math.sin(angle) * radius]);
 		}
 	}
-	positions.push(positions[0]);
+	if (positions[0]) {
+		positions.push(positions[0]);
+	}
 	return helpers.polygon([positions]);
 }

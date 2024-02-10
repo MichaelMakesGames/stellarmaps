@@ -16,13 +16,13 @@
 	const _props = $$props; // this suppresses warning about unknown prop 'parent'
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
-	const svg: SVGGElement = $modalStore[0].meta?.svg;
-	const colors: Record<string, string> = $modalStore[0].meta?.colors;
-	const mapData: MapData = $modalStore[0].meta?.mapData;
+	const svg: SVGGElement = $modalStore[0]?.meta?.svg;
+	const colors: Record<string, string> = $modalStore[0]?.meta?.colors;
+	const mapData: MapData = $modalStore[0]?.meta?.mapData;
 
 	const defaultExportSettings = {
 		lockAspectRatio: true,
-		lockedAspectRatio: [1, 1],
+		lockedAspectRatio: [1, 1] as [number, number],
 		imageWidth: 4096,
 		imageHeight: 4096,
 		centerX: 0,

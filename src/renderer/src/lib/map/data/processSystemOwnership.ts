@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-// TODO re-enable the above rule and update db to Record<number, T | undefined>
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import type { Delaunay, Voronoi } from 'd3-delaunay';
 import { getUnionLeaderId, pointToGeoJSON } from './utils';
 import * as helpers from '@turf/helpers';
+import { getOrSetDefault } from '../../utils';
 
 export default function processSystemOwnership(
 	gameState: GameState,
 	settings: MapSettings,
 	voronoi: Voronoi<Delaunay.Point>,
-	systemIdToCoordinates: Record<number, [number, number]>,
+	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	const fleetToCountry: Record<string, number> = {};
 	Object.values(gameState.country).forEach((country) => {
@@ -24,40 +23,29 @@ export default function processSystemOwnership(
 	const unionLeaderToUnionMembers: Record<number, Set<number>> = {};
 	const ownedSystemPoints: helpers.Point[] = [];
 	const systemIdToPolygon: Record<string, Delaunay.Polygon> = {};
-	const systemIdToCountry: Record<string, number | undefined> = {};
-	const systemIdToUnionLeader: Record<string, number | undefined> = {};
+	const systemIdToCountry: Record<string, number> = {};
+	const systemIdToUnionLeader: Record<string, number> = {};
 	Object.values(gameState.galactic_object).forEach((go, i) => {
-		const starbase = gameState.starbase_mgr.starbases[go.starbases[0]];
-		const ownerId =
-			starbase != null ? fleetToCountry[gameState.ships[starbase.station].fleet] : null;
+		const starbase =
+			go.starbases[0] != null ? gameState.starbase_mgr.starbases[go.starbases[0]] : null;
+		const starbaseShip = starbase == null ? null : gameState.ships[starbase.station];
+		const ownerId = starbaseShip != null ? fleetToCountry[starbaseShip.fleet] : null;
 		const owner = ownerId != null ? gameState.country[ownerId] : null;
-		const polygon = voronoi.cellPolygon(i);
-		systemIdToPolygon[go.id] = polygon;
+		const polygon = voronoi.cellPolygon(i) as Delaunay.Polygon | null;
+		if (polygon != null) systemIdToPolygon[go.id] = polygon;
 		if (ownerId != null && owner) {
 			const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, ['joinedBorders']);
-			ownedSystemPoints.push(helpers.point(pointToGeoJSON(systemIdToCoordinates[go.id])).geometry);
-			if (countryToOwnedSystemIds[ownerId] == null) {
-				countryToOwnedSystemIds[ownerId] = [];
-			}
-			countryToOwnedSystemIds[ownerId].push(go.id);
+			ownedSystemPoints.push(helpers.point(pointToGeoJSON(getSystemCoordinates(go.id))).geometry);
+			getOrSetDefault(countryToOwnedSystemIds, ownerId, []).push(go.id);
 			systemIdToCountry[go.id] = ownerId;
 			systemIdToUnionLeader[go.id] = joinedUnionLeaderId;
 
 			if (polygon == null) {
-				console.warn(`null polygon for system at ${systemIdToCoordinates[go.id]}`);
+				console.warn(`null polygon for system at ${getSystemCoordinates(go.id)}`);
 			} else {
-				if (countryToSystemPolygons[ownerId] == null) {
-					countryToSystemPolygons[ownerId] = [];
-				}
-				countryToSystemPolygons[ownerId].push(polygon);
-				if (unionLeaderToSystemPolygons[joinedUnionLeaderId] == null) {
-					unionLeaderToSystemPolygons[joinedUnionLeaderId] = [];
-				}
-				unionLeaderToSystemPolygons[joinedUnionLeaderId].push(polygon);
-				if (unionLeaderToUnionMembers[joinedUnionLeaderId] == null) {
-					unionLeaderToUnionMembers[joinedUnionLeaderId] = new Set();
-				}
-				unionLeaderToUnionMembers[joinedUnionLeaderId].add(ownerId);
+				getOrSetDefault(countryToSystemPolygons, ownerId, []).push(polygon);
+				getOrSetDefault(unionLeaderToSystemPolygons, joinedUnionLeaderId, []).push(polygon);
+				getOrSetDefault(unionLeaderToUnionMembers, joinedUnionLeaderId, new Set()).add(ownerId);
 			}
 		}
 	});

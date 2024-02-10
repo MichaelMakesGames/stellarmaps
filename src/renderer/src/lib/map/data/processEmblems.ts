@@ -14,23 +14,27 @@ export async function processEmblems(countries: Country[]) {
 				// do nothing
 			} else {
 				keys.push(key);
-				if (!(key in emblems)) {
+				if (emblems[key] == null) {
 					emblems[key] = stellarMapsApi.loadEmblem(
 						get(stellarisPathStore),
 						c.flag.icon.category,
 						c.flag.icon.file,
 					);
 				}
-				promises.push(emblems[key]);
+				const promise = emblems[key];
+				if (promise != null) promises.push(promise);
 			}
 		}
 	});
 	const results = await Promise.allSettled(promises);
 	return results.reduce<Record<string, string>>((acc, cur, i) => {
+		const key = keys[i];
 		if (cur.status === 'fulfilled') {
-			acc[keys[i]] = cur.value;
+			if (key != null) {
+				acc[key] = cur.value;
+			}
 		} else {
-			console.warn('failed to load emblem', keys[i], cur.reason);
+			console.warn('failed to load emblem', key, cur.reason);
 		}
 		return acc;
 	}, {});

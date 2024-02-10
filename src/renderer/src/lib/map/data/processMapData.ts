@@ -20,7 +20,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 	const emblemsPromise = timeItAsync('emblems', processEmblems, Object.values(gameState.country));
 	const countryNamesPromise = timeItAsync('names', processNames, gameState);
 
-	const systemIdToCoordinates = timeIt(
+	const getSystemCoordinates = timeIt(
 		'system coordinates',
 		processSystemCoordinates,
 		gameState,
@@ -31,7 +31,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		processVoronoi,
 		gameState,
 		settings,
-		systemIdToCoordinates,
+		getSystemCoordinates,
 	);
 	const {
 		countryToOwnedSystemIds,
@@ -48,14 +48,14 @@ export default async function processMapData(gameState: GameState, settings: Map
 		gameState,
 		settings,
 		voronoi,
-		systemIdToCoordinates,
+		getSystemCoordinates,
 	);
 	const { galaxyBorderCircles, galaxyBorderCirclesGeoJSON } = timeIt(
 		'circular galaxy borders',
 		processCircularGalaxyBorders,
 		gameState,
 		settings,
-		systemIdToCoordinates,
+		getSystemCoordinates,
 	);
 	const { terraIncognitaPath, knownSystems, knownCountries, knownWormholes } = timeIt(
 		'terra incognita',
@@ -75,7 +75,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 			relayMegastructures,
 			systemIdToUnionLeader,
 			null,
-			systemIdToCoordinates,
+			getSystemCoordinates,
 		);
 	const countryNames = await countryNamesPromise;
 	const labels = timeIt(
@@ -102,7 +102,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		relayMegastructures,
 		knownCountries,
 		galaxyBorderCirclesGeoJSON,
-		systemIdToCoordinates,
+		getSystemCoordinates,
 	);
 	const systems = timeIt(
 		'systems',
@@ -112,7 +112,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		systemIdToCountry,
 		knownCountries,
 		knownSystems,
-		systemIdToCoordinates,
+		getSystemCoordinates,
 	);
 	const bypassLinks = timeIt(
 		'bypassLinks',
@@ -120,7 +120,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		gameState,
 		knownSystems,
 		knownWormholes,
-		systemIdToCoordinates,
+		getSystemCoordinates,
 	);
 	const emblems = await emblemsPromise;
 

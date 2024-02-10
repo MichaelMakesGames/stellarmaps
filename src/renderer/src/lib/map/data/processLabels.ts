@@ -46,10 +46,10 @@ export default function processLabels(
 						.map((p) => {
 							if (settings.labelsAvoidHoles === 'all') return p;
 							if (settings.labelsAvoidHoles === 'none')
-								return helpers.polygon([p.coordinates[0]]).geometry;
+								return helpers.polygon([p.coordinates[0] ?? []]).geometry;
 							// settings.labelsAvoidHoles === 'owned'
 							return helpers.polygon([
-								p.coordinates[0],
+								p.coordinates[0] ?? [],
 								...p.coordinates.slice(1).filter((hole) => {
 									const holePolygon = helpers.polygon([hole.slice().reverse()]);
 									return ownedSystemPoints.some((ownedSystemPoint) =>
@@ -119,7 +119,7 @@ export default function processLabels(
 							};
 						})
 				: [];
-		const emblemKey = country.flag?.icon
+		const emblemKey = country?.flag?.icon
 			? `${country.flag.icon.category}/${country.flag.icon.file}`
 			: null;
 		return {
@@ -193,7 +193,7 @@ function makeRect(
 ): helpers.Polygon {
 	const dx = width / 2;
 	const dy = height / 2;
-	const center = [relativePoint[0], relativePoint[1]];
+	const center: helpers.Position = [relativePoint[0], relativePoint[1]];
 	if (relativePointType === 'top') center[1] += dy;
 	if (relativePointType === 'bottom') center[1] -= dy;
 	// clockwise: [0,0],[0,1],[1,1],[1,0],[0,0]
@@ -208,31 +208,38 @@ function makeRect(
 }
 
 function aspectRatioSensitivePolylabel(
-	polygon: number[][][],
+	polygon: helpers.Position[][],
 	precision: number,
 	aspectRatio: number,
 ) {
 	const scaledPolygon = polygon.map((ring) =>
 		ring.map((point) => [point[0] * aspectRatio, point[1]]),
 	);
-	const point = polylabel(scaledPolygon, precision);
-	return [point[0] / aspectRatio, point[1]];
+	const scaledPoint = polylabel(scaledPolygon, precision) as unknown as helpers.Position;
+	const point: helpers.Position = [scaledPoint[0] / aspectRatio, scaledPoint[1]];
+	return point;
 }
 
 // The booleanContains function from turf doesn't seem to work with concave polygons
 // This is stricter and simplified a bit since we know the inner shape is a rectangle
 function contains(polygon: helpers.Polygon, rect: helpers.Polygon) {
+	const [r1, r2, r3, r4] = rect.coordinates[0] ?? [];
+	if (r1 == null || r2 == null || r3 == null || r4 == null) {
+		throw new Error('rect has too few points!');
+	}
 	if (
-		!booleanContains(polygon, helpers.point(rect.coordinates[0][0])) ||
-		!booleanContains(polygon, helpers.point(rect.coordinates[0][1])) ||
-		!booleanContains(polygon, helpers.point(rect.coordinates[0][2])) ||
-		!booleanContains(polygon, helpers.point(rect.coordinates[0][3]))
+		!booleanContains(polygon, helpers.point(r1)) ||
+		!booleanContains(polygon, helpers.point(r2)) ||
+		!booleanContains(polygon, helpers.point(r3)) ||
+		!booleanContains(polygon, helpers.point(r4))
 	)
 		return false;
-	const minX = Math.min(...rect.coordinates[0].map((p) => p[0]));
-	const maxX = Math.max(...rect.coordinates[0].map((p) => p[0]));
-	const minY = Math.min(...rect.coordinates[0].map((p) => p[1]));
-	const maxY = Math.max(...rect.coordinates[0].map((p) => p[1]));
+	const xs = [r1[0], r2[0], r3[0], r4[0]];
+	const ys = [r1[1], r2[1], r3[1], r4[1]];
+	const minX = Math.min(...xs);
+	const maxX = Math.max(...xs);
+	const minY = Math.min(...ys);
+	const maxY = Math.max(...ys);
 	return !polygon.coordinates.flat().some(([x, y]) => {
 		return x > minX && x < maxX && y > minY && y < maxY;
 	});

@@ -40,6 +40,7 @@ const galacticObjectSchema = z.object({
 		y: z.number(),
 	}),
 	starbases: z.array(z.number()),
+	// TODO coerced array
 	hyperlane: z.array(z.object({ to: z.number(), length: z.number() })).optional(),
 	megastructures: z.array(z.number()).optional(),
 	colonies: z.array(z.number()).optional(),
@@ -109,7 +110,12 @@ const countrySchema = z.object({
 			systems: z.array(z.number()).optional(),
 		})
 		.optional(),
-	relations_manager: z.object({ relation: z.array(relationSchema).optional() }).optional(),
+	relations_manager: z
+		.object({
+			// TODO coerced array
+			relation: z.array(relationSchema).optional(),
+		})
+		.optional(),
 });
 export type Country = WithId<z.infer<typeof countrySchema>>;
 
@@ -161,6 +167,7 @@ export const gameStateSchema = z.object({
 	megastructures: stellarisDb(megastructureSchema),
 	sectors: stellarisDb(sectorSchema),
 	federation: stellarisDb(federationSchema),
+	// TODO coerced array
 	player: z.array(z.object({ name: z.string(), country: z.number() })).optional(),
 	galaxy: z.object({ shape: z.string() }),
 	planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
@@ -184,7 +191,8 @@ function convertSchemaToGameStateFilter(schema: z.ZodType): boolean | Record<str
 		);
 		const complexUnionPaths = unionPaths.filter((p) => typeof p !== 'boolean');
 		if (unionPaths.includes(true)) return true;
-		if (complexUnionPaths.length === 1) return complexUnionPaths[0];
+		if (complexUnionPaths.length === 1)
+			return complexUnionPaths[0] as (typeof complexUnionPaths)[number];
 		if (complexUnionPaths.length > 1) {
 			console.error('complex union, falling back to true');
 			return true;

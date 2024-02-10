@@ -7,10 +7,10 @@ export function localizeText(text: LocalizedText) {
 }
 
 export function localizeTextSync(
-	text: null | LocalizedText,
-	loc: Record<string, string | undefined>,
+	text: null | undefined | LocalizedText,
+	loc: Record<string, string>,
 ): string {
-	if (text == null) return 'null';
+	if (text == null) return 'NULL';
 	if (text.key === '%ADJECTIVE%') {
 		try {
 			const var0 = text.variables?.[0];
@@ -33,7 +33,7 @@ export function localizeTextSync(
 			} else {
 				return (loc['adj_format'] ?? 'adj $1$')
 					.replace('adj', adj)
-					.replace('$1$', localizeTextSync(var0.value.variables[0].value, loc));
+					.replace('$1$', localizeTextSync(var0.value.variables[0]?.value, loc));
 			}
 		} catch {
 			console.warn('localization failed', text);

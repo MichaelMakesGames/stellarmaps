@@ -1,5 +1,6 @@
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
+import { isDefined } from '../../utils';
 import type processSystemOwnership from './processSystemOwnership';
 import { getCountryColors } from './utils';
 
@@ -9,7 +10,7 @@ export default function processSystems(
 	systemIdToCountry: ReturnType<typeof processSystemOwnership>['systemIdToCountry'],
 	knownCountries: Set<number>,
 	knownSystems: Set<number>,
-	systemIdToCoordinates: Record<number, [number, number]>,
+	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	const systems = Object.values(gameState.galactic_object).map((system) => {
 		const countryId = systemIdToCountry[system.id];
@@ -24,14 +25,13 @@ export default function processSystems(
 			system.colonies?.includes(sector.local_capital as number),
 		);
 		const isCountryCapital = system.colonies?.includes(country?.capital as number);
-		const x = -systemIdToCoordinates[system.id][0];
-		const y = systemIdToCoordinates[system.id][1];
+		const [x, y] = getSystemCoordinates(system.id, { invertX: true });
 
 		const ownerIsKnown = countryId != null && knownCountries.has(countryId);
 		const systemIsKnown = knownSystems.has(system.id);
 
 		const bypassTypes = new Set(
-			system.bypasses?.map((bypassId) => gameState.bypasses[bypassId].type),
+			system.bypasses?.map((bypassId) => gameState.bypasses[bypassId]?.type).filter(isDefined),
 		);
 		const hasWormhole = bypassTypes.has('wormhole');
 		const hasGateway = bypassTypes.has('gateway');
