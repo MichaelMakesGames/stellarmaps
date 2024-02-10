@@ -20,18 +20,18 @@ export default function processSystems(
 		const secondaryColor = colors?.[1] ?? 'black';
 
 		const isOwned = country != null;
-		const isColonized = isOwned && Boolean(system.colonies?.length);
+		const isColonized = isOwned && Boolean(system.colonies.length);
 		const isSectorCapital = Object.values(gameState.sectors).some((sector) =>
-			system.colonies?.includes(sector.local_capital as number),
+			system.colonies.includes(sector.local_capital as number),
 		);
-		const isCountryCapital = system.colonies?.includes(country?.capital as number);
+		const isCountryCapital = system.colonies.includes(country?.capital as number);
 		const [x, y] = getSystemCoordinates(system.id, { invertX: true });
 
 		const ownerIsKnown = countryId != null && knownCountries.has(countryId);
 		const systemIsKnown = knownSystems.has(system.id);
 
 		const bypassTypes = new Set(
-			system.bypasses?.map((bypassId) => gameState.bypasses[bypassId]?.type).filter(isDefined),
+			system.bypasses.map((bypassId) => gameState.bypasses[bypassId]?.type).filter(isDefined),
 		);
 		const hasWormhole = bypassTypes.has('wormhole');
 		const hasGateway = bypassTypes.has('gateway');

@@ -24,15 +24,15 @@ export default function processBypassLinks(
 		const [fromX, fromY] = getSystemCoordinates(system.id, { invertX: true });
 
 		const bypassTypes = new Set(
-			system.bypasses?.map((bypassId) => gameState.bypasses[bypassId]?.type).filter(isDefined),
+			system.bypasses.map((bypassId) => gameState.bypasses[bypassId]?.type).filter(isDefined),
 		);
 
 		const wormholeBypass = system.bypasses
-			?.map((bypassId) => gameState.bypasses[bypassId])
+			.map((bypassId) => gameState.bypasses[bypassId])
 			.find((b) => b?.type === 'wormhole');
 		const wormholeIsKnown = wormholeBypass != null && knownWormholes.has(wormholeBypass.id);
 		const wormholeLinksTo = Object.values(gameState.galactic_object).find((go) =>
-			go.bypasses?.includes(wormholeBypass?.linked_to as number),
+			go.bypasses.includes(wormholeBypass?.linked_to as number),
 		);
 		if (wormholeLinksTo != null) {
 			const key = `wormhole-${[system.id, wormholeLinksTo.id].sort()}`;

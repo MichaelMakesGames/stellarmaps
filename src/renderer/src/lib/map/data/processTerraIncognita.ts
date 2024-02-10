@@ -12,7 +12,7 @@ export default function processTerraIncognita(
 ) {
 	const terraIncognitaPerspectiveCountryId =
 		settings.terraIncognitaPerspectiveCountry === 'player'
-			? gameState.player?.filter((p) => gameState.country[p.country])[0]?.country
+			? gameState.player.filter((p) => gameState.country[p.country])[0]?.country
 			: parseInt(settings.terraIncognitaPerspectiveCountry);
 	const terraIncognitaPerspectiveCountry =
 		terraIncognitaPerspectiveCountryId != null
@@ -36,7 +36,7 @@ export default function processTerraIncognita(
 	const knownCountries = new Set(
 		terraIncognitaPerspectiveCountryId == null
 			? Object.keys(gameState.country).map((id) => parseInt(id))
-			: (terraIncognitaPerspectiveCountry?.relations_manager?.relation ?? [])
+			: (terraIncognitaPerspectiveCountry?.relations_manager.relation ?? [])
 					.filter((relation) => relation.communications)
 					.map((relation) => relation.country),
 	);

@@ -59,7 +59,7 @@ export default function processCircularGalaxyBorders(
 				helpers.point(pointToGeoJSON(getSystemCoordinates(go.id))),
 			]),
 		};
-		const edge = go.hyperlane?.map((hyperlane) => hyperlane.to) ?? [];
+		const edge = go.hyperlane.map((hyperlane) => hyperlane.to);
 		const edgeSet = new Set(edge);
 		while (edge.length > 0) {
 			const nextId = edge.pop();
@@ -69,7 +69,7 @@ export default function processCircularGalaxyBorders(
 			if (next != null && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
 				cluster.points.features.push(helpers.point(pointToGeoJSON(getSystemCoordinates(nextId))));
-				const nextHyperlanes = next.hyperlane ?? [];
+				const nextHyperlanes = next.hyperlane;
 				const isOutlier = nextHyperlanes[0] != null && nextHyperlanes[0].length > OUTLIER_DISTANCE;
 				if (isOutlier) {
 					cluster.outliers.add(nextId);

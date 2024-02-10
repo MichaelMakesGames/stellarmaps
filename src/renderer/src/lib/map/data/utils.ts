@@ -74,12 +74,12 @@ export function isUnionLeader(countryId: number, gameState: GameState, settings:
 		if (federation) {
 			return federation.leader === countryId;
 		} else {
-			return Boolean(country.subjects?.length);
+			return Boolean(country.subjects.length);
 		}
 	} else if (settings.unionFederations !== 'off' && federation) {
 		return federation.leader === countryId;
 	} else if (settings.unionSubjects !== 'off') {
-		return Boolean(country.subjects?.length);
+		return Boolean(country.subjects.length);
 	} else {
 		return false;
 	}
@@ -256,7 +256,7 @@ export function createHyperlanePaths(
 	const hyperlanes = new Set<string>();
 	const relayHyperlanes = new Set<string>();
 	Object.values(gameState.galactic_object).forEach((go) => {
-		for (const hyperlane of (go.hyperlane ?? []).filter((lane) => {
+		for (const hyperlane of go.hyperlane.filter((lane) => {
 			if (owner != null) {
 				return systemIdToUnionLeader[go.id] === owner && systemIdToUnionLeader[lane.to] === owner;
 			} else {
@@ -268,8 +268,8 @@ export function createHyperlanePaths(
 			}
 		})) {
 			const isRelay =
-				go.megastructures?.some((id) => relayMegastructures.has(id)) &&
-				gameState.galactic_object[hyperlane.to]?.megastructures?.some((id) =>
+				go.megastructures.some((id) => relayMegastructures.has(id)) &&
+				gameState.galactic_object[hyperlane.to]?.megastructures.some((id) =>
 					relayMegastructures.has(id),
 				);
 			const key = [go.id, hyperlane.to].sort().join(',');

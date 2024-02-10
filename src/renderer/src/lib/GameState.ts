@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { z } from 'zod';
-import { saveToWindow } from './utils';
+import { isEmptyObject, saveToWindow } from './utils';
 
 type WithId<T> = T & { id: number };
 
@@ -12,6 +12,10 @@ gameStatePromise.subscribe(
 			saveToWindow('gameState', gameState);
 		}),
 );
+
+function preprocessedArray<T extends z.ZodTypeAny>(schema: T) {
+	return z.preprocess((val) => (val == null || isEmptyObject(val) ? [] : val), z.array(schema));
+}
 
 // zod can't infer recursive types
 export interface LocalizedText {
@@ -39,12 +43,11 @@ const galacticObjectSchema = z.object({
 		x: z.number(),
 		y: z.number(),
 	}),
-	starbases: z.array(z.number()),
-	// TODO coerced array
-	hyperlane: z.array(z.object({ to: z.number(), length: z.number() })).optional(),
-	megastructures: z.array(z.number()).optional(),
-	colonies: z.array(z.number()).optional(),
-	bypasses: z.array(z.number()).optional(),
+	starbases: preprocessedArray(z.number()),
+	hyperlane: preprocessedArray(z.object({ to: z.number(), length: z.number() })),
+	megastructures: preprocessedArray(z.number()),
+	colonies: preprocessedArray(z.number()),
+	bypasses: preprocessedArray(z.number()),
 	flags: z
 		.record(
 			z.string(),
@@ -86,7 +89,7 @@ const countrySchema = z.object({
 	name: localizedTextSchema,
 	flag: z
 		.object({
-			colors: z.array(z.string()),
+			colors: preprocessedArray(z.string()),
 			icon: z
 				.object({
 					category: z.string(),
@@ -96,26 +99,34 @@ const countrySchema = z.object({
 		})
 		.optional(),
 	capital: z.number().optional(),
-	subjects: z.array(z.number()).optional(),
+	subjects: preprocessedArray(z.number()),
 	overlord: z.number().optional(),
 	federation: z.number().optional(),
-	usable_bypasses: z.array(z.number()).default([]),
+	usable_bypasses: preprocessedArray(z.number()),
 	fleets_manager: z
 		.object({
-			owned_fleets: z.array(z.object({ fleet: z.number() })).optional(),
+			owned_fleets: preprocessedArray(z.object({ fleet: z.number() })),
 		})
 		.optional(),
 	terra_incognita: z
 		.object({
-			systems: z.array(z.number()).optional(),
+			systems: preprocessedArray(z.number()),
 		})
 		.optional(),
 	relations_manager: z
 		.object({
-			// TODO coerced array
-			relation: z.array(relationSchema).optional(),
+			relation: relationSchema.optional(),
+			$multiKeys: z
+				.object({
+					relation: preprocessedArray(relationSchema).optional(),
+				})
+				.optional(),
 		})
-		.optional(),
+		.default({})
+		.transform((obj) => ({
+			...obj,
+			relation: (obj.relation == null ? [] : [obj.relation]).concat(obj.$multiKeys?.relation ?? []),
+		})),
 });
 export type Country = WithId<z.infer<typeof countrySchema>>;
 
@@ -137,13 +148,13 @@ export type Fleet = WithId<z.infer<typeof fleetSchema>>;
 const sectorSchema = z.object({
 	owner: z.number().optional(),
 	local_capital: z.number().optional(),
-	systems: z.array(z.number()),
+	systems: preprocessedArray(z.number()),
 });
 export type Sector = WithId<z.infer<typeof sectorSchema>>;
 
 const federationSchema = z.object({
 	leader: z.number(),
-	members: z.array(z.number()),
+	members: preprocessedArray(z.number()),
 	name: localizedTextSchema,
 });
 export type Federation = WithId<z.infer<typeof federationSchema>>;
@@ -167,8 +178,7 @@ export const gameStateSchema = z.object({
 	megastructures: stellarisDb(megastructureSchema),
 	sectors: stellarisDb(sectorSchema),
 	federation: stellarisDb(federationSchema),
-	// TODO coerced array
-	player: z.array(z.object({ name: z.string(), country: z.number() })).optional(),
+	player: preprocessedArray(z.object({ name: z.string(), country: z.number() })),
 	galaxy: z.object({ shape: z.string() }),
 	planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
 });

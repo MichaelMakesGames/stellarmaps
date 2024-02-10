@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::lexer::Token;
 use anyhow;
 use logos::{Lexer, Logos};
@@ -14,7 +16,7 @@ fn parse_object<'source>(
 ) -> anyhow::Result<Value> {
 	let mut map = Map::new();
 	let mut items = vec![];
-	let mut duplicated_keys = vec![];
+	let mut multi_keys: HashMap<String, Vec<Value>> = HashMap::new();
 
 	let mut assigning = false;
 	let mut key = None;
@@ -29,7 +31,7 @@ fn parse_object<'source>(
 					assigning = false;
 				} else {
 					if key.is_some() && value.is_some() {
-						insert_val(key, value, &mut map, &mut duplicated_keys, filter);
+						insert_val(key, value, &mut map, &mut multi_keys);
 						value = None;
 					} else if key.is_some() {
 						items.push(Value::String(key.unwrap()));
@@ -46,13 +48,7 @@ fn parse_object<'source>(
 					// key2 = val2
 					// in the above example, key current contains key1 and val contains key2
 					// we need to save key1 as null, then move val to key
-					insert_val(
-						key,
-						Some(Value::Null),
-						&mut map,
-						&mut duplicated_keys,
-						filter,
-					);
+					insert_val(key, Some(Value::Null), &mut map, &mut multi_keys);
 					key = Some(value.unwrap().as_str().unwrap().to_string());
 					value = None;
 				}
@@ -74,23 +70,18 @@ fn parse_object<'source>(
 			Some(Ok(Token::Comment)) => (),
 			Some(Ok(Token::Open)) => {
 				if assigning {
-					let next_filter = if is_key_array(key.as_ref().unwrap(), filter) {
-						get_next_filter_array(get_next_filter(key.as_ref().unwrap(), filter))
-					} else {
-						get_next_filter(key.as_ref().unwrap(), filter)
-					};
+					let next_filter = get_next_filter(key.as_ref().unwrap(), filter);
 					insert_val(
 						key,
 						Some(parse_object(lex, next_filter)?),
 						&mut map,
-						&mut duplicated_keys,
-						filter,
+						&mut multi_keys,
 					);
 					key = None;
 					assigning = false;
 				} else {
 					if key.is_some() && value.is_some() {
-						insert_val(key, value, &mut map, &mut duplicated_keys, filter);
+						insert_val(key, value, &mut map, &mut multi_keys);
 						key = None;
 						value = None;
 					} else if key.is_some() {
@@ -111,26 +102,22 @@ fn parse_object<'source>(
 		token = lex.next();
 	}
 	if key.is_some() && value.is_some() {
-		insert_val(key, value, &mut map, &mut duplicated_keys, filter);
+		insert_val(key, value, &mut map, &mut multi_keys);
 	} else if key.is_some() && value.is_none() && !assigning {
 		items.push(Value::String(key.unwrap()));
 	} else if key.is_some() && value.is_none() && assigning {
-		insert_val(
-			key,
-			Some(Value::Null),
-			&mut map,
-			&mut duplicated_keys,
-			filter,
-		);
+		insert_val(key, Some(Value::Null), &mut map, &mut multi_keys);
 	}
 
 	if map.is_empty() && !items.is_empty() {
 		return Ok(Value::Array(items.into_iter().map(parse_value).collect()));
 	} else if items.is_empty() {
-		if !duplicated_keys.is_empty() {
+		if !multi_keys.is_empty() {
 			map.insert(
-				String::from("$duplicatedKeys"),
-				Value::Array(duplicated_keys),
+				String::from("$multiKeys"),
+				Value::from(Map::from_iter(
+					multi_keys.into_iter().map(|(k, v)| (k, Value::from(v))),
+				)),
 			);
 		}
 		map.retain(|_k, v| !v.is_null());
@@ -203,31 +190,15 @@ fn insert_val(
 	key: Option<String>,
 	value: Option<Value>,
 	map: &mut Map<String, Value>,
-	duplicated_keys: &mut Vec<Value>,
-	filter: &Value,
+	multi_keys: &mut HashMap<String, Vec<Value>>,
 ) {
 	let k: String = key.unwrap();
-	if is_key_array(&k, filter) {
-		if map.contains_key(&k) {
-			map
-				.get_mut(&k)
-				.unwrap()
-				.as_array_mut()
-				.unwrap()
-				.push(parse_value(value.unwrap()))
-		} else {
-			let value = parse_value(value.unwrap());
-			// there's likely an edge-case here with nested arrays
-			if value.is_array() {
-				map.insert(k, value);
-			} else {
-				map.insert(k, Value::Array(vec![value]));
-			}
-		}
+	if map.contains_key(&k) {
+		multi_keys
+			.entry(k.clone())
+			.or_default()
+			.push(parse_value(value.unwrap()));
 	} else {
-		if map.contains_key(&k) {
-			duplicated_keys.push(Value::String(k.clone()));
-		}
 		map.insert(k, parse_value(value.unwrap()));
 	}
 }
@@ -237,16 +208,6 @@ fn is_key_included(key: &String, filter: &Value) -> bool {
 		|| (filter.is_object()
 			&& (filter.as_object().unwrap().contains_key(key)
 				|| filter.as_object().unwrap().contains_key("*")));
-}
-
-fn is_key_array(key: &String, filter: &Value) -> bool {
-	return filter.is_object()
-		&& filter
-			.as_object()
-			.unwrap()
-			.get(key)
-			.unwrap_or(&Value::Null)
-			.is_array();
 }
 
 fn get_next_filter<'a>(key: &String, filter: &'a Value) -> &'a Value {
@@ -267,7 +228,7 @@ fn get_next_filter<'a>(key: &String, filter: &'a Value) -> &'a Value {
 }
 
 fn get_next_filter_array<'a>(filter: &'a Value) -> &'a Value {
-	if filter.is_boolean() || filter.is_object() {
+	if filter.is_boolean() {
 		return filter;
 	} else if filter.is_array() {
 		let array = filter.as_array().unwrap();
@@ -420,7 +381,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_duplicate_keys_metadata() {
+	fn test_multi_keys() {
 		let actual = parse_full(
 			r#"
 				foo = 1
@@ -430,15 +391,25 @@ mod tests {
 					b = b
 					b = b
 				}
+				baz = 4
+				baz = 5
+				baz = 6
+				foo = 7
 			"#,
 		)
 		.unwrap();
 		let expected = json!({
-			"foo": 3,
-			"$duplicatedKeys": ["foo", "foo"],
+			"foo": 1,
+			"baz": 4,
+			"$multiKeys": {
+				"foo": [2, 3, 7],
+				"baz": [5, 6]
+			},
 			"bar": {
 				"b": "b",
-				"$duplicatedKeys": ["b"]
+				"$multiKeys": {
+					"b": ["b"]
+				}
 			}
 		});
 		assert_eq!(actual, expected);
@@ -553,22 +524,24 @@ mod tests {
 	}
 
 	#[test]
-	fn test_filter_array_coercion() {
+	fn test_filter_multi_keys() {
 		let actual = parse(
 			r#"
-				foo = { i = 1 iword = one }
-				foo = { i = 2 iword = two }
-				bar = BAR
+				foo = 1
+				foo = 2
+				foo = 3
+				bar = 4
+				bar = 5
+				bar = 6
 			"#,
-			&json!({
-				"foo": [{ "i": true }],
-				"bar": [],
-			}),
+			&json!({ "bar": false }),
 		)
 		.unwrap();
 		let expected = json!({
-			"foo": [{ "i": 1 }, { "i": 2 }],
-			"bar": ["BAR"]
+			"bar": 4,
+			"$multiKeys": {
+				"bar": [5, 6]
+			},
 		});
 		assert_eq!(actual, expected);
 	}

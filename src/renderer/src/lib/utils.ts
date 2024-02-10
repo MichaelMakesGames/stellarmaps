@@ -95,3 +95,12 @@ export function getOrDefault<T>(
 ): NonNullable<T> {
 	return record[key] ?? defaultValue;
 }
+
+export function isEmptyObject(value: unknown) {
+	return (
+		value != null &&
+		typeof value === 'object' &&
+		!Array.isArray(value) &&
+		Object.keys(value).length === 0
+	);
+}

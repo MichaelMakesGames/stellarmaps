@@ -13,7 +13,7 @@ export default function processSystemOwnership(
 ) {
 	const fleetToCountry: Record<string, number> = {};
 	Object.values(gameState.country).forEach((country) => {
-		country.fleets_manager?.owned_fleets?.forEach((owned_fleet) => {
+		country.fleets_manager?.owned_fleets.forEach((owned_fleet) => {
 			fleetToCountry[owned_fleet.fleet] = country.id;
 		});
 	});
