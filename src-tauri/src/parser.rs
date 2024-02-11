@@ -109,7 +109,13 @@ fn parse_object<'source>(
 		insert_val(key, Some(Value::Null), &mut map, &mut multi_keys);
 	}
 
-	if map.is_empty() && !items.is_empty() {
+	if map.is_empty() && items.is_empty() {
+		if filter.is_array() {
+			return Ok(Value::Array(items));
+		} else {
+			return Ok(Value::Object(map));
+		}
+	} else if map.is_empty() && !items.is_empty() {
 		return Ok(Value::Array(items.into_iter().map(parse_value).collect()));
 	} else if items.is_empty() {
 		if !multi_keys.is_empty() {
@@ -245,6 +251,7 @@ fn get_next_filter_array<'a>(filter: &'a Value) -> &'a Value {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use assert_json_diff::assert_json_eq;
 	use serde_json::json;
 
 	fn parse_full(string: &str) -> anyhow::Result<Value> {
@@ -255,28 +262,28 @@ mod tests {
 	fn test_basic_map() {
 		let actual = parse_full("foo = bar").unwrap();
 		let expected = json!({ "foo": "bar" });
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
 	fn test_basic_map_with_string_value() {
 		let actual = parse_full(r#"foo = "bar""#).unwrap();
 		let expected = json!({ "foo": "bar" });
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
 	fn test_basic_map_with_string_key() {
 		let actual = parse_full(r#""foo" = bar"#).unwrap();
 		let expected = json!({ "foo": "bar" });
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
 	fn test_basic_map_with_multiple_key_vals() {
 		let actual = parse_full(r#"foo = bar baz = bax"#).unwrap();
 		let expected = json!({ "foo": "bar", "baz": "bax" });
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -294,7 +301,7 @@ mod tests {
 			"foo": "FOO",
 			"baz": "BAZ",
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -322,7 +329,7 @@ mod tests {
 				"2": "o"
 			}
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -350,28 +357,28 @@ mod tests {
 				"caps": "FOO"
 			}
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
 	fn test_array_basic() {
 		let actual = parse_full(r#"foo bar"#).unwrap();
 		let expected = json!(["foo", "bar"]);
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
 	fn test_array_of_objects() {
 		let actual = parse_full(r#"{foo=FOO}{bar=BAR}"#).unwrap();
 		let expected = json!([{ "foo": "FOO" }, { "bar": "BAR" }]);
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
 	fn test_array_mixed() {
 		let actual = parse_full(r#"1 two { three = THREE } { 4 four FOUR }"#).unwrap();
 		let expected = json!([1, "two", { "three": "THREE" }, [4, "four", "FOUR"]]);
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -412,7 +419,7 @@ mod tests {
 				}
 			}
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -431,7 +438,7 @@ mod tests {
 			"foo": "FOO",
 			"baz": "BAZ",
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -449,7 +456,7 @@ mod tests {
 		let expected = json!({
 			"baz": "BAZ",
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -467,7 +474,7 @@ mod tests {
 		let expected = json!({
 			"bar": {}
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -499,7 +506,7 @@ mod tests {
 				{ "upper": "Z" }
 			]
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -520,7 +527,7 @@ mod tests {
 			"2": { "word": "Two" },
 			"3": { "word": "Three" },
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -543,7 +550,24 @@ mod tests {
 				"bar": [5, 6]
 			},
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
+	}
+
+	#[test]
+	fn test_filter_array_key_resolves_empty_block_ambiguity() {
+		let actual = parse(
+			r#"
+				empty_array = {}
+				empty_object = {}
+			"#,
+			&json!({ "empty_array": [false], "empty_object": false }),
+		)
+		.unwrap();
+		let expected = json!({
+			"empty_array": [],
+			"empty_object": {}
+		});
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -565,7 +589,7 @@ mod tests {
 			"false": false,
 			"array": [1, 1.23, true, false]
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -583,7 +607,7 @@ mod tests {
 			"notnull": "foo",
 			"array": ["notnull", null]
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 
 	#[test]
@@ -611,6 +635,6 @@ mod tests {
 				{ "upper": "Z", "lower": "z" }
 			]
 		});
-		assert_eq!(actual, expected);
+		assert_json_eq!(actual, expected);
 	}
 }
