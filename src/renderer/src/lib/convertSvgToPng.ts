@@ -1,6 +1,6 @@
 import { wait } from './utils';
 
-export interface ConvertSvgToPngOptions {
+interface ConvertSvgToPngOptions {
 	left: number;
 	top: number;
 	width: number;

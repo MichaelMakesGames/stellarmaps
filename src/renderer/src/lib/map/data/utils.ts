@@ -21,7 +21,7 @@ export function pointFromGeoJSON(point: helpers.Position): [number, number] {
 	return [point[0] * SCALE, point[1] * SCALE];
 }
 
-export function round3Position(position: [number, number]): [number, number] {
+function round3Position(position: [number, number]): [number, number] {
 	return [helpers.round(position[0], 3), helpers.round(position[1], 3)];
 }
 

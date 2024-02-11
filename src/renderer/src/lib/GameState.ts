@@ -63,7 +63,7 @@ const planetSchema = z.object({
 	owner: z.number().optional(),
 	num_sapient_pops: z.number().optional(),
 });
-export type Planet = WithId<z.infer<typeof planetSchema>>;
+type Planet = WithId<z.infer<typeof planetSchema>>;
 
 const bypassSchema = z.object({
 	type: z.string(),
@@ -75,14 +75,14 @@ export type Bypass = WithId<z.infer<typeof bypassSchema>>;
 const megastructureSchema = z.object({
 	type: z.string(),
 });
-export type Megastructure = WithId<z.infer<typeof megastructureSchema>>;
+type Megastructure = WithId<z.infer<typeof megastructureSchema>>;
 
 const relationSchema = z.object({
 	owner: z.number(),
 	country: z.number(),
 	communications: z.boolean().optional(),
 });
-export type Relation = z.infer<typeof relationSchema>;
+type Relation = z.infer<typeof relationSchema>;
 
 const countrySchema = z.object({
 	type: z.string(),
@@ -133,17 +133,17 @@ export type Country = WithId<z.infer<typeof countrySchema>>;
 const starbaseSchema = z.object({
 	station: z.number(),
 });
-export type Starbase = WithId<z.infer<typeof starbaseSchema>>;
+type Starbase = WithId<z.infer<typeof starbaseSchema>>;
 
 const shipSchema = z.object({
 	fleet: z.number(),
 });
-export type Ship = WithId<z.infer<typeof shipSchema>>;
+type Ship = WithId<z.infer<typeof shipSchema>>;
 
 const fleetSchema = z.object({
 	station: z.boolean().optional(),
 });
-export type Fleet = WithId<z.infer<typeof fleetSchema>>;
+type Fleet = WithId<z.infer<typeof fleetSchema>>;
 
 const sectorSchema = z.object({
 	owner: z.number().optional(),
@@ -157,7 +157,7 @@ const federationSchema = z.object({
 	members: preprocessedArray(z.number()),
 	name: localizedTextSchema,
 });
-export type Federation = WithId<z.infer<typeof federationSchema>>;
+type Federation = WithId<z.infer<typeof federationSchema>>;
 
 function addIds<T>(db: Record<number, T>): Record<number, WithId<T>> {
 	return Object.fromEntries(

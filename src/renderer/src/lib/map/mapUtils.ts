@@ -9,10 +9,10 @@ import type {
 } from '../mapSettings';
 import type { MapData } from './data/processMapData';
 
-export function getDisplayedBorders(data: MapData, settings: MapSettings) {
+function getDisplayedBorders(data: MapData, settings: MapSettings) {
 	return data.borders.filter((border) => border.isKnown || !settings.terraIncognita);
 }
-export interface ColorConfig {
+interface ColorConfig {
 	value: ColorSetting;
 	background?: ColorConfig;
 }

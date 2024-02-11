@@ -6,15 +6,15 @@ import { z } from 'zod';
 import stellarMapsApi from './stellarMapsApi';
 import { ADDITIONAL_COLORS } from './colors';
 
-export type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness';
+type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness';
 
-export type NumberOptionalMapSettings =
+type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
 	| 'countryEmblemsMinSize'
 	| 'countryNamesMaxSize'
 	| 'countryNamesMinSize';
 
-export type StringMapSettings =
+type StringMapSettings =
 	| 'labelsAvoidHoles'
 	| 'countryNamesFont'
 	| 'unionFederations'
@@ -24,7 +24,7 @@ export type StringMapSettings =
 	| 'terraIncognitaPerspectiveCountry'
 	| 'terraIncognitaStyle';
 
-export type BooleanMapSettings =
+type BooleanMapSettings =
 	| 'alignStarsToGrid'
 	| 'circularGalaxyBorders'
 	| 'countryEmblems'
@@ -50,7 +50,7 @@ export type ColorSettingAdjustment = ColorSetting['colorAdjustments'][number];
 export type ColorSettingAdjustmentType = NonNullable<ColorSettingAdjustment['type']>;
 export const COLOR_SETTING_ADJUSTMENT_TYPES =
 	colorSettingSchema.shape.colorAdjustments.element.shape.type.unwrap().unwrap().options;
-export type ColorMapSettings =
+type ColorMapSettings =
 	| 'backgroundColor'
 	| 'borderColor'
 	| 'borderFillColor'
@@ -72,7 +72,7 @@ const strokeSettingSchema = z.object({
 	glow: z.boolean(),
 });
 export type StrokeSetting = z.infer<typeof strokeSettingSchema>;
-export type StrokeMapSettings =
+type StrokeMapSettings =
 	| 'borderStroke'
 	| 'unionBorderStroke'
 	| 'sectorBorderStroke'
@@ -111,7 +111,7 @@ export type MapSettings = Record<NumberMapSettings, number> &
 	Record<StrokeMapSettings, StrokeSetting> &
 	Record<IconMapSettings, IconSetting>;
 
-export interface IdAndName {
+interface IdAndName {
 	id: string;
 	name: string;
 }
@@ -123,13 +123,13 @@ interface MapSettingConfigBase extends IdAndName {
 	hideIf?: (settings: MapSettings) => boolean;
 }
 
-export interface MapSettingConfigToggle extends MapSettingConfigBase {
+interface MapSettingConfigToggle extends MapSettingConfigBase {
 	id: BooleanMapSettings;
 	type: 'toggle';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<boolean>;
 }
 
-export interface MapSettingConfigNumber extends MapSettingConfigBase {
+interface MapSettingConfigNumber extends MapSettingConfigBase {
 	id: NumberMapSettings | NumberOptionalMapSettings;
 	type: 'number';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<null | number>;
@@ -139,7 +139,7 @@ export interface MapSettingConfigNumber extends MapSettingConfigBase {
 	optional?: boolean;
 }
 
-export interface MapSettingConfigRange extends MapSettingConfigBase {
+interface MapSettingConfigRange extends MapSettingConfigBase {
 	id: NumberMapSettings | NumberOptionalMapSettings;
 	type: 'range';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<null | number>;
@@ -152,7 +152,7 @@ export interface SelectOption extends IdAndName {
 	group?: string;
 }
 
-export interface MapSettingConfigSelect extends MapSettingConfigBase {
+interface MapSettingConfigSelect extends MapSettingConfigBase {
 	id: StringMapSettings;
 	type: 'select';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<string>;
@@ -160,7 +160,7 @@ export interface MapSettingConfigSelect extends MapSettingConfigBase {
 	dynamicOptions?: Readable<SelectOption[]>;
 }
 
-export interface MapSettingConfigText extends MapSettingConfigBase {
+interface MapSettingConfigText extends MapSettingConfigBase {
 	id: StringMapSettings;
 	type: 'text';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<string>;
@@ -198,7 +198,7 @@ export type MapSettingConfig =
 	| MapSettingConfigStroke
 	| MapSettingConfigIcon;
 
-export interface MapSettingGroup extends IdAndName {
+interface MapSettingGroup extends IdAndName {
 	settings: MapSettingConfig[];
 }
 
@@ -212,7 +212,7 @@ export const countryOptions = writable<IdAndName[]>([]);
 
 export const emptyOptions = readable<IdAndName[]>([]);
 
-export const glyphOptions: SelectOption[] = [
+const glyphOptions: SelectOption[] = [
 	{ id: 'none', name: 'None' },
 	{ id: '✦', name: '✦ 4-Pointed Star' },
 	{ id: '✧', name: '✧ 4-Pointed Star (outline)' },
@@ -676,7 +676,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 	},
 ];
 
-export const defaultMapSettings: MapSettings = {
+const defaultMapSettings: MapSettings = {
 	backgroundColor: { color: 'very_black', colorAdjustments: [] },
 	borderFillColor: {
 		color: 'secondary',
@@ -1081,7 +1081,7 @@ export function isColorDynamic(color: string, settings: MapSettings): boolean {
 	);
 }
 
-export function validateAndResetSettings(unvalidatedSettings: MapSettings): MapSettings {
+function validateAndResetSettings(unvalidatedSettings: MapSettings): MapSettings {
 	const settings = { ...unvalidatedSettings };
 	const configs = mapSettingConfig.flatMap((category) => category.settings);
 	for (const key of Object.keys(settings)) {

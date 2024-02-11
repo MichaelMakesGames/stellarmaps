@@ -1,4 +1,4 @@
-export interface StellarisSaveMetadata {
+interface StellarisSaveMetadata {
 	name: string;
 	date: string;
 	path: string;
