@@ -1,5 +1,6 @@
 import * as zipjs from '@zip.js/zip.js';
 import fs from 'fs/promises';
+import { jsonify, tokenize } from '../shared/parseSave';
 
 export default async function loadSave(savePath: string) {
 	const buffer = await fs.readFile(savePath);
@@ -11,7 +12,7 @@ export default async function loadSave(savePath: string) {
 		const writer = new zipjs.TextWriter();
 		const rawGameState = await gameStateEntry.getData(writer);
 		zipReader.close();
-		return rawGameState;
+		return jsonify(tokenize(rawGameState));
 	}
 	zipReader.close();
 	throw new Error(`failed to load game state from ${savePath}`);

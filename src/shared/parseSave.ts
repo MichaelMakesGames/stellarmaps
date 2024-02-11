@@ -55,10 +55,9 @@ export function jsonify(tokens: string[]): Record<string, any> {
 					const newObject = {};
 					const strippedKey = stripQuotes(key);
 					if (current[strippedKey] != undefined) {
-						if (!Array.isArray(current[strippedKey])) {
-							current[strippedKey] = [current[strippedKey]];
-						}
-						current[strippedKey].push(newObject);
+						current.$multiKeys = current.$multiKeys ?? {};
+						current.$multiKeys[strippedKey] = current.$multiKeys[strippedKey] ?? [];
+						current.$multiKeys[strippedKey].push(newObject);
 					} else {
 						current[strippedKey] = newObject;
 					}
@@ -113,12 +112,12 @@ export function jsonify(tokens: string[]): Record<string, any> {
 			if (assigning && key != null) {
 				const strippedKey = stripQuotes(key);
 				if (current[strippedKey] != undefined) {
-					if (!Array.isArray(current[strippedKey])) {
-						current[strippedKey] = [current[strippedKey]];
-					}
-					current[strippedKey].push(parseValue(token));
+					current.$multiKeys = current.$multiKeys ?? {};
+					current.$multiKeys[strippedKey] = current.$multiKeys[strippedKey] ?? [];
+					current.$multiKeys[strippedKey].push(parseValue(token));
 				} else {
-					current[strippedKey] = parseValue(token);
+					const value = parseValue(token);
+					if (value != null) current[strippedKey] = value;
 				}
 				key = null;
 				assigning = false;
@@ -141,7 +140,8 @@ function assignToArray(obj: any, value: any) {
 	if (obj[ARRAY_KEY] == null) obj[ARRAY_KEY] = [];
 	obj[ARRAY_KEY].push(value);
 }
-function parseValue(token: string): string | number | boolean {
+function parseValue(token: string): string | number | boolean | null {
+	if (token === 'none') return null;
 	if (token === 'no') return false;
 	if (token === 'yes') return true;
 	const n = Number.parseFloat(token);
