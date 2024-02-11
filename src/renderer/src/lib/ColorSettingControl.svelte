@@ -24,7 +24,7 @@
 	}
 </script>
 
-<div class="bg-surface-800 rounded-lg">
+<div class="rounded-lg bg-surface-800">
 	<div class="p-2 pb-0">
 		<label class="flex items-baseline">
 			<span class="w-24">Color</span>
@@ -56,8 +56,8 @@
 	>
 		<AccordionItem>
 			<svelte:fragment slot="summary">
-				Color Adjustments <div class="inline-block relative">
-					<span class="badge-icon variant-filled-secondary absolute top-[-14px] left-0">
+				Color Adjustments <div class="relative inline-block">
+					<span class="variant-filled-secondary badge-icon absolute left-0 top-[-14px]">
 						{value.colorAdjustments?.length ?? 0}
 					</span>
 				</div>
@@ -93,7 +93,7 @@
 				{/each}
 				<button
 					type="button"
-					class="btn btn-sm variant-filled-secondary"
+					class="variant-filled-secondary btn btn-sm"
 					on:click={() => {
 						value = {
 							...value,

@@ -1,6 +1,6 @@
+import { get } from 'svelte/store';
 import type { Country, GameState } from '../../GameState';
 import { stellarisDataPromiseStore } from '../../loadStellarisData';
-import { get } from 'svelte/store';
 import { localizeTextSync } from './locUtils';
 
 export default async function processNames(gameState: GameState) {

@@ -1,9 +1,9 @@
+import fg from 'fast-glob';
 import fs from 'fs/promises';
 import os from 'os';
 import path from 'path';
 import { platformPaths } from 'platform-paths';
 import { getSteamPath } from 'steam-path';
-import fg from 'fast-glob';
 
 export async function getSubDirs(dir: string) {
 	const subPaths = (await fs.readdir(dir)).map((subP) => path.join(dir, subP));

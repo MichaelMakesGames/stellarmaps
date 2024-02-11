@@ -6,7 +6,7 @@
 </script>
 
 {#if shouldShow}
-	<button type="submit" class="btn btn-lg variant-filled-primary w-full rounded-none">
+	<button type="submit" class="variant-filled-primary btn btn-lg w-full rounded-none">
 		<span><HeroiconPaintBrushMini /></span>
 		<span>Apply Changes</span>
 		<span class="invisible"><HeroiconPaintBrushMini /></span>

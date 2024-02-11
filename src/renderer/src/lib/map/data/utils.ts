@@ -1,15 +1,15 @@
-import type { GameState } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
+import explode from '@turf/explode';
 import * as helpers from '@turf/helpers';
 import intersect from '@turf/intersect';
 import union from '@turf/union';
 import type { Delaunay } from 'd3-delaunay';
+import type { GameState } from '../../GameState';
+import type { MapSettings } from '../../mapSettings';
 // eslint-disable-next-line
 // @ts-ignore
 import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
 import { isDefined } from '../../utils';
-import explode from '@turf/explode';
 
 export const SCALE = 100;
 

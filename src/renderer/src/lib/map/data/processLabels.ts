@@ -1,6 +1,8 @@
+import booleanContains from '@turf/boolean-contains';
+import * as helpers from '@turf/helpers';
+import polylabel from 'polylabel';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import polylabel from 'polylabel';
 import type processNames from './processNames';
 import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
@@ -12,8 +14,6 @@ import {
 	joinSystemPolygons,
 	pointFromGeoJSON,
 } from './utils';
-import * as helpers from '@turf/helpers';
-import booleanContains from '@turf/boolean-contains';
 
 export default function processLabels(
 	gameState: GameState,

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { MapData } from './data/processMapData';
 	import {
+		mapSettingConfig,
 		mapSettings,
 		type IconMapSettings,
-		mapSettingConfig,
-		type MapSettings,
 		type MapSettingConfigIcon,
+		type MapSettings,
 	} from '../mapSettings';
+	import type { MapData } from './data/processMapData';
 	import { getFillColorAttributes } from './mapUtils';
 
 	export let data: MapData;

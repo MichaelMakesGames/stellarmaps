@@ -189,7 +189,7 @@
 </script>
 
 <form
-	class="modal block overflow-y-auto bg-surface-100-800-token w-[60rem] h-auto p-4 space-y-4 rounded-container-token shadow-xl"
+	class="bg-surface-100-800-token modal block h-auto w-[60rem] space-y-4 overflow-y-auto p-4 shadow-xl rounded-container-token"
 	role="dialog"
 	aria-modal="true"
 	on:submit={(e) => {
@@ -228,7 +228,7 @@
 						}
 					}}
 				/>
-				<div class="input-group-shim !px-0 !justify-center">px</div>
+				<div class="input-group-shim !justify-center !px-0">px</div>
 				<div class="input-group-shim">×</div>
 				<input
 					type="number"
@@ -243,9 +243,9 @@
 						}
 					}}
 				/>
-				<div class="input-group-shim !px-0 !justify-center">px</div>
+				<div class="input-group-shim !justify-center !px-0">px</div>
 			</div>
-			<p class="mt-3 mb-1">Zoom</p>
+			<p class="mb-1 mt-3">Zoom</p>
 			<RangeSlider
 				disabled={processing}
 				name="zoom"
@@ -254,8 +254,8 @@
 				step={0.1}
 				bind:value={zoom}
 			/>
-			<p class="mt-3 mb-1">
-				Center <span class="text-surface-300 ml-1">(The galaxy is about 1000 units across.)</span>
+			<p class="mb-1 mt-3">
+				Center <span class="ml-1 text-surface-300">(The galaxy is about 1000 units across.)</span>
 			</p>
 			<div class="input-group input-group-divider grid-cols-[auto_3rem_3rem_auto_3rem]">
 				<input
@@ -312,7 +312,7 @@
 				viewBox="{viewBoxLeft} {viewBoxTop} {viewBoxWidth} {viewBoxHeight}"
 				width="1000"
 				height="1000"
-				class="w-[12rem] h-[12rem]"
+				class="h-[12rem] w-[12rem]"
 				style="background: {resolveColor({
 					mapSettings: $mapSettings,
 					colors,
@@ -363,7 +363,7 @@
 	<footer class="modal-footer flex justify-end space-x-2">
 		<button
 			type="button"
-			class="btn variant-ghost-surface"
+			class="variant-ghost-surface btn"
 			on:click={() => {
 				exportSettings.set(defaultExportSettings);
 				lockAspectRatio = defaultExportSettings.lockAspectRatio;
@@ -382,7 +382,7 @@
 		</button>
 		<button
 			type="button"
-			class="btn variant-ghost-surface"
+			class="variant-ghost-surface btn"
 			on:click={modalStore.close}
 			disabled={processing}
 		>
@@ -390,13 +390,13 @@
 		</button>
 		<button
 			type="button"
-			class="btn variant-filled-tertiary"
+			class="variant-filled-tertiary btn"
 			disabled={processing}
 			on:click={() => onSubmit(exportSvg)}
 		>
 			{processing ? 'Processing...' : 'Export SVG'}
 		</button>
-		<button type="submit" class="btn variant-filled-primary" disabled={processing}>
+		<button type="submit" class="variant-filled-primary btn" disabled={processing}>
 			{processing ? 'Processing...' : 'Export PNG'}
 		</button>
 	</footer>

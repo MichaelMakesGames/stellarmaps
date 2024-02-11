@@ -3,6 +3,7 @@
 	import { select } from 'd3-selection';
 	import { ZoomTransform, zoom, zoomIdentity } from 'd3-zoom';
 	import { onDestroy } from 'svelte';
+	import { get } from 'svelte/store';
 	import { fade } from 'svelte/transition';
 	import orbitronPath from '../../static/Orbitron-VariableFont_wght.ttf';
 	import { gameStatePromise, type GalacticObject, type GameState } from '../GameState';
@@ -19,10 +20,9 @@
 	import stellarMapsApi from '../stellarMapsApi';
 	import { debounce, timeItAsync, toastError } from '../utils';
 	import Map from './Map.svelte';
+	import MapTooltip from './MapTooltip.svelte';
 	import processMapData from './data/processMapData';
 	import { resolveColor } from './mapUtils';
-	import MapTooltip from './MapTooltip.svelte';
-	import { get } from 'svelte/store';
 
 	const modalStore = getModalStore();
 
@@ -305,11 +305,11 @@
 	}
 </script>
 
-<div class="w-full h-full relative" style:background={bg} bind:this={container}>
+<div class="relative h-full w-full" style:background={bg} bind:this={container}>
 	{#if transform != null}
 		<button
 			type="button"
-			class="btn-icon variant-filled absolute top-3 left-3"
+			class="variant-filled btn-icon absolute left-3 top-3"
 			transition:fade
 			on:click={resetZoom}
 		>
@@ -318,31 +318,31 @@
 	{/if}
 	<button
 		type="button"
-		class="btn variant-filled absolute top-3 right-3"
+		class="variant-filled btn absolute right-3 top-3"
 		transition:fade
 		on:click={openExportModal}
 	>
 		Export
 	</button>
 	{#if tooltip != null && !zooming && !resizing}
-		<div class="h-full w-full overflow-hidden absolute top-0 left-0 pointer-events-none">
+		<div class="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
 			<MapTooltip {...tooltip} gameState={gameStateOrNull} />
 		</div>
 	{/if}
 	{#if !$gameStatePromise}
-		<div class="h-full w-full flex items-center" style:background={bg}>
+		<div class="flex h-full w-full items-center" style:background={bg}>
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">
 				Select a save in the top left
 			</div>
 		</div>
 	{:else if resizing}
-		<div class="h-full w-full flex items-center" style:background={bg}>
+		<div class="flex h-full w-full items-center" style:background={bg}>
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">Resizing...</div>
 		</div>
 	{:else}
 		{#await Promise.all([pngDataUrlPromise, allAsyncDataPromise])}
 			<div
-				class="h-full w-full flex items-center absolute top-0 left-0 backdrop-blur backdrop-brightness-75"
+				class="absolute left-0 top-0 flex h-full w-full items-center backdrop-blur backdrop-brightness-75"
 			>
 				<div class="h1 w-full text-center" style="lineHeight: 100%;">
 					This could take a few seconds...
@@ -356,7 +356,7 @@
 			viewBox="0 0 {outputWidth} {outputHeight}"
 			role="presentation"
 			on:mousemove={debounce(onMouseMove, 100)}
-			class="w-full h-full"
+			class="h-full w-full"
 		>
 			<g bind:this={g}>
 				{#if pngDataUrl}

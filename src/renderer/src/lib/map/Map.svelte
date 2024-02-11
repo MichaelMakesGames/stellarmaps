@@ -2,6 +2,7 @@
 	import { afterUpdate, createEventDispatcher } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { mapSettings } from '../mapSettings';
+	import { saveToWindow } from '../utils';
 	import BypassLinks from './BypassLinks.svelte';
 	import CountryBorders from './CountryBorders.svelte';
 	import CountryLabels from './CountryLabels.svelte';
@@ -12,7 +13,6 @@
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
 	import type { MapData } from './data/processMapData';
 	import { resolveColor } from './mapUtils';
-	import { saveToWindow } from '../utils';
 
 	export let id: string = '';
 	export let data: null | MapData;

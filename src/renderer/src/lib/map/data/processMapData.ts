@@ -2,6 +2,7 @@ import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { timeIt, timeItAsync } from '../../utils';
 import processBorders from './processBorders';
+import processBypassLinks from './processBypassLinks';
 import processCircularGalaxyBorders from './processCircularGalaxyBorder';
 import { processEmblems } from './processEmblems';
 import processHyperRelays from './processHyperRelays';
@@ -12,7 +13,6 @@ import processSystemOwnership from './processSystemOwnership';
 import processSystems from './processSystems';
 import processTerraIncognita from './processTerraIncognita';
 import processVoronoi from './processVoronoi';
-import processBypassLinks from './processBypassLinks';
 import { createHyperlanePaths } from './utils';
 
 export default async function processMapData(gameState: GameState, settings: MapSettings) {

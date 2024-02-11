@@ -1,9 +1,9 @@
+import * as helpers from '@turf/helpers';
+import type { Delaunay, Voronoi } from 'd3-delaunay';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import type { Delaunay, Voronoi } from 'd3-delaunay';
-import { getUnionLeaderId, pointToGeoJSON } from './utils';
-import * as helpers from '@turf/helpers';
 import { getOrSetDefault } from '../../utils';
+import { getUnionLeaderId, pointToGeoJSON } from './utils';
 
 export default function processSystemOwnership(
 	gameState: GameState,

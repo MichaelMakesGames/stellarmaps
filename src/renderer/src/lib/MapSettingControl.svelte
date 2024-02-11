@@ -6,13 +6,13 @@
 	import { slide } from 'svelte/transition';
 	import ColorSettingControl from './ColorSettingControl.svelte';
 	import IconSettingControl from './IconSettingControl.svelte';
+	import StrokeSettingControl from './StrokeSettingControl.svelte';
 	import {
 		editedMapSettings,
 		emptyOptions,
 		type MapSettingConfig,
 		type SelectOption,
 	} from './mapSettings';
-	import StrokeSettingControl from './StrokeSettingControl.svelte';
 	import { isDefined } from './utils';
 
 	export let config: MapSettingConfig;
@@ -62,7 +62,7 @@
 			{config.name}
 			<div class="grow" />
 			{#if config.type === 'stroke' || config.type === 'icon'}
-				<div class="inline-block relative top-1">
+				<div class="relative top-1 inline-block">
 					<SlideToggle
 						name={config.id}
 						checked={value.enabled}

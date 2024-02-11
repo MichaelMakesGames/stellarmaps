@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { MapData } from './data/processMapData';
 	import { mapSettings } from '../mapSettings';
 	import Glow from './Glow.svelte';
+	import type { MapData } from './data/processMapData';
 	import {
 		getFillColorAttributes,
 		getStrokeAttributes,

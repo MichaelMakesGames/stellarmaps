@@ -1,14 +1,14 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron';
+import { electronApp, is, optimizer } from '@electron-toolkit/utils';
+import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron';
 import { join } from 'path';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
-import loadSaveMetadata from './loadSaveMetadata';
-import { loadLoc } from './loadLoc';
-import loadStellarisInstallDir from './loadStellarisInstallDir';
 import { loadColors } from './loadColors';
-import loadSave from './loadSave';
-import loadFonts from './loadFonts';
 import loadEmblem from './loadEmblem';
+import loadFonts from './loadFonts';
+import { loadLoc } from './loadLoc';
+import loadSave from './loadSave';
+import loadSaveMetadata from './loadSaveMetadata';
+import loadStellarisInstallDir from './loadStellarisInstallDir';
 
 function createWindow(): void {
 	// Create the browser window.

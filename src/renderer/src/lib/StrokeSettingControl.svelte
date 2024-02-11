@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
-	import type { MapSettingConfigStroke, StrokeSetting } from './mapSettings';
 	import { fade } from 'svelte/transition';
+	import type { MapSettingConfigStroke, StrokeSetting } from './mapSettings';
 
 	export let value: StrokeSetting;
 	export let config: MapSettingConfigStroke;
 </script>
 
 {#if !value.enabled}
-	<div class="bg-surface-800 rounded-lg text-surface-300 p-2">Disabled</div>
+	<div class="rounded-lg bg-surface-800 p-2 text-surface-300">Disabled</div>
 {:else}
-	<div class="bg-surface-800 rounded-lg">
+	<div class="rounded-lg bg-surface-800">
 		<div class="p-2 pb-0">
 			<label class="flex items-baseline">
 				<span class="w-24">Width</span>
@@ -39,7 +39,7 @@
 				<svelte:fragment slot="summary">More Styles</svelte:fragment>
 				<div slot="content" class="flex-col space-y-1">
 					{#if !config.noSmoothing}
-						<div class="text-sm flex">
+						<div class="flex text-sm">
 							<input
 								id="{config.id}-smoothing"
 								type="checkbox"
@@ -55,7 +55,7 @@
 							<label for="{config.id}-smoothing" class="ms-1 grow cursor-pointer">Smoothing</label>
 						</div>
 					{/if}
-					<div class="text-sm flex">
+					<div class="flex text-sm">
 						<input
 							id="{config.id}-glow"
 							type="checkbox"
@@ -71,7 +71,7 @@
 						<label for="{config.id}-glow" class="ms-1 grow cursor-pointer">Glow</label>
 					</div>
 					{#if !config.noDashed}
-						<div class="text-sm flex">
+						<div class="flex text-sm">
 							<input
 								id="{config.id}-dashed"
 								type="checkbox"
@@ -92,7 +92,7 @@
 								<input
 									id="{config.id}-dashArray"
 									type="text"
-									class="ms-1 input w-1/3 text-sm h-6 -my-1"
+									class="input -my-1 ms-1 h-6 w-1/3 text-sm"
 									transition:fade
 									value={value.dashArray}
 									on:input={(e) => {

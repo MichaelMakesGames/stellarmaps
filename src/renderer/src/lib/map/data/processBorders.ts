@@ -1,9 +1,15 @@
+import buffer from '@turf/buffer';
+import difference from '@turf/difference';
+import explode from '@turf/explode';
+import * as helpers from '@turf/helpers';
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
-import explode from '@turf/explode';
 import type processCircularGalaxyBorders from './processCircularGalaxyBorder';
+import type processHyperRelays from './processHyperRelays';
 import type processSystemOwnership from './processSystemOwnership';
+import type processTerraIncognita from './processTerraIncognita';
+import { getSmoothedPosition, smoothGeojson } from './smoothing';
 import {
 	SCALE,
 	createHyperlanePaths,
@@ -15,12 +21,6 @@ import {
 	positionToString,
 	segmentToPath,
 } from './utils';
-import * as helpers from '@turf/helpers';
-import { getSmoothedPosition, smoothGeojson } from './smoothing';
-import buffer from '@turf/buffer';
-import type processHyperRelays from './processHyperRelays';
-import type processTerraIncognita from './processTerraIncognita';
-import difference from '@turf/difference';
 
 export default function processBorders(
 	gameState: GameState,

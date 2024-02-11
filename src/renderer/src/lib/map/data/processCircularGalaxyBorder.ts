@@ -1,14 +1,14 @@
+import centerOfMass from '@turf/center-of-mass';
+import turfCircle from '@turf/circle';
+import convex from '@turf/convex';
+import difference from '@turf/difference';
+import * as helpers from '@turf/helpers';
+import union from '@turf/union';
+import { interpolateBasis } from 'd3-interpolate';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import { interpolateBasis } from 'd3-interpolate';
-import { SCALE, pointFromGeoJSON, pointToGeoJSON } from './utils';
-import * as helpers from '@turf/helpers';
-import difference from '@turf/difference';
-import turfCircle from '@turf/circle';
-import union from '@turf/union';
-import convex from '@turf/convex';
-import centerOfMass from '@turf/center-of-mass';
 import type { NonEmptyArray } from '../../utils';
+import { SCALE, pointFromGeoJSON, pointToGeoJSON } from './utils';
 
 const CIRCLE_OUTER_PADDING = 20;
 const CIRCLE_INNER_PADDING = 10;

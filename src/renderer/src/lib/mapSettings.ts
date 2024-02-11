@@ -1,10 +1,10 @@
-import { get, writable, type Readable, readable, derived } from 'svelte/store';
-import { stellarisDataPromiseStore } from './loadStellarisData';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import * as R from 'rambda';
+import { derived, get, readable, writable, type Readable } from 'svelte/store';
 import { z } from 'zod';
-import stellarMapsApi from './stellarMapsApi';
 import { ADDITIONAL_COLORS } from './colors';
+import { stellarisDataPromiseStore } from './loadStellarisData';
+import stellarMapsApi from './stellarMapsApi';
 
 type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness';
 

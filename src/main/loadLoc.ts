@@ -1,5 +1,5 @@
-import { getStellarisDataPaths } from './fsUtils';
 import fs from 'fs/promises';
+import { getStellarisDataPaths } from './fsUtils';
 
 const locRegExp = /^\s*([\w.-]+)\s*:\d*\s*"(.*)".*$/gm;
 export async function loadLoc(installPath: string) {

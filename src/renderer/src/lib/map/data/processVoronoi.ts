@@ -1,6 +1,6 @@
+import { Delaunay } from 'd3-delaunay';
 import type { GalacticObject, GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import { Delaunay } from 'd3-delaunay';
 
 const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
 export default function processVoronoi(

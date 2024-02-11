@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+	import ColorSettingControl from './ColorSettingControl.svelte';
 	import {
-		type MapSettingConfigIcon,
-		type IconSetting,
 		ICON_POSITIONS,
-		type IconPosition,
 		iconOptions,
+		type IconPosition,
+		type IconSetting,
+		type MapSettingConfigIcon,
 	} from './mapSettings';
 	import { isDefined } from './utils';
-	import ColorSettingControl from './ColorSettingControl.svelte';
 
 	export let value: IconSetting;
 	export let config: MapSettingConfigIcon;
@@ -28,9 +28,9 @@
 </script>
 
 {#if !value.enabled}
-	<div class="bg-surface-800 rounded-lg text-surface-300 p-2">Disabled</div>
+	<div class="rounded-lg bg-surface-800 p-2 text-surface-300">Disabled</div>
 {:else}
-	<div class="bg-surface-800 rounded-lg">
+	<div class="rounded-lg bg-surface-800">
 		<div class="p-2 pb-0">
 			<label class="flex items-baseline">
 				<span class="w-24">Icon</span>
@@ -50,7 +50,7 @@
 					{/each}
 				</select>
 			</label>
-			<label class="flex items-baseline mt-2">
+			<label class="mt-2 flex items-baseline">
 				<span class="w-24">Size</span>
 				<input
 					class="input"
@@ -76,11 +76,11 @@
 			<AccordionItem>
 				<svelte:fragment slot="summary">Advanced Options</svelte:fragment>
 				<div slot="content" class="flex-col space-y-1">
-					<div class="text-sm flex items-baseline">
+					<div class="flex items-baseline text-sm">
 						<label for="{config.id}-smoothing" class="ms-1 w-24 cursor-pointer">Position</label>
 						<select
 							id="{config.id}-position"
-							class="select text-sm p-1"
+							class="select p-1 text-sm"
 							value={value.position}
 							on:change={(e) => {
 								value = {
@@ -94,11 +94,11 @@
 							{/each}
 						</select>
 					</div>
-					<div class="text-sm flex items-baseline">
+					<div class="flex items-baseline text-sm">
 						<label for="{config.id}-smoothing" class="ms-1 w-24 cursor-pointer">Priority</label>
 						<input
 							id="{config.id}-priority"
-							class="input text-sm p-1"
+							class="input p-1 text-sm"
 							type="number"
 							value={value.priority}
 							on:change={(e) => {

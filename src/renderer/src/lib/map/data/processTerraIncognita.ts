@@ -1,8 +1,8 @@
+import * as helpers from '@turf/helpers';
+import type { Delaunay } from 'd3-delaunay';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import * as helpers from '@turf/helpers';
 import { joinSystemPolygons, multiPolygonToPath } from './utils';
-import type { Delaunay } from 'd3-delaunay';
 
 export default function processTerraIncognita(
 	gameState: GameState,

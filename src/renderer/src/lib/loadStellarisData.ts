@@ -1,11 +1,11 @@
-import { jsonify, tokenize } from './parseSave';
-import { get, writable } from 'svelte/store';
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { rgb } from 'd3-color';
 import { hsv } from 'd3-hsv';
+import { get, writable } from 'svelte/store';
+import { ADDITIONAL_COLORS } from './colors';
+import { jsonify, tokenize } from './parseSave';
 import stellarMapsApi from './stellarMapsApi';
 import { timeItAsync } from './utils';
-import { ADDITIONAL_COLORS } from './colors';
 
 export const stellarisPathStore = localStorageStore('stellarisPath', '');
 export const stellarisDataPromiseStore = writable(

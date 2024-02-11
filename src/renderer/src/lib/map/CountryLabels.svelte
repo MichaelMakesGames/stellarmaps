@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mapSettings, lastProcessedMapSettings } from '../mapSettings';
+	import { lastProcessedMapSettings, mapSettings } from '../mapSettings';
 	import type { MapData } from './data/processMapData';
 
 	export let data: MapData;

@@ -1,5 +1,5 @@
-import { getStellarisDataPaths } from './fsUtils';
 import fs from 'fs/promises';
+import { getStellarisDataPaths } from './fsUtils';
 
 export async function loadColors(installPath: string) {
 	const filePaths = await getStellarisDataPaths(installPath, 'flags/colors.txt');

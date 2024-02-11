@@ -1,8 +1,8 @@
-import { contextBridge, shell } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
+import { contextBridge, shell } from 'electron';
+import fs from 'fs/promises';
 import path from 'path';
 import { platformPaths } from 'platform-paths';
-import fs from 'fs/promises';
 import { StellarMapsAPI } from '../shared/StellarMapsApi';
 
 const api: StellarMapsAPI = {

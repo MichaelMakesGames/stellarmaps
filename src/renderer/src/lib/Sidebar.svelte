@@ -9,25 +9,24 @@
 		localStorageStore,
 		popup,
 	} from '@skeletonlabs/skeleton';
-	import MapSettingControl from './MapSettingControl.svelte';
+	import ApplyChangesButton from './ApplyChangesButton.svelte';
 	import { gameStatePromise, gameStateSchema } from './GameState';
+	import MapSettingControl from './MapSettingControl.svelte';
+	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
+	import { localizeText } from './map/data/locUtils';
 	import {
+		applyMapSettings,
+		countryOptions,
+		editedMapSettings,
 		lastProcessedMapSettings,
 		mapSettingConfig,
 		mapSettings,
 		presetMapSettings,
-		applyMapSettings,
 		settingsAreDifferent,
 		type SavedMapSettings,
-		editedMapSettings,
-		countryOptions,
 	} from './mapSettings';
-	import parseSave from './parseSave';
-	import ApplyChangesButton from './ApplyChangesButton.svelte';
-	import { parseNumberEntry, saveToWindow, timeIt, timeItAsync, toastError, wait } from './utils';
-	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import stellarMapsApi, { type StellarisSaveMetadata } from './stellarMapsApi';
-	import { localizeText } from './map/data/locUtils';
+	import { saveToWindow, timeIt, timeItAsync, toastError, wait } from './utils';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -117,7 +116,7 @@
 
 <form
 	id="sidebar-left"
-	class="flex flex-col h-full w-96"
+	class="flex h-full w-96 flex-col"
 	on:submit|preventDefault={applyMapSettings}
 	novalidate
 >
@@ -199,7 +198,7 @@
 		</select>
 		<button
 			type="submit"
-			class="btn variant-filled-primary w-full"
+			class="variant-filled-primary btn w-full"
 			disabled={!selectedSave}
 			class:variant-filled-primary={selectedSave && selectedSave !== loadedSave}
 			class:variant-filled-surface={!selectedSave || selectedSave === loadedSave}
@@ -210,7 +209,7 @@
 
 	<div class="flex items-baseline p-4 pb-1" style="transition-duration: 50ms;">
 		<h2 class="h3 flex-1">Map Settings</h2>
-		<button type="button" class="text-primary-500 mx-2" on:click={saveSettings}>Save</button>
+		<button type="button" class="mx-2 text-primary-500" on:click={saveSettings}>Save</button>
 		<button
 			type="button"
 			class="text-primary-500"
@@ -223,10 +222,10 @@
 		>
 			Load
 		</button>
-		<div class="card w-64 shadow-xl py-2 z-10" data-popup="popupCombobox">
+		<div class="card z-10 w-64 py-2 shadow-xl" data-popup="popupCombobox">
 			<ListBox rounded="rounded-none" active="variant-filled-primary">
 				{#if $customSavedSettings.length > 0}
-					<div class="text-secondary-300 px-4 pt-2" style="font-variant-caps: small-caps;">
+					<div class="px-4 pt-2 text-secondary-300" style="font-variant-caps: small-caps;">
 						Custom
 					</div>
 					{#each $customSavedSettings as saved}
@@ -243,7 +242,7 @@
 							<svelte:fragment slot="trail">
 								<button
 									type="button"
-									class="text-error-400 hover:text-error-300 focus:text-error-300 relative top-1"
+									class="relative top-1 text-error-400 hover:text-error-300 focus:text-error-300"
 									on:click={() => {
 										modalStore.trigger({
 											type: 'confirm',
@@ -260,13 +259,13 @@
 										});
 									}}
 								>
-									<HeroiconTrashMini class="w-4 h-4" />
+									<HeroiconTrashMini class="h-4 w-4" />
 								</button>
 							</svelte:fragment>
 						</ListBoxItem>
 					{/each}
 				{/if}
-				<div class="text-secondary-300 px-4 pt-2" style="font-variant-caps: small-caps;">
+				<div class="px-4 pt-2 text-secondary-300" style="font-variant-caps: small-caps;">
 					Presets
 				</div>
 				{#each presetMapSettings as preset}
@@ -283,7 +282,7 @@
 					</ListBoxItem>
 				{/each}
 			</ListBox>
-			<div class="arrow bg-surface-100-800-token" />
+			<div class="bg-surface-100-800-token arrow" />
 		</div>
 	</div>
 

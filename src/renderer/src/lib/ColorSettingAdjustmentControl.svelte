@@ -33,7 +33,7 @@
 </script>
 
 <div class="flex space-x-2" transition:fly>
-	<select class="select text-sm p-1 w-1/2" value={adjustment.type ?? ''} on:change={onTypeChange}>
+	<select class="select w-1/2 p-1 text-sm" value={adjustment.type ?? ''} on:change={onTypeChange}>
 		<option value="">Select type...</option>
 		{#each COLOR_SETTING_ADJUSTMENT_TYPES.filter((t) => !config.allowedAdjustments || config.allowedAdjustments.includes(t)) as type}
 			<option value={type}>{ADJUSTMENT_NAMES[type]}</option>

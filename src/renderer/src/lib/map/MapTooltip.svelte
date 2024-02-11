@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	import { onDestroy, onMount } from 'svelte';
 	import type { GalacticObject, GameState } from '../GameState';
 	import HeroiconUserMicro from '../icons/HeroiconUserMicro.svelte';
 	import { isDefined } from '../utils';
 	import { localizeText } from './data/locUtils';
-	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 
 	export let x: number;
 	export let y: number;
@@ -55,7 +55,7 @@
 </script>
 
 <div
-	class="absolute w-2 h-4 -ms-1 -mt-2 pointer-events-none"
+	class="pointer-events-none absolute -ms-1 -mt-2 h-4 w-2"
 	style:top="{y}px"
 	style:left="{x}px"
 	tabindex="-1"
@@ -64,7 +64,7 @@
 
 <div
 	data-popup="map-tooltip"
-	class="bg-surface-600 py-1 px-2 shadow-sm border border-surface-500 rounded pointer-events-none"
+	class="pointer-events-none rounded border border-surface-500 bg-surface-600 px-2 py-1 shadow-sm"
 	bind:this={popupEl}
 >
 	<div class="arrow bg-surface-600" bind:this={arrowEl} />
@@ -84,8 +84,8 @@
 							{name}
 						{/await}
 					</span>
-					<span class="inline-block ms-3">
-						{planet.num_sapient_pops}<HeroiconUserMicro class="w-3 h-3 inline" />
+					<span class="ms-3 inline-block">
+						{planet.num_sapient_pops}<HeroiconUserMicro class="inline h-3 w-3" />
 					</span>
 				</li>
 			{/each}

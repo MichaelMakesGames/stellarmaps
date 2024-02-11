@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
 import * as zipjs from '@zip.js/zip.js';
+import fs from 'fs/promises';
 
 export default async function loadSave(savePath: string) {
 	const buffer = await fs.readFile(savePath);

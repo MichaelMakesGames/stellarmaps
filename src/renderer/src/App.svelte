@@ -1,5 +1,5 @@
 <script>
-	import { computePosition, autoUpdate, offset, shift, flip, arrow } from '@floating-ui/dom';
+	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	import {
 		AppBar,
 		AppShell,
@@ -9,8 +9,8 @@
 		storePopup,
 	} from '@skeletonlabs/skeleton';
 	import './app.postcss';
-	import Sidebar from './lib/Sidebar.svelte';
 	import ExportModal from './lib/ExportModal.svelte';
+	import Sidebar from './lib/Sidebar.svelte';
 	import VersionInfo from './lib/VersionInfo.svelte';
 	import MapContainer from './lib/map/MapContainer.svelte';
 
@@ -27,5 +27,6 @@
 	<svelte:fragment slot="sidebarLeft">
 		<Sidebar />
 	</svelte:fragment>
+	<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"></div>
 	<MapContainer />
 </AppShell>
