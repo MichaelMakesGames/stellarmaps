@@ -4,6 +4,10 @@ Stylized and customizable Stellaris maps
 
 <img src="./examples/default.png" alt="Example map">
 
+# Flood Borders Branch
+
+This branch is experimenting with a different algorithm for generating hyperlane-sensitive borders. See `processFloodBorders.ts`. It is very WIP, and set aside for now to try other approaches.
+
 # Features
 
 - Country borders

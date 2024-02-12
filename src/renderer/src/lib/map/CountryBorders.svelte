@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { writable } from 'svelte/store';
 	import { mapSettings } from '../mapSettings';
+	import { saveToWindow } from '../utils';
 	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
 	import {
@@ -10,6 +12,7 @@
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
+	const useFloodBorders = saveToWindow('useFloodBorders', writable(false));
 
 	function filterSectorBorders(sectorBorder: { path: string; isUnionBorder: boolean }) {
 		if (sectorBorder.isUnionBorder) {
@@ -20,7 +23,26 @@
 	}
 </script>
 
-{#if $mapSettings.borderStroke.enabled}
+{#if $useFloodBorders}
+	{#each data.floodBorders.paths as border}
+		<path
+			d={border.path}
+			{...getFillColorAttributes({
+				mapSettings: $mapSettings,
+				colors: colors,
+				colorStack: [$mapSettings.borderFillColor],
+				countryColors: border,
+			})}
+			{...getStrokeColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				colorStack: [$mapSettings.borderColor],
+				countryColors: border,
+			})}
+			{...getStrokeAttributes($mapSettings.borderStroke)}
+		/>
+	{/each}
+{:else if $mapSettings.borderStroke.enabled}
 	{#each data.borders.filter((border) => border.isKnown || !$mapSettings.terraIncognita) as border}
 		<path id="border-{border.countryId}-outer" d={`${border.outerPath}`} fill="none" />
 		<path

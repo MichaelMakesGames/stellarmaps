@@ -5,6 +5,7 @@ import processBorders from './processBorders';
 import processBypassLinks from './processBypassLinks';
 import processCircularGalaxyBorders from './processCircularGalaxyBorder';
 import { processEmblems } from './processEmblems';
+import processFloodBorders from './processFloodBorders';
 import processHyperRelays from './processHyperRelays';
 import processLabels from './processLabels';
 import processNames from './processNames';
@@ -124,6 +125,15 @@ export default async function processMapData(gameState: GameState, settings: Map
 	);
 	const emblems = await emblemsPromise;
 
+	const floodBorders = timeIt(
+		'floodBorders',
+		processFloodBorders,
+		gameState,
+		settings,
+		systemIdToUnionLeader,
+		getSystemCoordinates,
+	);
+
 	return {
 		borders,
 		unownedHyperlanesPath,
@@ -135,6 +145,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		terraIncognitaPath,
 		galaxyBorderCircles,
 		findClosestSystem,
+		floodBorders,
 	};
 }
 
