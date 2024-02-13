@@ -17,6 +17,7 @@ vite.config.ts
 postcss.config.cjs
 electron.vite.config.ts
 svelte.config.mjs
+commitlint.config.cjs
 
 # not sure why this file causes issues
 src/shared/*
