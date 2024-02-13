@@ -7,15 +7,6 @@ import type {
 	MapSettings,
 	StrokeSetting,
 } from '../mapSettings';
-import type { MapData } from './data/processMapData';
-
-function getDisplayedBorders(data: MapData, settings: MapSettings) {
-	return data.borders.filter((border) => border.isKnown || !settings.terraIncognita);
-}
-interface ColorConfig {
-	value: ColorSetting;
-	background?: ColorConfig;
-}
 
 export function resolveColor({
 	mapSettings,
@@ -157,4 +148,32 @@ export function getFillColorAttributes(resolveColorOptions: Parameters<typeof re
 		fill: color.formatRgb(),
 		'fill-opacity': opacity,
 	};
+}
+
+// used for approximating country fill color when the fading effect is active
+// this is needed for reasonable MIN_CONTRAST behavior
+export function approximateBorderFadeOpacity(
+	colorSetting: ColorSetting,
+	fade: number,
+): ColorSetting {
+	const approximateOpacity = fade === 0 ? 1 : 0.4 - 0.6 * fade;
+	const hasOpacity = colorSetting.colorAdjustments.some(
+		(adjustment) => adjustment.type === 'OPACITY',
+	);
+	if (hasOpacity) {
+		return {
+			...colorSetting,
+			colorAdjustments: colorSetting.colorAdjustments.map((a) =>
+				a.type === 'OPACITY' ? { ...a, value: a.value * approximateOpacity } : a,
+			),
+		};
+	} else {
+		return {
+			...colorSetting,
+			colorAdjustments: [
+				...colorSetting.colorAdjustments,
+				{ type: 'OPACITY', value: approximateOpacity },
+			],
+		};
+	}
 }

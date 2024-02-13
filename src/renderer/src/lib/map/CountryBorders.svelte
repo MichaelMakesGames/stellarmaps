@@ -3,6 +3,7 @@
 	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
 	import {
+		approximateBorderFadeOpacity,
 		getFillColorAttributes,
 		getStrokeAttributes,
 		getStrokeColorAttributes,
@@ -26,13 +27,31 @@
 		<path
 			id="border-{border.countryId}-inner"
 			d={border.innerPath}
-			{...getFillColorAttributes({
-				mapSettings: $mapSettings,
-				colors,
-				countryColors: border,
-				colorStack: [$mapSettings.borderFillColor],
-			})}
+			{...$mapSettings.borderFillFade === 0
+				? getFillColorAttributes({
+						mapSettings: $mapSettings,
+						colors,
+						countryColors: border,
+						colorStack: [$mapSettings.borderFillColor],
+					})
+				: { fill: 'none' }}
 		/>
+		{#if $mapSettings.borderFillFade > 0}
+			<path
+				id="border-{border.countryId}-inner"
+				d={border.innerPath}
+				clip-path={`url(#border-${border.countryId}-inner-clip-path)`}
+				stroke-width={(1 - $mapSettings.borderFillFade) * 25}
+				filter="url(#fade)"
+				fill="none"
+				{...getStrokeColorAttributes({
+					mapSettings: $mapSettings,
+					colors,
+					countryColors: border,
+					colorStack: [$mapSettings.borderFillColor],
+				})}
+			/>
+		{/if}
 		{#each border.sectorBorders.filter(filterSectorBorders) as sectorBorder}
 			<Glow
 				enabled={sectorBorder.isUnionBorder && $mapSettings.unionBorderStroke.enabled
@@ -53,7 +72,13 @@
 						mapSettings: $mapSettings,
 						colors,
 						countryColors: border,
-						colorStack: [$mapSettings.sectorBorderColor, $mapSettings.borderFillColor],
+						colorStack: [
+							$mapSettings.sectorBorderColor,
+							approximateBorderFadeOpacity(
+								$mapSettings.borderFillColor,
+								$mapSettings.borderFillFade,
+							),
+						],
 					})}
 					fill="none"
 				/>
@@ -68,7 +93,10 @@
 					mapSettings: $mapSettings,
 					colors,
 					countryColors: border,
-					colorStack: [$mapSettings.borderColor, $mapSettings.borderFillColor],
+					colorStack: [
+						$mapSettings.borderColor,
+						approximateBorderFadeOpacity($mapSettings.borderFillColor, $mapSettings.borderFillFade),
+					],
 				})}
 				{filter}
 			/>

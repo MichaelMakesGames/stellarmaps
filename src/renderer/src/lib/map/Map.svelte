@@ -73,6 +73,19 @@
 						other approaches resulted in a pixellated look when zoomed in (at least when rendered with WebKitGTK)
 					-->
 				</filter>
+				<filter
+					id="fade"
+					filterUnits="objectBoundingBox"
+					x="-50%"
+					y="-50%"
+					width="200%"
+					height="200%"
+				>
+					<feGaussianBlur
+						in="SourceGraphic"
+						stdDeviation={(1 - $mapSettings.borderFillFade) * 25}
+					/>
+				</filter>
 			{/each}
 		{/if}
 		<Icons />

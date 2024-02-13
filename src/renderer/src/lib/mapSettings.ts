@@ -6,7 +6,7 @@ import { ADDITIONAL_COLORS } from './colors';
 import { stellarisDataPromiseStore } from './loadStellarisData';
 import stellarMapsApi from './stellarMapsApi';
 
-type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness';
+type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness' | 'borderFillFade';
 
 type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
@@ -293,6 +293,15 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Country Fill Color',
 				type: 'color',
 				hideIf: (settings) => !settings.borderStroke.enabled,
+			},
+			{
+				id: 'borderFillFade',
+				name: 'Country Fill Fade',
+				type: 'range',
+				hideIf: (settings) => !settings.borderStroke.enabled,
+				min: 0,
+				max: 1,
+				step: 0.05,
 			},
 			{
 				id: 'sectorBorderStroke',
@@ -682,6 +691,7 @@ const defaultMapSettings: MapSettings = {
 		color: 'secondary',
 		colorAdjustments: [{ type: 'OPACITY', value: 0.5 }],
 	},
+	borderFillFade: 0,
 	borderColor: { color: 'primary', colorAdjustments: [] },
 	borderStroke: {
 		enabled: true,
@@ -932,18 +942,19 @@ export const presetMapSettings: SavedMapSettings[] = [
 				color: 'secondary',
 				colorAdjustments: [
 					{
-						type: 'MAX_LIGHTNESS',
-						value: 0.15,
+						type: 'MIN_LIGHTNESS',
+						value: 0.5,
 					},
-					{ type: 'OPACITY', value: 0.5 },
 				],
 			},
+			borderFillFade: 0.5,
 			backgroundColor: {
 				color: 'true_black',
 				colorAdjustments: [],
 			},
 			borderStroke: {
 				...defaultMapSettings.borderStroke,
+				width: 1,
 				glow: true,
 			},
 			sectorBorderStroke: {
