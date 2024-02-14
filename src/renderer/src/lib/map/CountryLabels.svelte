@@ -28,7 +28,7 @@
 				height={emblemHeight}
 				xlink:href={data.emblems[label.emblemKey]}
 			/>
-			{#if label.isUnionLeader}
+			{#if label.isUnionLeader && $mapSettings.unionLeaderSymbol !== 'none'}
 				<text
 					transform="translate({point[0]},{point[1] -
 						(textHeight ? emblemHeight : emblemHeight / 2)})"
