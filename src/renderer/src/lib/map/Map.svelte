@@ -81,10 +81,7 @@
 					width="200%"
 					height="200%"
 				>
-					<feGaussianBlur
-						in="SourceGraphic"
-						stdDeviation={(1 - $mapSettings.borderFillFade) * 25}
-					/>
+					<feGaussianBlur in="SourceGraphic" stdDeviation={$mapSettings.borderFillFade * 25} />
 				</filter>
 			{/each}
 		{/if}

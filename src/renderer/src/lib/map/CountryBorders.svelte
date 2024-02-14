@@ -3,7 +3,6 @@
 	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
 	import {
-		approximateBorderFadeOpacity,
 		getFillColorAttributes,
 		getStrokeAttributes,
 		getStrokeColorAttributes,
@@ -27,28 +26,33 @@
 		<path
 			id="border-{border.countryId}-inner"
 			d={border.innerPath}
-			{...$mapSettings.borderFillFade === 0
-				? getFillColorAttributes({
-						mapSettings: $mapSettings,
-						colors,
-						countryColors: border,
-						colorStack: [$mapSettings.borderFillColor],
-					})
-				: { fill: 'none' }}
+			{...getFillColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				countryColors: border,
+				colorStack: [$mapSettings.borderFillColor],
+			})}
 		/>
 		{#if $mapSettings.borderFillFade > 0}
 			<path
 				id="border-{border.countryId}-inner"
 				d={border.innerPath}
 				clip-path={`url(#border-${border.countryId}-inner-clip-path)`}
-				stroke-width={(1 - $mapSettings.borderFillFade) * 25}
+				stroke-width={$mapSettings.borderFillFade * 25}
 				filter="url(#fade)"
 				fill="none"
 				{...getStrokeColorAttributes({
 					mapSettings: $mapSettings,
 					colors,
 					countryColors: border,
-					colorStack: [$mapSettings.borderFillColor],
+					colorStack: [
+						{
+							...$mapSettings.borderFillColor,
+							colorAdjustments: $mapSettings.borderFillColor.colorAdjustments.filter(
+								(a) => a.type !== 'OPACITY',
+							),
+						},
+					],
 				})}
 			/>
 		{/if}
@@ -72,13 +76,7 @@
 						mapSettings: $mapSettings,
 						colors,
 						countryColors: border,
-						colorStack: [
-							$mapSettings.sectorBorderColor,
-							approximateBorderFadeOpacity(
-								$mapSettings.borderFillColor,
-								$mapSettings.borderFillFade,
-							),
-						],
+						colorStack: [$mapSettings.sectorBorderColor, $mapSettings.borderFillColor],
 					})}
 					fill="none"
 				/>
@@ -93,10 +91,7 @@
 					mapSettings: $mapSettings,
 					colors,
 					countryColors: border,
-					colorStack: [
-						$mapSettings.borderColor,
-						approximateBorderFadeOpacity($mapSettings.borderFillColor, $mapSettings.borderFillFade),
-					],
+					colorStack: [$mapSettings.borderColor, $mapSettings.borderFillColor],
 				})}
 				{filter}
 			/>

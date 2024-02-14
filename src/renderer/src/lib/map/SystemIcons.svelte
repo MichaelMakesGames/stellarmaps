@@ -7,7 +7,7 @@
 		type MapSettings,
 	} from '../mapSettings';
 	import type { MapData } from './data/processMapData';
-	import { approximateBorderFadeOpacity, getFillColorAttributes } from './mapUtils';
+	import { getFillColorAttributes } from './mapUtils';
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
@@ -113,10 +113,7 @@
 				mapSettings: $mapSettings,
 				colors,
 				countryColors: systemIcons.system,
-				colorStack: [
-					systemIcon.color,
-					approximateBorderFadeOpacity($mapSettings.borderFillColor, $mapSettings.borderFillFade),
-				],
+				colorStack: [systemIcon.color, $mapSettings.borderFillColor],
 			})}
 		/>
 	{/each}

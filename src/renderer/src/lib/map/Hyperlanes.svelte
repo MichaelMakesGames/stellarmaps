@@ -2,11 +2,7 @@
 	import { isColorDynamic, mapSettings } from '../mapSettings';
 	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
-	import {
-		approximateBorderFadeOpacity,
-		getStrokeAttributes,
-		getStrokeColorAttributes,
-	} from './mapUtils';
+	import { getStrokeAttributes, getStrokeColorAttributes } from './mapUtils';
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
@@ -83,10 +79,7 @@
 					mapSettings: $mapSettings,
 					colors,
 					countryColors: border,
-					colorStack: [
-						$mapSettings.hyperlaneColor,
-						approximateBorderFadeOpacity($mapSettings.borderFillColor, $mapSettings.borderFillFade),
-					],
+					colorStack: [$mapSettings.hyperlaneColor, $mapSettings.borderFillColor],
 				})}
 				{...getStrokeAttributes($mapSettings.hyperlaneStroke)}
 				{filter}
@@ -102,10 +95,7 @@
 					mapSettings: $mapSettings,
 					colors,
 					countryColors: border,
-					colorStack: [
-						$mapSettings.hyperRelayColor,
-						approximateBorderFadeOpacity($mapSettings.borderFillColor, $mapSettings.borderFillFade),
-					],
+					colorStack: [$mapSettings.hyperRelayColor, $mapSettings.borderFillColor],
 				})}
 				{...getStrokeAttributes($mapSettings.hyperRelayStroke)}
 				{filter}

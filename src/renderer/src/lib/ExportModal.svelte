@@ -8,11 +8,7 @@
 	} from '@skeletonlabs/skeleton';
 	import convertSvgToPng from './convertSvgToPng';
 	import type { MapData } from './map/data/processMapData';
-	import {
-		approximateBorderFadeOpacity,
-		getFillColorAttributes,
-		resolveColor,
-	} from './map/mapUtils';
+	import { getFillColorAttributes, resolveColor } from './map/mapUtils';
 	import { mapSettings } from './mapSettings';
 	import stellarMapsApi from './stellarMapsApi';
 	import { toastError } from './utils';
@@ -334,13 +330,7 @@
 								mapSettings: $mapSettings,
 								colors,
 								countryColors: border,
-								colorStack: [
-									$mapSettings.borderColor,
-									approximateBorderFadeOpacity(
-										$mapSettings.borderFillColor,
-										$mapSettings.borderFillFade,
-									),
-								],
+								colorStack: [$mapSettings.borderColor, $mapSettings.borderFillColor],
 							})}
 						/>
 						<path
@@ -352,10 +342,7 @@
 								colorStack: [
 									// normally only use this approximation when for background colors
 									// but it helps this simplified preview reflect the map
-									approximateBorderFadeOpacity(
-										$mapSettings.borderFillColor,
-										$mapSettings.borderFillFade,
-									),
+									$mapSettings.borderFillColor,
 								],
 							})}
 						/>

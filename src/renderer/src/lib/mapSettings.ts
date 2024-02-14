@@ -945,9 +945,13 @@ export const presetMapSettings: SavedMapSettings[] = [
 						type: 'MIN_LIGHTNESS',
 						value: 0.5,
 					},
+					{
+						type: 'OPACITY',
+						value: 0.15,
+					},
 				],
 			},
-			borderFillFade: 0.5,
+			borderFillFade: 0.25,
 			backgroundColor: {
 				color: 'true_black',
 				colorAdjustments: [],
