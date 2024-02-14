@@ -19,7 +19,7 @@
 		"commitlint": "commitlint --edit"
 	},
 	"simple-git-hooks": {
-		"pre-commit": "npm run knip && npm run typecheck && npm run format:check",
+		"pre-commit": "npm run knip && npm run typecheck && npm run format:check && npm run lint",
 		"commit-msg": "npm run commitlint"
 	},
 	"devDependencies": {
