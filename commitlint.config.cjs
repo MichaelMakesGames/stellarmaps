@@ -10,6 +10,7 @@ module.exports = {
 				'data', // data processing
 				'export', // image/video export
 				'i18n', // translation etc
+				'unreleased', // changes that only affects things that haven't been released yet
 				'ui',
 			],
 		],
