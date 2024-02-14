@@ -18,6 +18,9 @@ function preprocessedArray<T extends z.ZodTypeAny>(schema: T) {
 }
 
 // zod can't infer recursive types
+/**
+ * @public
+ */
 export interface LocalizedText {
 	key: string;
 	variables?: {
@@ -55,6 +58,10 @@ const galacticObjectSchema = z.object({
 		)
 		.optional(),
 });
+
+/**
+ * @public
+ */
 export type GalacticObject = WithId<z.infer<typeof galacticObjectSchema>>;
 
 const planetSchema = z.object({
@@ -63,26 +70,42 @@ const planetSchema = z.object({
 	owner: z.number().optional(),
 	num_sapient_pops: z.number().optional(),
 });
-type Planet = WithId<z.infer<typeof planetSchema>>;
+
+/**
+ * @public
+ */
+export type Planet = WithId<z.infer<typeof planetSchema>>;
 
 const bypassSchema = z.object({
 	type: z.string(),
 	owner: z.object({ type: z.number(), id: z.number() }).optional(),
 	linked_to: z.number().optional(),
 });
+
+/**
+ * @public
+ */
 export type Bypass = WithId<z.infer<typeof bypassSchema>>;
 
 const megastructureSchema = z.object({
 	type: z.string(),
 });
-type Megastructure = WithId<z.infer<typeof megastructureSchema>>;
+
+/**
+ * @public
+ */
+export type Megastructure = WithId<z.infer<typeof megastructureSchema>>;
 
 const relationSchema = z.object({
 	owner: z.number(),
 	country: z.number(),
 	communications: z.boolean().optional(),
 });
-type Relation = z.infer<typeof relationSchema>;
+
+/**
+ * @public
+ */
+export type Relation = z.infer<typeof relationSchema>;
 
 const countrySchema = z.object({
 	type: z.string(),
@@ -128,28 +151,48 @@ const countrySchema = z.object({
 			relation: (obj.relation == null ? [] : [obj.relation]).concat(obj.$multiKeys?.relation ?? []),
 		})),
 });
+
+/**
+ * @public
+ */
 export type Country = WithId<z.infer<typeof countrySchema>>;
 
 const starbaseSchema = z.object({
 	station: z.number(),
 });
-type Starbase = WithId<z.infer<typeof starbaseSchema>>;
+
+/**
+ * @public
+ */
+export type Starbase = WithId<z.infer<typeof starbaseSchema>>;
 
 const shipSchema = z.object({
 	fleet: z.number(),
 });
-type Ship = WithId<z.infer<typeof shipSchema>>;
+
+/**
+ * @public
+ */
+export type Ship = WithId<z.infer<typeof shipSchema>>;
 
 const fleetSchema = z.object({
 	station: z.boolean().optional(),
 });
-type Fleet = WithId<z.infer<typeof fleetSchema>>;
+
+/**
+ * @public
+ */
+export type Fleet = WithId<z.infer<typeof fleetSchema>>;
 
 const sectorSchema = z.object({
 	owner: z.number().optional(),
 	local_capital: z.number().optional(),
 	systems: preprocessedArray(z.number()),
 });
+
+/**
+ * @public
+ */
 export type Sector = WithId<z.infer<typeof sectorSchema>>;
 
 const federationSchema = z.object({
@@ -157,7 +200,11 @@ const federationSchema = z.object({
 	members: preprocessedArray(z.number()),
 	name: localizedTextSchema,
 });
-type Federation = WithId<z.infer<typeof federationSchema>>;
+
+/**
+ * @public
+ */
+export type Federation = WithId<z.infer<typeof federationSchema>>;
 
 function addIds<T>(db: Record<number, T>): Record<number, WithId<T>> {
 	return Object.fromEntries(
@@ -182,6 +229,10 @@ export const gameStateSchema = z.object({
 	galaxy: z.object({ shape: z.string() }),
 	planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
 });
+
+/**
+ * @public
+ */
 export type GameState = z.infer<typeof gameStateSchema>;
 
 function convertSchemaToGameStateFilter(schema: z.ZodType): boolean | Record<string, any> | any[] {
