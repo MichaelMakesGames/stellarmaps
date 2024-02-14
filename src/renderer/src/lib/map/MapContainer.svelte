@@ -278,27 +278,30 @@
 			if (system) {
 				const settings = get(mapSettings);
 				const processedSystem = dataOrNull?.systems.find((s) => s.id === system.id);
-
-				const systemPoint: [number, number] = [-system.coordinate.x, system.coordinate.y];
-				const tooltipPoint: [number, number] = [
-					(transform || zoomIdentity).applyX(
-						((systemPoint[0] + viewBoxWidth / 2) * outputWidth) / viewBoxWidth,
-					),
-					(transform || zoomIdentity).applyY(
-						((systemPoint[1] + viewBoxHeight / 2) * outputHeight) / viewBoxHeight,
-					),
-				];
-
-				if (settings.terraIncognita && !processedSystem?.systemIsKnown) {
-					tooltip = null;
-				} else if (Math.hypot(tooltipPoint[0] - e.offsetX, tooltipPoint[1] - e.offsetY) > 32) {
+				if (processedSystem == null) {
 					tooltip = null;
 				} else {
-					tooltip = {
-						x: tooltipPoint[0],
-						y: tooltipPoint[1],
-						system: system,
-					};
+					const systemPoint: [number, number] = [processedSystem.x, processedSystem.y];
+					const tooltipPoint: [number, number] = [
+						(transform || zoomIdentity).applyX(
+							((systemPoint[0] + viewBoxWidth / 2) * outputWidth) / viewBoxWidth,
+						),
+						(transform || zoomIdentity).applyY(
+							((systemPoint[1] + viewBoxHeight / 2) * outputHeight) / viewBoxHeight,
+						),
+					];
+
+					if (settings.terraIncognita && !processedSystem.systemIsKnown) {
+						tooltip = null;
+					} else if (Math.hypot(tooltipPoint[0] - e.offsetX, tooltipPoint[1] - e.offsetY) > 32) {
+						tooltip = null;
+					} else {
+						tooltip = {
+							x: tooltipPoint[0],
+							y: tooltipPoint[1],
+							system: system,
+						};
+					}
 				}
 			}
 		}
