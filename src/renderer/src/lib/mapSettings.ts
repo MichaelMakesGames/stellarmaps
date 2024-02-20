@@ -739,7 +739,7 @@ const defaultMapSettings: MapSettings = {
 		colorAdjustments: [{ type: 'OPACITY', value: 0.15 }],
 	},
 	unownedHyperlaneColor: {
-		color: 'primary',
+		color: 'white',
 		colorAdjustments: [{ type: 'OPACITY', value: 0.15 }],
 	},
 	hyperRelayStroke: {
