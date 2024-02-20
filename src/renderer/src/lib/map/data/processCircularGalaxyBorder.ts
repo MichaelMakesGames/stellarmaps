@@ -1,3 +1,4 @@
+import buffer from '@turf/buffer';
 import centerOfMass from '@turf/center-of-mass';
 import turfCircle from '@turf/circle';
 import convex from '@turf/convex';
@@ -10,10 +11,11 @@ import type { MapSettings } from '../../mapSettings';
 import type { NonEmptyArray } from '../../utils';
 import { SCALE, pointFromGeoJSON, pointToGeoJSON, type PolygonalFeature } from './utils';
 
-const CIRCLE_OUTER_PADDING = 20;
+const CIRCLE_OUTER_PADDING = 15;
 const CIRCLE_INNER_PADDING = 10;
 const OUTLIER_DISTANCE = 30;
 const OUTLIER_RADIUS = 15;
+const OUTLIER_HYPERLANE_PADDING = 7.5;
 const STARBURST_NUM_SLICES = 12;
 const STARBURST_LINES_PER_SLICE = 50;
 const STARBURST_SLICE_ANGLE = (Math.PI * 2) / STARBURST_NUM_SLICES;
@@ -24,6 +26,7 @@ interface BorderCircle {
 	cy: number;
 	r: number;
 	type: 'inner' | 'outer' | 'inner-padded' | 'outer-padded' | 'outlier';
+	systems: Set<number>;
 }
 export default function processCircularGalaxyBorders(
 	gameState: GameState,
@@ -180,16 +183,18 @@ export default function processCircularGalaxyBorders(
 					cy,
 					r: maxR,
 					type: 'outer',
+					systems: cluster.systems,
 				},
 				{
 					cx,
 					cy,
 					r: maxR + CIRCLE_OUTER_PADDING,
 					type: 'outer-padded',
+					systems: cluster.systems,
 				},
 			];
 			if (minR > 0) {
-				clusterCircles.push({ cx, cy, r: minR, type: 'inner' });
+				clusterCircles.push({ cx, cy, r: minR, type: 'inner', systems: cluster.systems });
 			}
 			if (minR > CIRCLE_OUTER_PADDING) {
 				clusterCircles.push({
@@ -197,6 +202,7 @@ export default function processCircularGalaxyBorders(
 					cy,
 					r: minR - CIRCLE_INNER_PADDING,
 					type: 'inner-padded',
+					systems: cluster.systems,
 				});
 			}
 			// inner/outer borders are specially handled for starburst
@@ -208,6 +214,7 @@ export default function processCircularGalaxyBorders(
 					cy: getSystemCoordinates(outlierId)[1],
 					r: OUTLIER_RADIUS,
 					type: 'outlier' as const,
+					systems: new Set([outlierId]),
 				})),
 			);
 			return clusterCircles;
@@ -226,6 +233,23 @@ export default function processCircularGalaxyBorders(
 				galaxyBorderCirclesGeoJSON = polygon;
 			} else {
 				galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
+			}
+			if (circle.type === 'outlier' && galaxyBorderCirclesGeoJSON != null) {
+				const multiLineString = helpers.multiLineString(
+					Array.from(circle.systems).flatMap((systemId) => {
+						const system = gameState.galactic_object[systemId];
+						if (system == null) return [];
+						return system.hyperlane.map(({ to }) => [
+							pointToGeoJSON(getSystemCoordinates(systemId)),
+							pointToGeoJSON(getSystemCoordinates(to)),
+						]);
+					}),
+				);
+				const hyperlaneBuffer = buffer(multiLineString, OUTLIER_HYPERLANE_PADDING / SCALE, {
+					units: 'degrees',
+					steps: 1,
+				});
+				galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, hyperlaneBuffer);
 			}
 		} else if (circle.type === 'inner-padded') {
 			if (galaxyBorderCirclesGeoJSON != null) {
