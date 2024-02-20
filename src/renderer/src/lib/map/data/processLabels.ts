@@ -8,6 +8,7 @@ import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
 import {
 	SCALE,
+	applyGalaxyBoundary,
 	getPolygons,
 	inverseX,
 	isUnionLeader,
@@ -24,7 +25,8 @@ export default function processLabels(
 	knownCountries: ReturnType<typeof processTerraIncognita>['knownCountries'],
 	ownedSystemPoints: ReturnType<typeof processSystemOwnership>['ownedSystemPoints'],
 ) {
-	const labels = Object.entries(countryToGeojson).map(([countryId, countryGeojson]) => {
+	const labels = Object.entries(countryToGeojson).map(([countryId, unboundedCountryGeojson]) => {
+		const countryGeojson = applyGalaxyBoundary(unboundedCountryGeojson, galaxyBorderCirclesGeoJSON);
 		const name = countryNames[countryId] ?? '';
 		const country = gameState.country[parseInt(countryId)];
 
@@ -39,84 +41,85 @@ export default function processLabels(
 		} else if (settings.countryNames) {
 			searchAspectRatio = textAspectRatio;
 		}
-		const labelPoints = searchAspectRatio
-			? getPolygons(countryGeojson)
-					.map((p) => {
-						if (settings.labelsAvoidHoles === 'all') return p;
-						if (settings.labelsAvoidHoles === 'none')
-							return helpers.polygon([p.coordinates[0] ?? []]).geometry;
-						// settings.labelsAvoidHoles === 'owned'
-						return helpers.polygon([
-							p.coordinates[0] ?? [],
-							...p.coordinates.slice(1).filter((hole) => {
-								const holePolygon = helpers.polygon([hole.slice().reverse()]);
-								return ownedSystemPoints.some((ownedSystemPoint) =>
-									booleanContains(holePolygon, ownedSystemPoint),
-								);
-							}),
-						]).geometry;
-					})
-					.map<[helpers.Polygon, helpers.Position]>((polygon) => [
-						polygon,
-						aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
-					])
-					.map(([polygon, point]) => {
-						let textWidth = textAspectRatio
-							? findLargestContainedRect({
-									polygon,
-									relativePoint: point,
-									relativePointType: emblemAspectRatio ? 'top' : 'middle',
-									ratio: textAspectRatio,
-									iterations: 8,
-									xBuffer: settings.borderStroke.width / SCALE,
-								})
-							: null;
-						if (
-							textWidth != null &&
-							settings.countryNamesMinSize != null &&
-							textWidth * textAspectRatio * SCALE < settings.countryNamesMinSize
-						) {
-							textWidth = null;
-						}
-						if (
-							textWidth != null &&
-							settings.countryNamesMaxSize != null &&
-							textWidth * textAspectRatio * SCALE > settings.countryNamesMaxSize
-						) {
-							textWidth = settings.countryNamesMaxSize / SCALE / textAspectRatio;
-						}
-						let emblemWidth = emblemAspectRatio
-							? findLargestContainedRect({
-									polygon,
-									relativePoint: point,
-									relativePointType: textWidth != null ? 'bottom' : 'middle',
-									ratio: emblemAspectRatio,
-									iterations: 8,
-								})
-							: null;
-						if (
-							emblemWidth != null &&
-							settings.countryEmblemsMinSize != null &&
-							emblemWidth * SCALE < settings.countryEmblemsMinSize
-						) {
-							emblemWidth = null;
-						}
-						if (
-							emblemWidth != null &&
-							settings.countryEmblemsMaxSize != null &&
-							emblemWidth * SCALE > settings.countryEmblemsMaxSize
-						) {
-							emblemWidth = settings.countryEmblemsMaxSize / SCALE;
-						}
-						return {
-							point: inverseX(pointFromGeoJSON(point)),
-							emblemWidth: emblemWidth != null ? emblemWidth * SCALE : null,
-							emblemHeight: emblemWidth != null ? emblemWidth * emblemAspectRatio * SCALE : null,
-							textWidth: textWidth != null ? textWidth * SCALE : null,
-							textHeight: textWidth != null ? textWidth * textAspectRatio * SCALE : null,
-						};
-					})
-			: [];
+		const labelPoints =
+			searchAspectRatio && countryGeojson
+				? getPolygons(countryGeojson)
+						.map((p) => {
+							if (settings.labelsAvoidHoles === 'all') return p;
+							if (settings.labelsAvoidHoles === 'none')
+								return helpers.polygon([p.coordinates[0] ?? []]).geometry;
+							// settings.labelsAvoidHoles === 'owned'
+							return helpers.polygon([
+								p.coordinates[0] ?? [],
+								...p.coordinates.slice(1).filter((hole) => {
+									const holePolygon = helpers.polygon([hole.slice().reverse()]);
+									return ownedSystemPoints.some((ownedSystemPoint) =>
+										booleanContains(holePolygon, ownedSystemPoint),
+									);
+								}),
+							]).geometry;
+						})
+						.map<[helpers.Polygon, helpers.Position]>((polygon) => [
+							polygon,
+							aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
+						])
+						.map(([polygon, point]) => {
+							let textWidth = textAspectRatio
+								? findLargestContainedRect({
+										polygon,
+										relativePoint: point,
+										relativePointType: emblemAspectRatio ? 'top' : 'middle',
+										ratio: textAspectRatio,
+										iterations: 8,
+										xBuffer: settings.borderStroke.width / SCALE,
+									})
+								: null;
+							if (
+								textWidth != null &&
+								settings.countryNamesMinSize != null &&
+								textWidth * textAspectRatio * SCALE < settings.countryNamesMinSize
+							) {
+								textWidth = null;
+							}
+							if (
+								textWidth != null &&
+								settings.countryNamesMaxSize != null &&
+								textWidth * textAspectRatio * SCALE > settings.countryNamesMaxSize
+							) {
+								textWidth = settings.countryNamesMaxSize / SCALE / textAspectRatio;
+							}
+							let emblemWidth = emblemAspectRatio
+								? findLargestContainedRect({
+										polygon,
+										relativePoint: point,
+										relativePointType: textWidth != null ? 'bottom' : 'middle',
+										ratio: emblemAspectRatio,
+										iterations: 8,
+									})
+								: null;
+							if (
+								emblemWidth != null &&
+								settings.countryEmblemsMinSize != null &&
+								emblemWidth * SCALE < settings.countryEmblemsMinSize
+							) {
+								emblemWidth = null;
+							}
+							if (
+								emblemWidth != null &&
+								settings.countryEmblemsMaxSize != null &&
+								emblemWidth * SCALE > settings.countryEmblemsMaxSize
+							) {
+								emblemWidth = settings.countryEmblemsMaxSize / SCALE;
+							}
+							return {
+								point: inverseX(pointFromGeoJSON(point)),
+								emblemWidth: emblemWidth != null ? emblemWidth * SCALE : null,
+								emblemHeight: emblemWidth != null ? emblemWidth * emblemAspectRatio * SCALE : null,
+								textWidth: textWidth != null ? textWidth * SCALE : null,
+								textHeight: textWidth != null ? textWidth * textAspectRatio * SCALE : null,
+							};
+						})
+				: [];
 		const emblemKey = country?.flag?.icon
 			? `${country.flag.icon.category}/${country.flag.icon.file}`
 			: null;
