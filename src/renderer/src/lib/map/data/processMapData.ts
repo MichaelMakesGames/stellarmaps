@@ -8,10 +8,12 @@ import { processEmblems } from './processEmblems';
 import processHyperRelays from './processHyperRelays';
 import processLabels from './processLabels';
 import processNames from './processNames';
+import processPolygons from './processPolygons';
 import processSystemCoordinates from './processSystemCoordinates';
 import processSystemOwnership from './processSystemOwnership';
 import processSystems from './processSystems';
 import processTerraIncognita from './processTerraIncognita';
+import processTerraIncognitaPath from './processTerraIncognitaPath';
 import processVoronoi from './processVoronoi';
 import { createHyperlanePaths } from './utils';
 
@@ -26,30 +28,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		gameState,
 		settings,
 	);
-	const { voronoi, findClosestSystem } = timeIt(
-		'voronoi',
-		processVoronoi,
-		gameState,
-		settings,
-		getSystemCoordinates,
-	);
-	const {
-		countryToOwnedSystemIds,
-		countryToSystemPolygons,
-		unionLeaderToSystemPolygons,
-		unionLeaderToUnionMembers,
-		ownedSystemPoints,
-		systemIdToPolygon,
-		systemIdToCountry,
-		systemIdToUnionLeader,
-	} = timeIt(
-		'system ownership',
-		processSystemOwnership,
-		gameState,
-		settings,
-		voronoi,
-		getSystemCoordinates,
-	);
+
 	const { galaxyBorderCircles, galaxyBorderCirclesGeoJSON } = timeIt(
 		'circular galaxy borders',
 		processCircularGalaxyBorders,
@@ -57,14 +36,54 @@ export default async function processMapData(gameState: GameState, settings: Map
 		settings,
 		getSystemCoordinates,
 	);
-	const { terraIncognitaPath, knownSystems, knownCountries, knownWormholes } = timeIt(
+
+	const { knownSystems, knownCountries, knownWormholes } = timeIt(
 		'terra incognita',
 		processTerraIncognita,
 		gameState,
 		settings,
-		systemIdToPolygon,
+	);
+
+	const {
+		sectorToSystemIds,
+		countryToSystemIds,
+		unionLeaderToSystemIds,
+		unionLeaderToUnionMembers,
+		ownedSystemPoints,
+		systemIdToCountry,
+		systemIdToUnionLeader,
+	} = timeIt('system ownership', processSystemOwnership, gameState, settings, getSystemCoordinates);
+
+	const { findClosestSystem, voronoi, systemIdToVoronoiIndexes } = timeIt(
+		'voronoi',
+		processVoronoi,
+		gameState,
+		settings,
+		getSystemCoordinates,
+	);
+
+	const { sectorToGeojson, countryToGeojson, unionLeaderToGeojson, terraIncognitaGeojson } = timeIt(
+		'polygons',
+		processPolygons,
+		gameState,
+		settings,
+		voronoi,
+		systemIdToVoronoiIndexes,
+		sectorToSystemIds,
+		countryToSystemIds,
+		unionLeaderToSystemIds,
+		knownSystems,
+	);
+
+	const { terraIncognitaPath } = timeIt(
+		'terra incognita path',
+		processTerraIncognitaPath,
+		gameState,
+		settings,
+		terraIncognitaGeojson,
 		galaxyBorderCirclesGeoJSON,
 	);
+
 	const relayMegastructures = timeIt('hyper relays', processHyperRelays, gameState);
 	const { hyperlanesPath: unownedHyperlanesPath, relayHyperlanesPath: unownedRelayHyperlanesPath } =
 		timeIt(
@@ -83,7 +102,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		processLabels,
 		gameState,
 		settings,
-		countryToSystemPolygons,
+		countryToGeojson,
 		countryNames,
 		galaxyBorderCirclesGeoJSON,
 		knownCountries,
@@ -94,10 +113,11 @@ export default async function processMapData(gameState: GameState, settings: Map
 		processBorders,
 		gameState,
 		settings,
-		unionLeaderToSystemPolygons,
+		unionLeaderToGeojson,
+		countryToGeojson,
+		sectorToGeojson,
 		unionLeaderToUnionMembers,
-		countryToOwnedSystemIds,
-		systemIdToPolygon,
+		countryToSystemIds,
 		systemIdToUnionLeader,
 		relayMegastructures,
 		knownCountries,

@@ -1,15 +1,7 @@
-import * as helpers from '@turf/helpers';
-import type { Delaunay } from 'd3-delaunay';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-import { joinSystemPolygons, multiPolygonToPath } from './utils';
 
-export default function processTerraIncognita(
-	gameState: GameState,
-	settings: MapSettings,
-	systemIdToPolygon: Record<string, Delaunay.Polygon>,
-	galaxyBorderCirclesGeoJSON: ReturnType<typeof joinSystemPolygons>,
-) {
+export default function processTerraIncognita(gameState: GameState, settings: MapSettings) {
 	const terraIncognitaPerspectiveCountryId =
 		settings.terraIncognitaPerspectiveCountry === 'player'
 			? gameState.player.filter((p) => gameState.country[p.country])[0]?.country
@@ -22,9 +14,6 @@ export default function processTerraIncognita(
 		terraIncognitaPerspectiveCountry?.terra_incognita?.systems ??
 			Object.keys(gameState.galactic_object).map((id) => parseInt(id)),
 	);
-	const unknownSystems = Object.keys(gameState.galactic_object)
-		.map((key) => parseInt(key))
-		.filter((id) => !knownSystems.has(id));
 	const wormholeIds = new Set(
 		Object.values(gameState.bypasses)
 			.filter((bypass) => bypass.type === 'wormhole')
@@ -42,19 +31,8 @@ export default function processTerraIncognita(
 	);
 	if (terraIncognitaPerspectiveCountryId != null)
 		knownCountries.add(terraIncognitaPerspectiveCountryId);
-	const terraIncognitaGeoJSON = joinSystemPolygons(
-		unknownSystems.map((systemId) => systemIdToPolygon[systemId]),
-		galaxyBorderCirclesGeoJSON,
-	);
-	const terraIncognitaPath =
-		terraIncognitaGeoJSON == null
-			? ''
-			: multiPolygonToPath(
-					helpers.featureCollection([terraIncognitaGeoJSON]),
-					settings.borderStroke.smoothing,
-				);
+
 	return {
-		terraIncognitaPath,
 		knownSystems,
 		knownCountries,
 		knownWormholes,

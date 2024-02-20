@@ -1,19 +1,28 @@
-import type * as helpers from '@turf/helpers';
-import { getAllPositionArrays } from './utils';
+import * as helpers from '@turf/helpers';
+import {
+	getAllPositionArrays,
+	type PolygonalFeature,
+	type PolygonalFeatureCollection,
+} from './utils';
 
 export function getSmoothedPosition(
 	position: helpers.Position,
-	geoJSON:
-		| helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>
-		| helpers.Feature<helpers.Polygon | helpers.MultiPolygon>,
+	geoJSON: PolygonalFeatureCollection | PolygonalFeature,
 ): helpers.Position {
+	const ROUND = 2;
 	const allPositionArrays = getAllPositionArrays(geoJSON);
 	const positionArray = allPositionArrays.find((array) =>
-		array.some((p) => p[0] === position[0] && p[1] === position[1]),
+		array.some(
+			(p) =>
+				helpers.round(p[0], ROUND) === helpers.round(position[0], ROUND) &&
+				helpers.round(p[1], ROUND) === helpers.round(position[1], ROUND),
+		),
 	);
 	if (positionArray != null && positionArray.length > 0) {
 		const positionIndex = positionArray.findIndex(
-			(p) => p[0] === position[0] && p[1] === position[1],
+			(p) =>
+				helpers.round(p[0], ROUND) === helpers.round(position[0], ROUND) &&
+				helpers.round(p[1], ROUND) === helpers.round(position[1], ROUND),
 		);
 
 		const nextIndex = (positionIndex + 1) % positionArray.length;

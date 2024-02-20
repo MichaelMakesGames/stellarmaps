@@ -6,7 +6,11 @@ import { ADDITIONAL_COLORS } from './colors';
 import { stellarisDataPromiseStore } from './loadStellarisData';
 import stellarMapsApi from './stellarMapsApi';
 
-type NumberMapSettings = 'unionLeaderSymbolSize' | 'terraIncognitaBrightness' | 'borderFillFade';
+type NumberMapSettings =
+	| 'voronoiGridSize'
+	| 'unionLeaderSymbolSize'
+	| 'terraIncognitaBrightness'
+	| 'borderFillFade';
 
 type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
@@ -25,6 +29,7 @@ type StringMapSettings =
 	| 'terraIncognitaStyle';
 
 type BooleanMapSettings =
+	| 'hyperlaneSensitiveBorders'
 	| 'alignStarsToGrid'
 	| 'circularGalaxyBorders'
 	| 'countryEmblems'
@@ -675,11 +680,31 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'toggle',
 				requiresReprocessing: true,
 			},
+		],
+	},
+	{
+		id: 'advancedBorder',
+		name: 'Advanced Border Settings',
+		settings: [
 			{
 				id: 'circularGalaxyBorders',
 				name: 'Circular Galaxy Borders',
 				requiresReprocessing: true,
 				type: 'toggle',
+			},
+			{
+				id: 'hyperlaneSensitiveBorders',
+				name: 'Hyperlane Sensitive Borders',
+				requiresReprocessing: true,
+				type: 'toggle',
+			},
+			{
+				id: 'voronoiGridSize',
+				name: 'Voronoi Grid Size',
+				requiresReprocessing: true,
+				type: 'number',
+				step: 1,
+				min: 1,
 			},
 		],
 	},
@@ -884,6 +909,8 @@ const defaultMapSettings: MapSettings = {
 		color: 'intense_purple',
 		colorAdjustments: [],
 	},
+	voronoiGridSize: 10,
+	hyperlaneSensitiveBorders: true,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);
@@ -1048,6 +1075,7 @@ export const presetMapSettings: SavedMapSettings[] = [
 				...defaultMapSettings.unpopulatedSystemIcon,
 				size: 0.5,
 			},
+			voronoiGridSize: 25,
 		},
 	},
 ];

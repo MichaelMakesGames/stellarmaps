@@ -1,15 +1,15 @@
-import explode from '@turf/explode';
+import turfArea from '@turf/area';
 import * as helpers from '@turf/helpers';
 import intersect from '@turf/intersect';
-import union from '@turf/union';
-import type { Delaunay } from 'd3-delaunay';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
-// eslint-disable-next-line
-// @ts-ignore
+// @ts-expect-error pathRound is missing from d3-path type defs
 import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
-import { isDefined } from '../../utils';
+
+export type PolygonalGeometry = helpers.Polygon | helpers.MultiPolygon;
+export type PolygonalFeature = helpers.Feature<PolygonalGeometry>;
+export type PolygonalFeatureCollection = helpers.FeatureCollection<PolygonalGeometry>;
 
 export const SCALE = 100;
 
@@ -19,10 +19,6 @@ export function pointToGeoJSON([x, y]: [number, number]): [number, number] {
 
 export function pointFromGeoJSON(point: helpers.Position): [number, number] {
 	return [point[0] * SCALE, point[1] * SCALE];
-}
-
-function round3Position(position: [number, number]): [number, number] {
-	return [helpers.round(position[0], 3), helpers.round(position[1], 3)];
 }
 
 export function inverseX([x, y]: [number, number]): [number, number] {
@@ -86,9 +82,7 @@ export function isUnionLeader(countryId: number, gameState: GameState, settings:
 }
 
 export function multiPolygonToPath(
-	geoJSON:
-		| helpers.FeatureCollection<helpers.MultiPolygon | helpers.Polygon, helpers.Properties>
-		| helpers.Feature<helpers.MultiPolygon | helpers.Polygon, helpers.Properties>,
+	geoJSON: PolygonalFeatureCollection | PolygonalFeature,
 	smooth: boolean,
 ) {
 	const features = geoJSON.type === 'FeatureCollection' ? geoJSON.features : [geoJSON];
@@ -125,86 +119,8 @@ export function segmentToPath(segment: helpers.Position[], smooth: boolean): str
 	return pathContext.toString();
 }
 
-export function joinSystemPolygons(
-	systemPolygons: (Delaunay.Polygon | null | undefined)[],
-	galaxyBorderCirclesGeoJSON: null | helpers.Feature<helpers.Polygon | helpers.MultiPolygon>,
-) {
-	const nonNullishPolygons = systemPolygons.filter(isDefined);
-	if (!nonNullishPolygons.length) return null;
-	const allPositions: Record<string, helpers.Position> = {};
-	const invalidMultiPolygon = helpers.multiPolygon(
-		nonNullishPolygons.map((polygon) => {
-			const ring = polygon.map((point) => {
-				const position = round3Position(pointToGeoJSON(point));
-				allPositions[positionToString(position)] = position;
-				return position;
-			});
-			if (ring[0] != null) {
-				// should always be true
-				ring[ring.length - 1] = ring[0];
-			}
-			return [ring];
-		}),
-	);
-	const polygonOrMultiPolygon = union(invalidMultiPolygon, invalidMultiPolygon);
-	const externalPositionStrings = new Set(
-		(polygonOrMultiPolygon
-			? explode(polygonOrMultiPolygon).features.map((f) => f.geometry.coordinates)
-			: []
-		).map(positionToString),
-	);
-	const internalPositions = Object.values(allPositions).filter(
-		(p) => !externalPositionStrings.has(positionToString(p)),
-	);
-	if (polygonOrMultiPolygon && galaxyBorderCirclesGeoJSON) {
-		return insertRedundantPositions(
-			intersect(polygonOrMultiPolygon, galaxyBorderCirclesGeoJSON),
-			internalPositions,
-		);
-	} else {
-		return insertRedundantPositions(polygonOrMultiPolygon, internalPositions);
-	}
-}
-
-function insertRedundantPositions(
-	geojson: null | helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
-	positions: helpers.Position[],
-) {
-	if (geojson == null) return null;
-	getAllPositionArrays(geojson).forEach((positionArray) => {
-		for (let i = 0; i < positionArray.length - 1; i++) {
-			const pos = positionArray[i] as helpers.Position;
-			const nextPos = positionArray[i + 1] as helpers.Position;
-			const maxX = Math.max(pos[0], nextPos[0]);
-			const minX = Math.min(pos[0], nextPos[0]);
-			const maxY = Math.max(pos[1], nextPos[1]);
-			const minY = Math.min(pos[1], nextPos[1]);
-			const slope = helpers.round((nextPos[0] - pos[0]) / (nextPos[1] - pos[1]), 3);
-			const positionsToInsert = positions.filter((posToInsert) => {
-				return (
-					posToInsert[0] >= minX &&
-					posToInsert[0] <= maxX &&
-					posToInsert[1] >= minY &&
-					posToInsert[1] <= maxY &&
-					helpers.round((nextPos[0] - posToInsert[0]) / (nextPos[1] - posToInsert[1]), 3) === slope
-				);
-			});
-			positionsToInsert.sort((a, b) => {
-				const aDistToNextPosSquared = (a[0] - nextPos[0]) ** 2 + (a[1] - nextPos[1]) ** 2;
-				const bDistToNextPosSquared = (b[0] - nextPos[0]) ** 2 + (b[1] - nextPos[1]) ** 2;
-				return bDistToNextPosSquared - aDistToNextPosSquared;
-			});
-			positionArray.splice(i + 1, 0, ...positionsToInsert);
-			i += positionsToInsert.length;
-		}
-	});
-	return geojson;
-}
-
 export function getPolygons(
-	geojson:
-		| helpers.FeatureCollection<helpers.MultiPolygon | helpers.Polygon>
-		| helpers.Feature<helpers.MultiPolygon | helpers.Polygon>,
+	geojson: PolygonalFeatureCollection | PolygonalFeature,
 ): helpers.Polygon[] {
 	const features = geojson.type === 'FeatureCollection' ? geojson.features : [geojson];
 	return features.flatMap((feature) => {
@@ -226,11 +142,7 @@ export function positionToString(p: helpers.Position): string {
 	return `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
 }
 
-export function getAllPositionArrays(
-	geoJSON:
-		| helpers.FeatureCollection<helpers.Polygon | helpers.MultiPolygon>
-		| helpers.Feature<helpers.Polygon | helpers.MultiPolygon>,
-) {
+export function getAllPositionArrays(geoJSON: PolygonalFeatureCollection | PolygonalFeature) {
 	const features = geoJSON.type === 'FeatureCollection' ? geoJSON.features : [geoJSON];
 	const allPositionArrays = features
 		.map<helpers.Position[][]>((f) => {
@@ -331,4 +243,60 @@ export function createHyperlanePaths(
 	const hyperlanesPath = Array.from(hyperlanes.values()).map(makeHyperlanePath).join(' ');
 	const relayHyperlanesPath = Array.from(relayHyperlanes.values()).map(makeHyperlanePath).join(' ');
 	return { hyperlanesPath, relayHyperlanesPath };
+}
+
+// frontier sectors don't exist as actual sector objects in the gameState
+// use the negative country id so they all have unique ids (needed when processing union boundaries)
+// also subtract 1, to avoid confusion with 0 vs -0 (country ids start at 0)
+export function getFrontierSectorPseudoId(countryId: number) {
+	return -countryId - 1;
+}
+
+export function closeRings(geojson: PolygonalFeature, loggingContext: Record<string, any> = {}) {
+	getAllPositionArrays(geojson).forEach((ring) => {
+		const first = ring[0];
+		const last = ring[ring.length - 1];
+		if (first != null && last != null) {
+			const areEqual = first[0] === last[0] && first[1] === last[1];
+			if (!areEqual) {
+				console.warn('Found unclosed ring. Closing.', { geojson, ring, ...loggingContext });
+				ring.push(first);
+			}
+		}
+	});
+}
+
+// TODO remove the public jsdoc
+/**
+ * @public
+ */
+export function removeHoles(geojson: PolygonalFeature, maxSize: number) {
+	const polygons =
+		geojson.geometry.type === 'Polygon'
+			? [geojson.geometry.coordinates]
+			: geojson.geometry.coordinates;
+	polygons.forEach((polygon) => {
+		let i = 1;
+		while (polygon[i] != null) {
+			const hole = polygon[i];
+			if (hole == null) break; // should be impossible
+			const holePoly = helpers.polygon([hole.toReversed()]);
+			const area = turfArea(holePoly);
+			if (area <= maxSize * 10_000) {
+				polygon.splice(i, 1);
+			} else {
+				i++;
+			}
+		}
+	});
+}
+
+export function applyGalaxyBoundary(
+	geojson: PolygonalFeature,
+	externalBorder: PolygonalFeature | null,
+) {
+	if (externalBorder != null) {
+		return intersect(geojson, externalBorder);
+	}
+	return geojson;
 }

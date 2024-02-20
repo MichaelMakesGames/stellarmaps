@@ -1,14 +1,13 @@
 import * as helpers from '@turf/helpers';
-import type { Delaunay, Voronoi } from 'd3-delaunay';
+
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { getOrSetDefault } from '../../utils';
-import { getUnionLeaderId, pointToGeoJSON } from './utils';
+import { getFrontierSectorPseudoId, getUnionLeaderId, pointToGeoJSON } from './utils';
 
 export default function processSystemOwnership(
 	gameState: GameState,
 	settings: MapSettings,
-	voronoi: Voronoi<Delaunay.Point>,
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	const fleetToCountry: Record<string, number> = {};
@@ -17,46 +16,48 @@ export default function processSystemOwnership(
 			fleetToCountry[owned_fleet.fleet] = country.id;
 		});
 	});
-	const countryToOwnedSystemIds: Record<string, number[]> = {};
-	const countryToSystemPolygons: Record<string, Delaunay.Polygon[]> = {};
-	const unionLeaderToSystemPolygons: Record<string, Delaunay.Polygon[]> = {};
+	const sectorToSystemIds: Record<number, Set<number>> = {};
+	const countryToSystemIds: Record<string, Set<number>> = {};
+	const unionLeaderToSystemIds: Record<string, Set<number>> = {};
 	const unionLeaderToUnionMembers: Record<number, Set<number>> = {};
 	const ownedSystemPoints: helpers.Point[] = [];
-	const systemIdToPolygon: Record<string, Delaunay.Polygon> = {};
 	const systemIdToCountry: Record<string, number> = {};
 	const systemIdToUnionLeader: Record<string, number> = {};
-	Object.values(gameState.galactic_object).forEach((go, i) => {
+	for (const system of Object.values(gameState.galactic_object)) {
 		const starbase =
-			go.starbases[0] != null ? gameState.starbase_mgr.starbases[go.starbases[0]] : null;
+			system.starbases[0] != null ? gameState.starbase_mgr.starbases[system.starbases[0]] : null;
 		const starbaseShip = starbase == null ? null : gameState.ships[starbase.station];
 		const ownerId = starbaseShip != null ? fleetToCountry[starbaseShip.fleet] : null;
 		const owner = ownerId != null ? gameState.country[ownerId] : null;
-		const polygon = voronoi.cellPolygon(i) as Delaunay.Polygon | null;
-		if (polygon != null) systemIdToPolygon[go.id] = polygon;
-		if (ownerId != null && owner) {
-			const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, ['joinedBorders']);
-			ownedSystemPoints.push(helpers.point(pointToGeoJSON(getSystemCoordinates(go.id))).geometry);
-			getOrSetDefault(countryToOwnedSystemIds, ownerId, []).push(go.id);
-			systemIdToCountry[go.id] = ownerId;
-			systemIdToUnionLeader[go.id] = joinedUnionLeaderId;
 
-			if (polygon == null) {
-				console.warn(`null polygon for system at ${getSystemCoordinates(go.id)}`);
-			} else {
-				getOrSetDefault(countryToSystemPolygons, ownerId, []).push(polygon);
-				getOrSetDefault(unionLeaderToSystemPolygons, joinedUnionLeaderId, []).push(polygon);
-				getOrSetDefault(unionLeaderToUnionMembers, joinedUnionLeaderId, new Set()).add(ownerId);
-			}
+		const sector = Object.values(gameState.sectors).find(
+			(s) => s.owner === ownerId && s.systems.includes(system.id),
+		);
+		const sectorId =
+			sector != null ? sector.id : ownerId != null ? getFrontierSectorPseudoId(ownerId) : null;
+		if (sectorId != null) {
+			getOrSetDefault(sectorToSystemIds, sectorId, new Set()).add(system.id);
 		}
-	});
+
+		if (ownerId != null && owner != null) {
+			const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, ['joinedBorders']);
+			ownedSystemPoints.push(
+				helpers.point(pointToGeoJSON(getSystemCoordinates(system.id))).geometry,
+			);
+			getOrSetDefault(countryToSystemIds, ownerId, new Set()).add(system.id);
+			getOrSetDefault(unionLeaderToSystemIds, joinedUnionLeaderId, new Set()).add(system.id);
+			getOrSetDefault(unionLeaderToUnionMembers, joinedUnionLeaderId, new Set()).add(ownerId);
+			systemIdToCountry[system.id] = ownerId;
+			systemIdToUnionLeader[system.id] = joinedUnionLeaderId;
+		}
+	}
 
 	return {
-		countryToOwnedSystemIds,
-		countryToSystemPolygons,
-		unionLeaderToSystemPolygons,
+		sectorToSystemIds,
+		countryToSystemIds,
+		unionLeaderToSystemIds,
 		unionLeaderToUnionMembers,
 		ownedSystemPoints,
-		systemIdToPolygon,
 		systemIdToCountry,
 		systemIdToUnionLeader,
 	};

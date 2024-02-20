@@ -8,7 +8,7 @@ import { interpolateBasis } from 'd3-interpolate';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import type { NonEmptyArray } from '../../utils';
-import { SCALE, pointFromGeoJSON, pointToGeoJSON } from './utils';
+import { SCALE, pointFromGeoJSON, pointToGeoJSON, type PolygonalFeature } from './utils';
 
 const CIRCLE_OUTER_PADDING = 20;
 const CIRCLE_INNER_PADDING = 10;
@@ -94,7 +94,7 @@ export default function processCircularGalaxyBorders(
 		clusters.push(cluster);
 	}
 
-	let starburstGeoJSON: null | helpers.Feature<helpers.Polygon | helpers.MultiPolygon> = null;
+	let starburstGeoJSON: null | PolygonalFeature = null;
 	const mainCluster = clusters.find((cluster) =>
 		clusters.every((otherCluster) => cluster.systems.size >= otherCluster.systems.size),
 	);
@@ -215,8 +215,7 @@ export default function processCircularGalaxyBorders(
 		// sort biggest to smallest, so if an inner circle contains a smaller cluster, the smaller one isn't erased
 		.sort((a, b) => b[0].r - a[0].r)
 		.flat();
-	let galaxyBorderCirclesGeoJSON: null | helpers.Feature<helpers.Polygon | helpers.MultiPolygon> =
-		starburstGeoJSON;
+	let galaxyBorderCirclesGeoJSON: null | PolygonalFeature = starburstGeoJSON;
 	for (const circle of galaxyBorderCircles) {
 		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
 			units: 'degrees',
@@ -314,7 +313,7 @@ function makeStarburstPolygon(
 	startAngle: number,
 	interpolateRadii: (n: number) => number,
 	padding: number,
-): helpers.Feature<helpers.Polygon> {
+): PolygonalFeature {
 	const positions: helpers.Position[] = [];
 	for (let i = 0; i < STARBURST_NUM_SLICES; i++) {
 		const sliceIndex = i;
