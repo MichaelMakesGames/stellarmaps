@@ -1,4 +1,3 @@
-import turfArea from '@turf/area';
 import * as helpers from '@turf/helpers';
 import intersect from '@turf/intersect';
 import type { GameState } from '../../GameState';
@@ -261,31 +260,6 @@ export function closeRings(geojson: PolygonalFeature, loggingContext: Record<str
 			if (!areEqual) {
 				console.warn('Found unclosed ring. Closing.', { geojson, ring, ...loggingContext });
 				ring.push(first);
-			}
-		}
-	});
-}
-
-// TODO remove the public jsdoc
-/**
- * @public
- */
-export function removeHoles(geojson: PolygonalFeature, maxSize: number) {
-	const polygons =
-		geojson.geometry.type === 'Polygon'
-			? [geojson.geometry.coordinates]
-			: geojson.geometry.coordinates;
-	polygons.forEach((polygon) => {
-		let i = 1;
-		while (polygon[i] != null) {
-			const hole = polygon[i];
-			if (hole == null) break; // should be impossible
-			const holePoly = helpers.polygon([hole.toReversed()]);
-			const area = turfArea(holePoly);
-			if (area <= maxSize * 10_000) {
-				polygon.splice(i, 1);
-			} else {
-				i++;
 			}
 		}
 	});

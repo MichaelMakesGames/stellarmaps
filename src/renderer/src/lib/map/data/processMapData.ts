@@ -52,6 +52,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 		ownedSystemPoints,
 		systemIdToCountry,
 		systemIdToUnionLeader,
+		sectorToCountry,
+		unionLeaderToSectors,
 	} = timeIt('system ownership', processSystemOwnership, gameState, settings, getSystemCoordinates);
 
 	const { findClosestSystem, voronoi, systemIdToVoronoiIndexes } = timeIt(
@@ -60,6 +62,7 @@ export default async function processMapData(gameState: GameState, settings: Map
 		gameState,
 		settings,
 		getSystemCoordinates,
+		galaxyBorderCircles,
 	);
 
 	const { sectorToGeojson, countryToGeojson, unionLeaderToGeojson, terraIncognitaGeojson } = timeIt(
@@ -72,6 +75,8 @@ export default async function processMapData(gameState: GameState, settings: Map
 		sectorToSystemIds,
 		countryToSystemIds,
 		unionLeaderToSystemIds,
+		unionLeaderToSectors,
+		sectorToCountry,
 		knownSystems,
 	);
 

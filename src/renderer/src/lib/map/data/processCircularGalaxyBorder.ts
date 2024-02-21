@@ -21,7 +21,7 @@ const STARBURST_LINES_PER_SLICE = 50;
 const STARBURST_SLICE_ANGLE = (Math.PI * 2) / STARBURST_NUM_SLICES;
 const ONE_DEGREE = Math.PI / 180;
 
-interface BorderCircle {
+export interface BorderCircle {
 	cx: number;
 	cy: number;
 	r: number;
@@ -33,13 +33,6 @@ export default function processCircularGalaxyBorders(
 	settings: MapSettings,
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
-	if (!settings.circularGalaxyBorders) {
-		return {
-			galaxyBorderCircles: [],
-			galaxyBorderCirclesGeoJSON: null,
-		};
-	}
-
 	const clusters: {
 		systems: Set<number>;
 		outliers: Set<number>;
@@ -101,7 +94,7 @@ export default function processCircularGalaxyBorders(
 	const mainCluster = clusters.find((cluster) =>
 		clusters.every((otherCluster) => cluster.systems.size >= otherCluster.systems.size),
 	);
-	if (mainCluster && gameState.galaxy.shape === 'starburst') {
+	if (mainCluster && gameState.galaxy.shape === 'starburst' && settings.circularGalaxyBorders) {
 		let outerRadii: number[] = [];
 		let innerRadii: number[] = [];
 		for (let i = 0; i < STARBURST_NUM_SLICES; i++) {
@@ -155,7 +148,10 @@ export default function processCircularGalaxyBorders(
 
 	const galaxyBorderCircles = clusters
 		.map((cluster) => {
-			const isStarburstCluster = cluster === mainCluster && gameState.galaxy.shape === 'starburst';
+			const isStarburstCluster =
+				cluster === mainCluster &&
+				gameState.galaxy.shape === 'starburst' &&
+				settings.circularGalaxyBorders;
 			let cx = (cluster.bBox.xMin + cluster.bBox.xMax) / 2;
 			let cy = (cluster.bBox.yMin + cluster.bBox.yMax) / 2;
 			if (cluster === mainCluster) {
@@ -222,6 +218,14 @@ export default function processCircularGalaxyBorders(
 		// sort biggest to smallest, so if an inner circle contains a smaller cluster, the smaller one isn't erased
 		.sort((a, b) => b[0].r - a[0].r)
 		.flat();
+
+	if (!settings.circularGalaxyBorders) {
+		return {
+			galaxyBorderCircles,
+			galaxyBorderCirclesGeoJSON: null,
+		};
+	}
+
 	let galaxyBorderCirclesGeoJSON: null | PolygonalFeature = starburstGeoJSON;
 	for (const circle of galaxyBorderCircles) {
 		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {

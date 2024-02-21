@@ -17,9 +17,11 @@ export default function processSystemOwnership(
 		});
 	});
 	const sectorToSystemIds: Record<number, Set<number>> = {};
+	const sectorToCountry: Record<number, number> = {};
 	const countryToSystemIds: Record<string, Set<number>> = {};
 	const unionLeaderToSystemIds: Record<string, Set<number>> = {};
 	const unionLeaderToUnionMembers: Record<number, Set<number>> = {};
+	const unionLeaderToSectors: Record<number, Set<number>> = {};
 	const ownedSystemPoints: helpers.Point[] = [];
 	const systemIdToCountry: Record<string, number> = {};
 	const systemIdToUnionLeader: Record<string, number> = {};
@@ -30,16 +32,13 @@ export default function processSystemOwnership(
 		const ownerId = starbaseShip != null ? fleetToCountry[starbaseShip.fleet] : null;
 		const owner = ownerId != null ? gameState.country[ownerId] : null;
 
-		const sector = Object.values(gameState.sectors).find(
-			(s) => s.owner === ownerId && s.systems.includes(system.id),
-		);
-		const sectorId =
-			sector != null ? sector.id : ownerId != null ? getFrontierSectorPseudoId(ownerId) : null;
-		if (sectorId != null) {
-			getOrSetDefault(sectorToSystemIds, sectorId, new Set()).add(system.id);
-		}
-
 		if (ownerId != null && owner != null) {
+			const sector = Object.values(gameState.sectors).find(
+				(s) => s.owner === ownerId && s.systems.includes(system.id),
+			);
+			const sectorId = sector != null ? sector.id : getFrontierSectorPseudoId(ownerId);
+			getOrSetDefault(sectorToSystemIds, sectorId, new Set()).add(system.id);
+			sectorToCountry[sectorId] = ownerId;
 			const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, ['joinedBorders']);
 			ownedSystemPoints.push(
 				helpers.point(pointToGeoJSON(getSystemCoordinates(system.id))).geometry,
@@ -47,6 +46,7 @@ export default function processSystemOwnership(
 			getOrSetDefault(countryToSystemIds, ownerId, new Set()).add(system.id);
 			getOrSetDefault(unionLeaderToSystemIds, joinedUnionLeaderId, new Set()).add(system.id);
 			getOrSetDefault(unionLeaderToUnionMembers, joinedUnionLeaderId, new Set()).add(ownerId);
+			getOrSetDefault(unionLeaderToSectors, joinedUnionLeaderId, new Set()).add(sectorId);
 			systemIdToCountry[system.id] = ownerId;
 			systemIdToUnionLeader[system.id] = joinedUnionLeaderId;
 		}
@@ -54,9 +54,11 @@ export default function processSystemOwnership(
 
 	return {
 		sectorToSystemIds,
+		sectorToCountry,
 		countryToSystemIds,
 		unionLeaderToSystemIds,
 		unionLeaderToUnionMembers,
+		unionLeaderToSectors,
 		ownedSystemPoints,
 		systemIdToCountry,
 		systemIdToUnionLeader,

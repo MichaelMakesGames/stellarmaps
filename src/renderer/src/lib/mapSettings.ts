@@ -10,13 +10,15 @@ type NumberMapSettings =
 	| 'voronoiGridSize'
 	| 'unionLeaderSymbolSize'
 	| 'terraIncognitaBrightness'
-	| 'borderFillFade';
+	| 'borderFillFade'
+	| 'claimVoidBorderThreshold';
 
 type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
 	| 'countryEmblemsMinSize'
 	| 'countryNamesMaxSize'
-	| 'countryNamesMinSize';
+	| 'countryNamesMinSize'
+	| 'claimVoidMaxSize';
 
 type StringMapSettings =
 	| 'labelsAvoidHoles'
@@ -706,6 +708,24 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				step: 1,
 				min: 1,
 			},
+			{
+				id: 'claimVoidBorderThreshold',
+				name: 'Claim Bordering Void Threshold',
+				requiresReprocessing: true,
+				type: 'range',
+				step: 0.05,
+				min: 0,
+				max: 1,
+			},
+			{
+				id: 'claimVoidMaxSize',
+				name: 'Claim Bordering Void Max Size',
+				requiresReprocessing: true,
+				type: 'number',
+				step: 1,
+				min: 0,
+				optional: true,
+			},
 		],
 	},
 ];
@@ -911,6 +931,8 @@ const defaultMapSettings: MapSettings = {
 	},
 	voronoiGridSize: 10,
 	hyperlaneSensitiveBorders: true,
+	claimVoidBorderThreshold: 0.6,
+	claimVoidMaxSize: 200,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

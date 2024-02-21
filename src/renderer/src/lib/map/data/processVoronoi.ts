@@ -2,12 +2,14 @@ import { Delaunay } from 'd3-delaunay';
 import type { GalacticObject, GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { getOrSetDefault } from '../../utils';
+import type { BorderCircle } from './processCircularGalaxyBorder';
 
 const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
 export default function processVoronoi(
 	gameState: GameState,
 	settings: MapSettings,
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
+	galaxyBorderCircles: BorderCircle[],
 ) {
 	const voronoiIndexToSystem: Record<number, number> = {};
 	const systemIdToVoronoiIndexes: Record<number, number[]> = {};
@@ -37,17 +39,34 @@ export default function processVoronoi(
 		}
 	}
 	const minDistanceSquared = settings.voronoiGridSize ** 2;
+	const outerCircles = galaxyBorderCircles.filter((c) => c.type === 'outer');
+	const isInOuterCircle = ([x, y]: [number, number]) =>
+		outerCircles.some((circle) => Math.hypot(circle.cx - x, circle.cy - y) < circle.r);
+	let extraPointsIndex = points.length;
+	const extraPointsIndexes: number[] = [];
+	systemIdToVoronoiIndexes[-1] = extraPointsIndexes;
 	const extraPoints: [number, number][] = [];
 	for (let x = -MAX_BORDER_DISTANCE; x <= MAX_BORDER_DISTANCE; x += settings.voronoiGridSize) {
-		for (let y = -MAX_BORDER_DISTANCE; y <= MAX_BORDER_DISTANCE; y += settings.voronoiGridSize) {
+		for (
+			let y = -MAX_BORDER_DISTANCE, row = 0;
+			y <= MAX_BORDER_DISTANCE;
+			y += settings.voronoiGridSize, row++
+		) {
+			// shifting every other row helps for more pleasing borders when claimVoid is enabled
+			const shiftedX =
+				x + (row % 2 === 1 && !settings.alignStarsToGrid ? settings.voronoiGridSize / 2 : 0);
+			const shiftedY = y;
 			if (
 				points.some(
-					([otherX, otherY]) => (otherX - x) ** 2 + (otherY - y) ** 2 < minDistanceSquared,
+					([otherX, otherY]) =>
+						(otherX - shiftedX) ** 2 + (otherY - shiftedY) ** 2 < minDistanceSquared,
 				)
 			) {
 				// do nothing
 			} else {
-				extraPoints.push([x, y]);
+				extraPoints.push([shiftedX, shiftedY]);
+				if (isInOuterCircle([shiftedY, shiftedX])) extraPointsIndexes.push(extraPointsIndex);
+				extraPointsIndex++;
 			}
 		}
 	}
