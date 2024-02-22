@@ -101,18 +101,6 @@ export default async function processMapData(gameState: GameState, settings: Map
 			null,
 			getSystemCoordinates,
 		);
-	const countryNames = await countryNamesPromise;
-	const labels = timeIt(
-		'labels',
-		processLabels,
-		gameState,
-		settings,
-		countryToGeojson,
-		countryNames,
-		galaxyBorderCirclesGeoJSON,
-		knownCountries,
-		ownedSystemPoints,
-	);
 	const borders = timeIt(
 		'borders',
 		processBorders,
@@ -122,12 +110,25 @@ export default async function processMapData(gameState: GameState, settings: Map
 		countryToGeojson,
 		sectorToGeojson,
 		unionLeaderToUnionMembers,
+		unionLeaderToSystemIds,
 		countryToSystemIds,
 		systemIdToUnionLeader,
 		relayMegastructures,
 		knownCountries,
+		galaxyBorderCircles,
 		galaxyBorderCirclesGeoJSON,
 		getSystemCoordinates,
+	);
+	const countryNames = await countryNamesPromise;
+	const labels = timeIt(
+		'labels',
+		processLabels,
+		gameState,
+		settings,
+		borders,
+		countryNames,
+		knownCountries,
+		ownedSystemPoints,
 	);
 	const systems = timeIt(
 		'systems',

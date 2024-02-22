@@ -1,6 +1,4 @@
-import buffer from '@turf/buffer';
 import centerOfMass from '@turf/center-of-mass';
-import turfCircle from '@turf/circle';
 import convex from '@turf/convex';
 import difference from '@turf/difference';
 import * as helpers from '@turf/helpers';
@@ -9,13 +7,18 @@ import { interpolateBasis } from 'd3-interpolate';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import type { NonEmptyArray } from '../../utils';
-import { SCALE, pointFromGeoJSON, pointToGeoJSON, type PolygonalFeature } from './utils';
+import {
+	SCALE,
+	makeBorderCircleGeojson,
+	pointFromGeoJSON,
+	pointToGeoJSON,
+	type PolygonalFeature,
+} from './utils';
 
 const CIRCLE_OUTER_PADDING = 15;
 const CIRCLE_INNER_PADDING = 10;
 const OUTLIER_DISTANCE = 30;
 const OUTLIER_RADIUS = 15;
-const OUTLIER_HYPERLANE_PADDING = 7.5;
 const STARBURST_NUM_SLICES = 12;
 const STARBURST_LINES_PER_SLICE = 50;
 const STARBURST_SLICE_ANGLE = (Math.PI * 2) / STARBURST_NUM_SLICES;
@@ -26,6 +29,7 @@ export interface BorderCircle {
 	cy: number;
 	r: number;
 	type: 'inner' | 'outer' | 'inner-padded' | 'outer-padded' | 'outlier';
+	isMainCluster: boolean;
 	systems: Set<number>;
 }
 export default function processCircularGalaxyBorders(
@@ -148,10 +152,7 @@ export default function processCircularGalaxyBorders(
 
 	const galaxyBorderCircles = clusters
 		.map((cluster) => {
-			const isStarburstCluster =
-				cluster === mainCluster &&
-				gameState.galaxy.shape === 'starburst' &&
-				settings.circularGalaxyBorders;
+			const isMainCluster = cluster === mainCluster;
 			let cx = (cluster.bBox.xMin + cluster.bBox.xMax) / 2;
 			let cy = (cluster.bBox.yMin + cluster.bBox.yMax) / 2;
 			if (cluster === mainCluster) {
@@ -180,6 +181,7 @@ export default function processCircularGalaxyBorders(
 					r: maxR,
 					type: 'outer',
 					systems: cluster.systems,
+					isMainCluster,
 				},
 				{
 					cx,
@@ -187,10 +189,18 @@ export default function processCircularGalaxyBorders(
 					r: maxR + CIRCLE_OUTER_PADDING,
 					type: 'outer-padded',
 					systems: cluster.systems,
+					isMainCluster,
 				},
 			];
 			if (minR > 0) {
-				clusterCircles.push({ cx, cy, r: minR, type: 'inner', systems: cluster.systems });
+				clusterCircles.push({
+					cx,
+					cy,
+					r: minR,
+					type: 'inner',
+					systems: cluster.systems,
+					isMainCluster,
+				});
 			}
 			if (minR > CIRCLE_OUTER_PADDING) {
 				clusterCircles.push({
@@ -199,11 +209,9 @@ export default function processCircularGalaxyBorders(
 					r: minR - CIRCLE_INNER_PADDING,
 					type: 'inner-padded',
 					systems: cluster.systems,
+					isMainCluster,
 				});
 			}
-			// inner/outer borders are specially handled for starburst
-			// we only want the following outlier circles for starburst
-			if (isStarburstCluster) clusterCircles.length = 0;
 			clusterCircles.push(
 				...Array.from(cluster.outliers).map((outlierId) => ({
 					cx: getSystemCoordinates(outlierId)[0],
@@ -211,6 +219,7 @@ export default function processCircularGalaxyBorders(
 					r: OUTLIER_RADIUS,
 					type: 'outlier' as const,
 					systems: new Set([outlierId]),
+					isMainCluster,
 				})),
 			);
 			return clusterCircles;
@@ -227,33 +236,16 @@ export default function processCircularGalaxyBorders(
 	}
 
 	let galaxyBorderCirclesGeoJSON: null | PolygonalFeature = starburstGeoJSON;
-	for (const circle of galaxyBorderCircles) {
-		const polygon = turfCircle(pointToGeoJSON([circle.cx, circle.cy]), circle.r / SCALE, {
-			units: 'degrees',
-			steps: Math.ceil(circle.r),
-		});
+	for (const circle of galaxyBorderCircles.filter(
+		(circle) => starburstGeoJSON == null || !circle.isMainCluster || circle.type === 'outlier',
+	)) {
+		const polygon = makeBorderCircleGeojson(gameState, getSystemCoordinates, circle);
+		if (polygon == null) continue;
 		if (circle.type === 'outer-padded' || circle.type === 'outlier') {
 			if (galaxyBorderCirclesGeoJSON == null) {
 				galaxyBorderCirclesGeoJSON = polygon;
 			} else {
 				galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
-			}
-			if (circle.type === 'outlier' && galaxyBorderCirclesGeoJSON != null) {
-				const multiLineString = helpers.multiLineString(
-					Array.from(circle.systems).flatMap((systemId) => {
-						const system = gameState.galactic_object[systemId];
-						if (system == null) return [];
-						return system.hyperlane.map(({ to }) => [
-							pointToGeoJSON(getSystemCoordinates(systemId)),
-							pointToGeoJSON(getSystemCoordinates(to)),
-						]);
-					}),
-				);
-				const hyperlaneBuffer = buffer(multiLineString, OUTLIER_HYPERLANE_PADDING / SCALE, {
-					units: 'degrees',
-					steps: 1,
-				});
-				galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, hyperlaneBuffer);
 			}
 		} else if (circle.type === 'inner-padded') {
 			if (galaxyBorderCirclesGeoJSON != null) {

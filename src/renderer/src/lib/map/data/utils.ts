@@ -1,10 +1,15 @@
+import buffer from '@turf/buffer';
+import turfCircle from '@turf/circle';
 import * as helpers from '@turf/helpers';
 import intersect from '@turf/intersect';
+import { segmentEach } from '@turf/meta';
+import union from '@turf/union';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 // @ts-expect-error pathRound is missing from d3-path type defs
 import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
+import type { BorderCircle } from './processCircularGalaxyBorder';
 
 export type PolygonalGeometry = helpers.Polygon | helpers.MultiPolygon;
 export type PolygonalFeature = helpers.Feature<PolygonalGeometry>;
@@ -119,14 +124,17 @@ export function segmentToPath(segment: helpers.Position[], smooth: boolean): str
 }
 
 export function getPolygons(
-	geojson: PolygonalFeatureCollection | PolygonalFeature,
-): helpers.Polygon[] {
+	geojson: PolygonalFeatureCollection | PolygonalFeature | null,
+): helpers.Feature<helpers.Polygon>[] {
+	if (geojson == null) return [];
 	const features = geojson.type === 'FeatureCollection' ? geojson.features : [geojson];
 	return features.flatMap((feature) => {
-		if (feature.geometry.type === 'Polygon') {
-			return [feature.geometry];
+		if (!['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
+			return [];
+		} else if (feature.geometry.type === 'Polygon') {
+			return [feature as helpers.Feature<helpers.Polygon>];
 		} else {
-			return feature.geometry.coordinates.map((coords) => helpers.polygon(coords).geometry);
+			return feature.geometry.coordinates.map((coords) => helpers.polygon(coords));
 		}
 	});
 }
@@ -273,4 +281,61 @@ export function applyGalaxyBoundary(
 		return intersect(geojson, externalBorder);
 	}
 	return geojson;
+}
+
+const OUTLIER_HYPERLANE_PADDING = 7.5;
+export function makeBorderCircleGeojson(
+	gameState: GameState,
+	getSystemCoordinates: (id: number) => [number, number],
+	circle: BorderCircle,
+) {
+	let geojson: PolygonalFeature | null = turfCircle(
+		pointToGeoJSON([circle.cx, circle.cy]),
+		circle.r / SCALE,
+		{
+			units: 'degrees',
+			steps: Math.ceil(circle.r),
+		},
+	);
+
+	if (circle.type === 'outlier') {
+		const multiLineString = helpers.multiLineString(
+			Array.from(circle.systems).flatMap((systemId) => {
+				const system = gameState.galactic_object[systemId];
+				if (system == null) return [];
+				return system.hyperlane.map(({ to }) => [
+					pointToGeoJSON(getSystemCoordinates(systemId)),
+					pointToGeoJSON(getSystemCoordinates(to)),
+				]);
+			}),
+		);
+		const hyperlaneBuffer = buffer(multiLineString, OUTLIER_HYPERLANE_PADDING / SCALE, {
+			units: 'degrees',
+			steps: 1,
+		});
+		geojson = union(geojson, hyperlaneBuffer);
+	}
+
+	return geojson;
+}
+
+export function getSharedDistancePercent(
+	polygon: helpers.Feature<helpers.Polygon>,
+	sharedPositionStrings: Set<string>,
+) {
+	let sharedDistance = 0;
+	let totalDistance = 0;
+	segmentEach(polygon, (segment) => {
+		const from = segment?.geometry.coordinates[0] ?? [0, 0];
+		const to = segment?.geometry.coordinates[1] ?? [0, 0];
+		const segmentDistance = Math.hypot(from[0] - to[0], from[1] - to[1]);
+		totalDistance += segmentDistance;
+		if (
+			sharedPositionStrings.has(positionToString(from)) &&
+			sharedPositionStrings.has(positionToString(to))
+		) {
+			sharedDistance += segmentDistance;
+		}
+	});
+	return sharedDistance / totalDistance;
 }

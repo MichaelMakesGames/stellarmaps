@@ -1,11 +1,15 @@
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import buffer from '@turf/buffer';
 import difference from '@turf/difference';
 import explode from '@turf/explode';
 import * as helpers from '@turf/helpers';
+import { coordAll } from '@turf/meta';
+import union from '@turf/union';
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
 import type processCircularGalaxyBorders from './processCircularGalaxyBorder';
+import type { BorderCircle } from './processCircularGalaxyBorder';
 import type processHyperRelays from './processHyperRelays';
 import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
@@ -17,8 +21,12 @@ import {
 	getAllPositionArrays,
 	getCountryColors,
 	getFrontierSectorPseudoId,
+	getPolygons,
+	getSharedDistancePercent,
 	getUnionLeaderId,
+	makeBorderCircleGeojson,
 	multiPolygonToPath,
+	pointToGeoJSON,
 	positionToString,
 	segmentToPath,
 	type PolygonalFeature,
@@ -31,15 +39,18 @@ export default function processBorders(
 	countryToGeojson: Record<number, PolygonalFeature>,
 	sectorToGeojson: Record<number, PolygonalFeature>,
 	unionLeaderToUnionMembers: ReturnType<typeof processSystemOwnership>['unionLeaderToUnionMembers'],
+	unionLeaderToSystemIds: Record<number, Set<number>>,
 	countryToOwnedSystemIds: Record<number, Set<number>>,
 	systemIdToUnionLeader: ReturnType<typeof processSystemOwnership>['systemIdToUnionLeader'],
 	relayMegastructures: ReturnType<typeof processHyperRelays>,
 	knownCountries: ReturnType<typeof processTerraIncognita>['knownCountries'],
+	galaxyBorderCircles: BorderCircle[],
 	galaxyBorderCirclesGeoJSON: ReturnType<
 		typeof processCircularGalaxyBorders
 	>['galaxyBorderCirclesGeoJSON'],
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
+	const unassignedFragments: [number, helpers.Feature<helpers.Polygon>][] = [];
 	const borders = Object.entries(unionLeaderToGeojson)
 		.map(parseNumberEntry)
 		.map(([countryId, outerBorderGeoJSON]) => {
@@ -205,35 +216,62 @@ export default function processBorders(
 				});
 			}
 
-			const boundedOuterBorderGeoJSON = applyGalaxyBoundary(
+			let boundedOuterBorderGeoJSON = applyGalaxyBoundary(
 				outerBorderGeoJSON,
 				galaxyBorderCirclesGeoJSON,
 			);
-			let smoothedOuterBorderGeoJSON = boundedOuterBorderGeoJSON;
-			if (settings.borderStroke.smoothing && boundedOuterBorderGeoJSON != null) {
-				smoothedOuterBorderGeoJSON = smoothGeojson(boundedOuterBorderGeoJSON, 2);
+
+			if (galaxyBorderCirclesGeoJSON) {
+				const fragments: helpers.Feature<helpers.Polygon>[] = [];
+				for (const polygon of getPolygons(boundedOuterBorderGeoJSON)) {
+					const systems = new Set(
+						Array.from(unionLeaderToSystemIds[countryId] ?? []).filter((systemId) => {
+							const coordinate = getSystemCoordinates(systemId);
+							const point = helpers.point(pointToGeoJSON(coordinate));
+							return booleanPointInPolygon(point, polygon);
+						}),
+					);
+					if (systems.size === 0) {
+						fragments.push(polygon);
+						unassignedFragments.push([countryId, polygon]);
+					} else {
+						const circles = galaxyBorderCircles.filter((c) => {
+							if (c.type !== 'outer-padded' && c.type !== 'outlier') return false;
+							if (systems.size < c.systems.size) {
+								return Array.from(systems).some((id) => c.systems.has(id));
+							} else {
+								return Array.from(c.systems).some((id) => systems.has(id));
+							}
+						});
+						const outerCircles = circles.filter((c) => c.type === 'outer-padded');
+						if (outerCircles.length === 1 && !outerCircles[0]?.isMainCluster) {
+							// all stars in this polygon belong to a non-main cluster
+							// try to find fragments outside of it's cluster's bounds
+							const bounds = circles.reduce<PolygonalFeature | null>((acc, cur) => {
+								const geojson = makeBorderCircleGeojson(gameState, getSystemCoordinates, cur);
+								if (acc == null) return geojson;
+								if (geojson == null) return acc;
+								return union(acc, geojson);
+							}, null);
+							const outOfBounds = bounds == null ? null : difference(polygon, bounds);
+							fragments.push(...getPolygons(outOfBounds));
+							unassignedFragments.push(
+								...getPolygons(outOfBounds).map<(typeof unassignedFragments)[number]>((geojson) => [
+									countryId,
+									geojson,
+								]),
+							);
+						}
+					}
+				}
+				for (const fragment of fragments) {
+					boundedOuterBorderGeoJSON =
+						boundedOuterBorderGeoJSON == null
+							? null
+							: difference(boundedOuterBorderGeoJSON, fragment);
+				}
 			}
-			const smoothedInnerBorderGeoJSON =
-				smoothedOuterBorderGeoJSON == null
-					? null
-					: (buffer(smoothedOuterBorderGeoJSON, -settings.borderStroke.width / SCALE, {
-							units: 'degrees',
-						}) as ReturnType<typeof buffer> | null);
-			const outerPath =
-				smoothedOuterBorderGeoJSON == null
-					? ''
-					: multiPolygonToPath(smoothedOuterBorderGeoJSON, settings.borderStroke.smoothing);
-			const innerPath =
-				smoothedInnerBorderGeoJSON == null
-					? ''
-					: multiPolygonToPath(smoothedInnerBorderGeoJSON, settings.borderStroke.smoothing);
-			const borderOnlyGeoJSON =
-				smoothedInnerBorderGeoJSON == null || smoothedOuterBorderGeoJSON == null
-					? smoothedOuterBorderGeoJSON
-					: difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
-			const borderPath = borderOnlyGeoJSON
-				? multiPolygonToPath(borderOnlyGeoJSON, settings.borderStroke.smoothing)
-				: '';
+
 			const { hyperlanesPath, relayHyperlanesPath } = createHyperlanePaths(
 				gameState,
 				settings,
@@ -242,13 +280,15 @@ export default function processBorders(
 				countryId,
 				getSystemCoordinates,
 			);
+
 			return {
 				countryId,
 				primaryColor,
 				secondaryColor,
-				outerPath,
-				innerPath,
-				borderPath,
+				outerPath: '', // we need to wait for these, because fragments might need to be assigned
+				innerPath: '', // we need to wait for these, because fragments might need to be assigned
+				borderPath: '', // we need to wait for these, because fragments might need to be assigned
+				geojson: boundedOuterBorderGeoJSON,
 				hyperlanesPath,
 				relayHyperlanesPath,
 				sectorBorders: nonEmptySectorSegments.map((segment) => ({
@@ -264,5 +304,69 @@ export default function processBorders(
 			};
 		})
 		.filter(isDefined);
+
+	const unionLeaderToPositionStrings: Record<number, Set<string>> = Object.fromEntries(
+		borders.map((border) => [
+			border.countryId,
+			new Set(
+				border.geojson == null
+					? []
+					: (coordAll(border.geojson) as [number, number][]).map(positionToString),
+			),
+		]),
+	);
+
+	for (const [originalCountryId, fragment] of unassignedFragments) {
+		let unionLeaderId: number | undefined;
+		let unionLeaderSharedDistancePercent = Number.EPSILON;
+		Object.entries(unionLeaderToGeojson)
+			.map(parseNumberEntry)
+			.filter(([id]) => id !== originalCountryId)
+			.forEach(([id]) => {
+				const sharedDistancePercent = getSharedDistancePercent(
+					fragment,
+					getOrDefault(unionLeaderToPositionStrings, id, new Set()),
+				);
+				if (sharedDistancePercent >= unionLeaderSharedDistancePercent) {
+					unionLeaderId = id;
+					unionLeaderSharedDistancePercent = sharedDistancePercent;
+				}
+			});
+		const border =
+			unionLeaderId == null ? null : borders.find((b) => b.countryId === unionLeaderId);
+		const geojson = border == null ? null : border.geojson;
+		if (border && geojson) {
+			border.geojson = union(geojson, fragment);
+		}
+	}
+
+	for (const border of borders) {
+		const boundedOuterBorderGeoJSON = border.geojson;
+		let smoothedOuterBorderGeoJSON = boundedOuterBorderGeoJSON;
+		if (settings.borderStroke.smoothing && boundedOuterBorderGeoJSON != null) {
+			smoothedOuterBorderGeoJSON = smoothGeojson(boundedOuterBorderGeoJSON, 2);
+		}
+		const smoothedInnerBorderGeoJSON =
+			smoothedOuterBorderGeoJSON == null
+				? null
+				: (buffer(smoothedOuterBorderGeoJSON, -settings.borderStroke.width / SCALE, {
+						units: 'degrees',
+					}) as ReturnType<typeof buffer> | null);
+		border.outerPath =
+			smoothedOuterBorderGeoJSON == null
+				? ''
+				: multiPolygonToPath(smoothedOuterBorderGeoJSON, settings.borderStroke.smoothing);
+		border.innerPath =
+			smoothedInnerBorderGeoJSON == null
+				? ''
+				: multiPolygonToPath(smoothedInnerBorderGeoJSON, settings.borderStroke.smoothing);
+		const borderOnlyGeoJSON =
+			smoothedInnerBorderGeoJSON == null || smoothedOuterBorderGeoJSON == null
+				? smoothedOuterBorderGeoJSON
+				: difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
+		border.borderPath = borderOnlyGeoJSON
+			? multiPolygonToPath(borderOnlyGeoJSON, settings.borderStroke.smoothing)
+			: '';
+	}
 	return borders;
 }

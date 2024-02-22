@@ -3,32 +3,23 @@ import * as helpers from '@turf/helpers';
 import polylabel from 'polylabel';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
+import type processBorders from './processBorders';
 import type processNames from './processNames';
 import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
-import {
-	SCALE,
-	applyGalaxyBoundary,
-	getPolygons,
-	inverseX,
-	isUnionLeader,
-	pointFromGeoJSON,
-	type PolygonalFeature,
-} from './utils';
+import { SCALE, getPolygons, inverseX, isUnionLeader, pointFromGeoJSON } from './utils';
 
 export default function processLabels(
 	gameState: GameState,
 	settings: MapSettings,
-	countryToGeojson: Record<number, PolygonalFeature>,
+	borders: ReturnType<typeof processBorders>,
 	countryNames: Awaited<ReturnType<typeof processNames>>,
-	galaxyBorderCirclesGeoJSON: PolygonalFeature | null,
 	knownCountries: ReturnType<typeof processTerraIncognita>['knownCountries'],
 	ownedSystemPoints: ReturnType<typeof processSystemOwnership>['ownedSystemPoints'],
 ) {
-	const labels = Object.entries(countryToGeojson).map(([countryId, unboundedCountryGeojson]) => {
-		const countryGeojson = applyGalaxyBoundary(unboundedCountryGeojson, galaxyBorderCirclesGeoJSON);
+	const labels = borders.map(({ countryId, geojson }) => {
 		const name = countryNames[countryId] ?? '';
-		const country = gameState.country[parseInt(countryId)];
+		const country = gameState.country[countryId];
 
 		const textAspectRatio =
 			name && settings.countryNames ? getTextAspectRatio(name, settings.countryNamesFont) : 0;
@@ -42,9 +33,10 @@ export default function processLabels(
 			searchAspectRatio = textAspectRatio;
 		}
 		const labelPoints =
-			searchAspectRatio && countryGeojson
-				? getPolygons(countryGeojson)
-						.map((p) => {
+			searchAspectRatio && geojson
+				? getPolygons(geojson)
+						.map((feature) => {
+							const p = feature.geometry;
 							if (settings.labelsAvoidHoles === 'all') return p;
 							if (settings.labelsAvoidHoles === 'none')
 								return helpers.polygon([p.coordinates[0] ?? []]).geometry;
@@ -127,8 +119,8 @@ export default function processLabels(
 			labelPoints,
 			name,
 			emblemKey,
-			isUnionLeader: isUnionLeader(parseInt(countryId), gameState, settings),
-			isKnown: knownCountries.has(parseInt(countryId)),
+			isUnionLeader: isUnionLeader(countryId, gameState, settings),
+			isKnown: knownCountries.has(countryId),
 		};
 	});
 	return labels;

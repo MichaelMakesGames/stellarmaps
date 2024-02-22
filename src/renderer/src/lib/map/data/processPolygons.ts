@@ -1,6 +1,6 @@
 import turfArea from '@turf/area';
 import * as helpers from '@turf/helpers';
-import { coordAll, segmentEach } from '@turf/meta';
+import { coordAll } from '@turf/meta';
 import { Delaunay, Voronoi } from 'd3-delaunay';
 import * as topojsonClient from 'topojson-client';
 import * as topojsonServer from 'topojson-server';
@@ -13,6 +13,8 @@ import {
 	SCALE,
 	closeRings,
 	getAllPositionArrays,
+	getPolygons,
+	getSharedDistancePercent,
 	pointToGeoJSON,
 	positionToString,
 	type PolygonalFeature,
@@ -93,7 +95,10 @@ export default function processPolygons(
 			);
 
 			let unionLeaderId: number | undefined;
-			let unionLeaderSharedDistancePercent = settings.claimVoidBorderThreshold;
+			let unionLeaderSharedDistancePercent = Math.max(
+				settings.claimVoidBorderThreshold,
+				Number.EPSILON,
+			);
 			Object.entries(unionLeaderToGeojson)
 				.map(parseNumberEntry)
 				.forEach(([id]) => {
@@ -173,8 +178,10 @@ function mergeSystemPolygons(
 function topologicallyMergeDelaunayPolygons(
 	systemPolygons: (Delaunay.Polygon | null | undefined)[],
 ) {
-	const nonNullishPolygons = systemPolygons.filter(isDefined);
-	if (!nonNullishPolygons.length) return null;
+	const nonNullishPolygons = systemPolygons
+		.filter(isDefined)
+		.filter((points) => points.length >= 4);
+	if (nonNullishPolygons.length === 0) return null;
 	const geojsonPolygons = nonNullishPolygons.map((points) =>
 		helpers.polygon([points.map(pointToGeoJSON)]),
 	);
@@ -197,36 +204,10 @@ function topologicallyMergePolygons(geojsonPolygons: PolygonalFeature[]) {
 }
 
 function getVoidPolygons(topology: Topology<Objects>) {
+	if (topology.objects[-1] == null) return [];
 	const voidGeojson = topojsonClient.feature(topology, '-1') as unknown as PolygonalFeature | null;
-	if (voidGeojson?.geometry.type === 'Polygon') {
-		return [voidGeojson as helpers.Feature<helpers.Polygon>];
-	} else if (voidGeojson?.geometry.type === 'MultiPolygon') {
-		return voidGeojson.geometry.coordinates.map((coordinates) => helpers.polygon(coordinates));
-	} else {
-		return [];
-	}
+	return getPolygons(voidGeojson);
 }
-
-const getSharedDistancePercent = (
-	polygon: helpers.Feature<helpers.Polygon>,
-	sharedPositionStrings: Set<string>,
-) => {
-	let sharedDistance = 0;
-	let totalDistance = 0;
-	segmentEach(polygon, (segment) => {
-		const from = segment?.geometry.coordinates[0] ?? [0, 0];
-		const to = segment?.geometry.coordinates[1] ?? [0, 0];
-		const segmentDistance = Math.hypot(from[0] - to[0], from[1] - to[1]);
-		totalDistance += segmentDistance;
-		if (
-			sharedPositionStrings.has(positionToString(from)) &&
-			sharedPositionStrings.has(positionToString(to))
-		) {
-			sharedDistance += segmentDistance;
-		}
-	});
-	return sharedDistance / totalDistance;
-};
 
 function addPolygonToGeojsonMapping(
 	polygon: helpers.Feature<helpers.Polygon>,
