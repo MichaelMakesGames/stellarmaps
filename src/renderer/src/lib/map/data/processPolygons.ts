@@ -1,6 +1,4 @@
-import turfArea from '@turf/area';
-import * as helpers from '@turf/helpers';
-import { coordAll } from '@turf/meta';
+import * as turf from '@turf/turf';
 import { Delaunay, Voronoi } from 'd3-delaunay';
 import * as topojsonClient from 'topojson-client';
 import * as topojsonServer from 'topojson-server';
@@ -78,21 +76,19 @@ export default function processPolygons(
 		const sectorToPositionStrings: Record<number, Set<string>> = Object.fromEntries(
 			Object.entries(sectorToGeojson).map(([id, geojson]) => [
 				id,
-				new Set((coordAll(geojson) as [number, number][]).map(positionToString)),
+				new Set(turf.coordAll(geojson).map(positionToString)),
 			]),
 		);
 		const unionLeaderToPositionStrings: Record<number, Set<string>> = Object.fromEntries(
 			Object.entries(unionLeaderToGeojson).map(([id, geojson]) => [
 				id,
-				new Set((coordAll(geojson) as [number, number][]).map(positionToString)),
+				new Set(turf.coordAll(geojson).map(positionToString)),
 			]),
 		);
 		for (const voidPolygon of getVoidPolygons(topology)) {
-			const area = turfArea(voidPolygon);
+			const area = turf.area(voidPolygon);
 			if (area > (settings.claimVoidMaxSize ?? 0) * 10_000_000) continue;
-			const voidPositionStrings = (coordAll(voidPolygon) as [number, number][]).map(
-				positionToString,
-			);
+			const voidPositionStrings = turf.coordAll(voidPolygon).map(positionToString);
 
 			let unionLeaderId: number | undefined;
 			let unionLeaderSharedDistancePercent = Math.max(
@@ -170,7 +166,7 @@ function mergeSystemPolygons(
 			),
 	) as PolygonalGeometry | null;
 	if (geometry == null) return null;
-	const feature = helpers.feature(geometry);
+	const feature = turf.feature(geometry);
 	if (getAllPositionArrays(feature).length === 0) return null;
 	return feature;
 }
@@ -183,7 +179,7 @@ function topologicallyMergeDelaunayPolygons(
 		.filter((points) => points.length >= 4);
 	if (nonNullishPolygons.length === 0) return null;
 	const geojsonPolygons = nonNullishPolygons.map((points) =>
-		helpers.polygon([points.map(pointToGeoJSON)]),
+		turf.polygon([points.map(pointToGeoJSON)]),
 	);
 	return topologicallyMergePolygons(geojsonPolygons);
 }
@@ -200,7 +196,7 @@ function topologicallyMergePolygons(geojsonPolygons: PolygonalFeature[]) {
 	) as PolygonalGeometry | null;
 	if (merged == null) return null;
 
-	return helpers.feature(merged);
+	return turf.feature(merged);
 }
 
 function getVoidPolygons(topology: Topology<Objects>) {
@@ -210,7 +206,7 @@ function getVoidPolygons(topology: Topology<Objects>) {
 }
 
 function addPolygonToGeojsonMapping(
-	polygon: helpers.Feature<helpers.Polygon>,
+	polygon: turf.Feature<turf.Polygon>,
 	mapping: Record<number, PolygonalFeature>,
 	id: number | null | undefined,
 ) {

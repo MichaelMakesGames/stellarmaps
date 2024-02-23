@@ -1,4 +1,4 @@
-import * as helpers from '@turf/helpers';
+import * as turf from '@turf/turf';
 import {
 	getAllPositionArrays,
 	type PolygonalFeature,
@@ -6,40 +6,40 @@ import {
 } from './utils';
 
 export function getSmoothedPosition(
-	position: helpers.Position,
+	position: turf.Position,
 	geoJSON: PolygonalFeatureCollection | PolygonalFeature,
-): helpers.Position {
+): turf.Position {
 	const ROUND = 2;
 	const allPositionArrays = getAllPositionArrays(geoJSON);
 	const positionArray = allPositionArrays.find((array) =>
 		array.some(
 			(p) =>
-				helpers.round(p[0], ROUND) === helpers.round(position[0], ROUND) &&
-				helpers.round(p[1], ROUND) === helpers.round(position[1], ROUND),
+				turf.round(p[0], ROUND) === turf.round(position[0], ROUND) &&
+				turf.round(p[1], ROUND) === turf.round(position[1], ROUND),
 		),
 	);
 	if (positionArray != null && positionArray.length > 0) {
 		const positionIndex = positionArray.findIndex(
 			(p) =>
-				helpers.round(p[0], ROUND) === helpers.round(position[0], ROUND) &&
-				helpers.round(p[1], ROUND) === helpers.round(position[1], ROUND),
+				turf.round(p[0], ROUND) === turf.round(position[0], ROUND) &&
+				turf.round(p[1], ROUND) === turf.round(position[1], ROUND),
 		);
 
 		const nextIndex = (positionIndex + 1) % positionArray.length;
-		const next = positionArray[nextIndex] as helpers.Position;
+		const next = positionArray[nextIndex] as turf.Position;
 		const nextDx = next[0] - position[0];
 		const nextDy = next[1] - position[1];
 
 		const prevIndex = (positionIndex + positionArray.length - 1) % positionArray.length;
-		const prev = positionArray[prevIndex] as helpers.Position;
+		const prev = positionArray[prevIndex] as turf.Position;
 		const prevDx = prev[0] - position[0];
 		const prevDy = prev[1] - position[1];
 
-		const smoothedSegment: [helpers.Position, helpers.Position] = [
+		const smoothedSegment: [turf.Position, turf.Position] = [
 			[position[0] + prevDx * 0.25, position[1] + prevDy * 0.25],
 			[position[0] + nextDx * 0.25, position[1] + nextDy * 0.25],
 		];
-		const smoothedSegmentMidpoint: helpers.Position = [
+		const smoothedSegmentMidpoint: turf.Position = [
 			(smoothedSegment[0][0] + smoothedSegment[1][0]) / 2,
 			(smoothedSegment[0][1] + smoothedSegment[1][1]) / 2,
 		];
@@ -50,34 +50,34 @@ export function getSmoothedPosition(
 	}
 }
 
-function isFeatureCollection(geojson: helpers.AllGeoJSON): geojson is helpers.FeatureCollection {
+function isFeatureCollection(geojson: turf.AllGeoJSON): geojson is turf.FeatureCollection {
 	return geojson.type === 'FeatureCollection';
 }
-function isFeature(geojson: helpers.AllGeoJSON): geojson is helpers.Feature {
+function isFeature(geojson: turf.AllGeoJSON): geojson is turf.Feature {
 	return geojson.type === 'Feature';
 }
-function isGeometryCollection(geojson: helpers.AllGeoJSON): geojson is helpers.GeometryCollection {
+function isGeometryCollection(geojson: turf.AllGeoJSON): geojson is turf.GeometryCollection {
 	return geojson.type === 'GeometryCollection';
 }
-function isPoint(geojson: helpers.AllGeoJSON): geojson is helpers.Point {
+function isPoint(geojson: turf.AllGeoJSON): geojson is turf.Point {
 	return geojson.type === 'Point';
 }
-function isMultiPoint(geojson: helpers.AllGeoJSON): geojson is helpers.MultiPoint {
+function isMultiPoint(geojson: turf.AllGeoJSON): geojson is turf.MultiPoint {
 	return geojson.type === 'MultiPoint';
 }
-function isLineString(geojson: helpers.AllGeoJSON): geojson is helpers.LineString {
+function isLineString(geojson: turf.AllGeoJSON): geojson is turf.LineString {
 	return geojson.type === 'LineString';
 }
-function isMultiLineString(geojson: helpers.AllGeoJSON): geojson is helpers.MultiLineString {
+function isMultiLineString(geojson: turf.AllGeoJSON): geojson is turf.MultiLineString {
 	return geojson.type === 'MultiLineString';
 }
-function isPolygon(geojson: helpers.AllGeoJSON): geojson is helpers.Polygon {
+function isPolygon(geojson: turf.AllGeoJSON): geojson is turf.Polygon {
 	return geojson.type === 'Polygon';
 }
-function isMultiPolygon(geojson: helpers.AllGeoJSON): geojson is helpers.MultiPolygon {
+function isMultiPolygon(geojson: turf.AllGeoJSON): geojson is turf.MultiPolygon {
 	return geojson.type === 'MultiPolygon';
 }
-export function smoothGeojson<T extends helpers.AllGeoJSON>(geojson: T, iterations: number): T {
+export function smoothGeojson<T extends turf.AllGeoJSON>(geojson: T, iterations: number): T {
 	if (isFeatureCollection(geojson)) {
 		return {
 			...geojson,
@@ -124,10 +124,10 @@ export function smoothGeojson<T extends helpers.AllGeoJSON>(geojson: T, iteratio
 }
 
 function smoothPositionArray(
-	positionArray: helpers.Position[],
+	positionArray: turf.Position[],
 	iterations: number,
 	loops: boolean,
-): helpers.Position[] {
+): turf.Position[] {
 	let copy = positionArray.slice();
 	for (let i = 0; i < iterations; i++) {
 		copy = smoothPositionArrayIteration(copy, loops);
@@ -136,9 +136,9 @@ function smoothPositionArray(
 }
 
 function smoothPositionArrayIteration(
-	positionArray: helpers.Position[],
+	positionArray: turf.Position[],
 	loops: boolean,
-): helpers.Position[] {
+): turf.Position[] {
 	const smoothed = positionArray.flatMap((position, index) => {
 		const isFirst = index === 0;
 		const isLast = index === positionArray.length - 1;
@@ -146,22 +146,22 @@ function smoothPositionArrayIteration(
 			return [position];
 		} else {
 			const nextIndex = (index + (loops && isLast ? 2 : 1)) % positionArray.length;
-			const next = positionArray[nextIndex] as helpers.Position;
+			const next = positionArray[nextIndex] as turf.Position;
 			const nextDx = next[0] - position[0];
 			const nextDy = next[1] - position[1];
 
 			const prevIndex =
 				(index + positionArray.length - (loops && isFirst ? 2 : 1)) % positionArray.length;
-			const prev = positionArray[prevIndex] as helpers.Position;
+			const prev = positionArray[prevIndex] as turf.Position;
 			const prevDx = prev[0] - position[0];
 			const prevDy = prev[1] - position[1];
 
-			const smoothedSegment: helpers.Position[] = [
+			const smoothedSegment: turf.Position[] = [
 				[position[0] + prevDx * 0.25, position[1] + prevDy * 0.25],
 				[position[0] + nextDx * 0.25, position[1] + nextDy * 0.25],
 			];
 			if (index === positionArray.length - 1) {
-				return [smoothedSegment[0] as helpers.Position];
+				return [smoothedSegment[0] as turf.Position];
 			} else {
 				return smoothedSegment;
 			}

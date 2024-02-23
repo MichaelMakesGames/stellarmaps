@@ -1,19 +1,13 @@
-import buffer from '@turf/buffer';
-import turfCircle from '@turf/circle';
-import * as helpers from '@turf/helpers';
-import intersect from '@turf/intersect';
-import { segmentEach } from '@turf/meta';
-import union from '@turf/union';
-import type { GameState } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
-// @ts-expect-error pathRound is missing from d3-path type defs
+import * as turf from '@turf/turf';
 import { pathRound } from 'd3-path';
 import { curveBasis, curveBasisClosed, curveLinear, curveLinearClosed } from 'd3-shape';
+import type { GameState } from '../../GameState';
+import type { MapSettings } from '../../mapSettings';
 import type { BorderCircle } from './processCircularGalaxyBorder';
 
-export type PolygonalGeometry = helpers.Polygon | helpers.MultiPolygon;
-export type PolygonalFeature = helpers.Feature<PolygonalGeometry>;
-export type PolygonalFeatureCollection = helpers.FeatureCollection<PolygonalGeometry>;
+export type PolygonalGeometry = turf.Polygon | turf.MultiPolygon;
+export type PolygonalFeature = turf.Feature<PolygonalGeometry>;
+export type PolygonalFeatureCollection = turf.FeatureCollection<PolygonalGeometry>;
 
 export const SCALE = 100;
 
@@ -21,7 +15,7 @@ export function pointToGeoJSON([x, y]: [number, number]): [number, number] {
 	return [x / SCALE, y / SCALE];
 }
 
-export function pointFromGeoJSON(point: helpers.Position): [number, number] {
+export function pointFromGeoJSON(point: turf.Position): [number, number] {
 	return [point[0] * SCALE, point[1] * SCALE];
 }
 
@@ -111,7 +105,7 @@ export function multiPolygonToPath(
 		.join(' ');
 }
 
-export function segmentToPath(segment: helpers.Position[], smooth: boolean): string {
+export function segmentToPath(segment: turf.Position[], smooth: boolean): string {
 	const points = segment.map(pointFromGeoJSON);
 	const pathContext = pathRound(3);
 	const curve = smooth ? curveBasis(pathContext) : curveLinear(pathContext);
@@ -125,16 +119,16 @@ export function segmentToPath(segment: helpers.Position[], smooth: boolean): str
 
 export function getPolygons(
 	geojson: PolygonalFeatureCollection | PolygonalFeature | null,
-): helpers.Feature<helpers.Polygon>[] {
+): turf.Feature<turf.Polygon>[] {
 	if (geojson == null) return [];
 	const features = geojson.type === 'FeatureCollection' ? geojson.features : [geojson];
 	return features.flatMap((feature) => {
 		if (!['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
 			return [];
 		} else if (feature.geometry.type === 'Polygon') {
-			return [feature as helpers.Feature<helpers.Polygon>];
+			return [feature as turf.Feature<turf.Polygon>];
 		} else {
-			return feature.geometry.coordinates.map((coords) => helpers.polygon(coords));
+			return feature.geometry.coordinates.map((coords) => turf.polygon(coords));
 		}
 	});
 }
@@ -145,14 +139,14 @@ export function getCountryColors(countryId: number, gameState: GameState, settin
 	]?.flag?.colors;
 }
 
-export function positionToString(p: helpers.Position): string {
+export function positionToString(p: turf.Position): string {
 	return `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
 }
 
 export function getAllPositionArrays(geoJSON: PolygonalFeatureCollection | PolygonalFeature) {
 	const features = geoJSON.type === 'FeatureCollection' ? geoJSON.features : [geoJSON];
 	const allPositionArrays = features
-		.map<helpers.Position[][]>((f) => {
+		.map<turf.Position[][]>((f) => {
 			const geometry = f.geometry;
 			if (geometry.type === 'Polygon') {
 				return geometry.coordinates;
@@ -215,7 +209,7 @@ export function createHyperlanePaths(
 			!settings.hyperlaneMetroStyle ||
 			Math.abs(dx) < 1 ||
 			Math.abs(dy) < 1 ||
-			Math.abs(helpers.round(dx / dy, 1)) === 1
+			Math.abs(turf.round(dx / dy, 1)) === 1
 		) {
 			return simplePath;
 		} else {
@@ -278,7 +272,7 @@ export function applyGalaxyBoundary(
 	externalBorder: PolygonalFeature | null,
 ) {
 	if (externalBorder != null) {
-		return intersect(geojson, externalBorder);
+		return turf.intersect(geojson, externalBorder);
 	}
 	return geojson;
 }
@@ -289,7 +283,7 @@ export function makeBorderCircleGeojson(
 	getSystemCoordinates: (id: number) => [number, number],
 	circle: BorderCircle,
 ) {
-	let geojson: PolygonalFeature | null = turfCircle(
+	let geojson: PolygonalFeature | null = turf.circle(
 		pointToGeoJSON([circle.cx, circle.cy]),
 		circle.r / SCALE,
 		{
@@ -299,7 +293,7 @@ export function makeBorderCircleGeojson(
 	);
 
 	if (circle.type === 'outlier') {
-		const multiLineString = helpers.multiLineString(
+		const multiLineString = turf.multiLineString(
 			Array.from(circle.systems).flatMap((systemId) => {
 				const system = gameState.galactic_object[systemId];
 				if (system == null) return [];
@@ -309,23 +303,23 @@ export function makeBorderCircleGeojson(
 				]);
 			}),
 		);
-		const hyperlaneBuffer = buffer(multiLineString, OUTLIER_HYPERLANE_PADDING / SCALE, {
+		const hyperlaneBuffer = turf.buffer(multiLineString, OUTLIER_HYPERLANE_PADDING / SCALE, {
 			units: 'degrees',
 			steps: 1,
 		});
-		geojson = union(geojson, hyperlaneBuffer);
+		geojson = turf.union(geojson, hyperlaneBuffer);
 	}
 
 	return geojson;
 }
 
 export function getSharedDistancePercent(
-	polygon: helpers.Feature<helpers.Polygon>,
+	polygon: turf.Feature<turf.Polygon>,
 	sharedPositionStrings: Set<string>,
 ) {
 	let sharedDistance = 0;
 	let totalDistance = 0;
-	segmentEach(polygon, (segment) => {
+	turf.segmentEach(polygon, (segment) => {
 		const from = segment?.geometry.coordinates[0] ?? [0, 0];
 		const to = segment?.geometry.coordinates[1] ?? [0, 0];
 		const segmentDistance = Math.hypot(from[0] - to[0], from[1] - to[1]);

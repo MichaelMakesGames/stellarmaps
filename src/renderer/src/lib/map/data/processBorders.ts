@@ -1,10 +1,4 @@
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
-import buffer from '@turf/buffer';
-import difference from '@turf/difference';
-import explode from '@turf/explode';
-import * as helpers from '@turf/helpers';
-import { coordAll } from '@turf/meta';
-import union from '@turf/union';
+import * as turf from '@turf/turf';
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
@@ -50,7 +44,7 @@ export default function processBorders(
 	>['galaxyBorderCirclesGeoJSON'],
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
-	const unassignedFragments: [number, helpers.Feature<helpers.Polygon>][] = [];
+	const unassignedFragments: [number, turf.Feature<turf.Polygon>][] = [];
 	const borders = Object.entries(unionLeaderToGeojson)
 		.map(parseNumberEntry)
 		.map(([countryId, outerBorderGeoJSON]) => {
@@ -86,10 +80,10 @@ export default function processBorders(
 				.filter(isDefined);
 
 			const unionMemberBorderLines: Set<string> = new Set();
-			getAllPositionArrays(helpers.featureCollection(unionMemberOuterPolygons)).forEach(
+			getAllPositionArrays(turf.featureCollection(unionMemberOuterPolygons)).forEach(
 				(positionArray) =>
 					positionArray.forEach((p, i) => {
-						const nextPosition = positionArray[(i + 1) % positionArray.length] as helpers.Position;
+						const nextPosition = positionArray[(i + 1) % positionArray.length] as turf.Position;
 						unionMemberBorderLines.add(
 							[positionToString(p), positionToString(nextPosition)].sort().join(','),
 						);
@@ -97,10 +91,10 @@ export default function processBorders(
 			);
 
 			const allBorderPoints: Set<string> = new Set(
-				explode(outerBorderGeoJSON).features.map((f) => positionToString(f.geometry.coordinates)),
+				turf.coordAll(outerBorderGeoJSON).map((coord) => positionToString(coord)),
 			);
 			const sectorOuterPoints: Set<string>[] = sectorOuterPolygons.map(
-				(p) => new Set(explode(p).features.map((f) => positionToString(f.geometry.coordinates))),
+				(p) => new Set(turf.coordAll(p).map((coord) => positionToString(coord))),
 			);
 			// include all border lines in this, so we don't draw sectors border where there is already an external border
 			const addedSectorLines: Set<string> = new Set(
@@ -110,15 +104,15 @@ export default function processBorders(
 							const isLastPos = i === positionArray.length - 1;
 							const nextPosition = positionArray[
 								(i + (isLastPos ? 2 : 1)) % positionArray.length
-							] as helpers.Position;
+							] as turf.Position;
 							return [positionToString(p), positionToString(nextPosition)].sort().join(',');
 						}),
 					)
 					.flat(),
 			);
-			const sectorSegments: helpers.Position[][] = [];
+			const sectorSegments: turf.Position[][] = [];
 			sectorOuterPolygons.flatMap(getAllPositionArrays).forEach((sectorRing, sectorIndex) => {
-				let currentSegment: helpers.Position[] = [];
+				let currentSegment: turf.Position[] = [];
 				const firstSegment = currentSegment;
 				sectorRing.forEach((pos, posIndex, posArray) => {
 					const posString = positionToString(pos);
@@ -132,7 +126,7 @@ export default function processBorders(
 						);
 
 					const nextPosIndex = (posIndex + (posIsLast ? 2 : 1)) % posArray.length;
-					const nextPos = posArray[nextPosIndex] as helpers.Position;
+					const nextPos = posArray[nextPosIndex] as turf.Position;
 					const nextPosString = positionToString(nextPos);
 
 					const nextLineString = [posString, nextPosString].sort().join(',');
@@ -189,7 +183,7 @@ export default function processBorders(
 			});
 			// make sure there are no 0 or 1 length segments
 			const nonEmptySectorSegments = sectorSegments.filter(
-				(segment): segment is [helpers.Position, helpers.Position, ...helpers.Position[]] =>
+				(segment): segment is [turf.Position, turf.Position, ...turf.Position[]] =>
 					segment.length > 1,
 			);
 			// check for union border segments
@@ -205,11 +199,9 @@ export default function processBorders(
 					if (allBorderPoints.has(positionToString(segment[0]))) {
 						segment[0] = getSmoothedPosition(segment[0], outerBorderGeoJSON);
 					}
-					if (
-						allBorderPoints.has(positionToString(segment[segment.length - 1] as helpers.Position))
-					) {
+					if (allBorderPoints.has(positionToString(segment[segment.length - 1] as turf.Position))) {
 						segment[segment.length - 1] = getSmoothedPosition(
-							segment[segment.length - 1] as helpers.Position,
+							segment[segment.length - 1] as turf.Position,
 							outerBorderGeoJSON,
 						);
 					}
@@ -222,13 +214,13 @@ export default function processBorders(
 			);
 
 			if (galaxyBorderCirclesGeoJSON) {
-				const fragments: helpers.Feature<helpers.Polygon>[] = [];
+				const fragments: turf.Feature<turf.Polygon>[] = [];
 				for (const polygon of getPolygons(boundedOuterBorderGeoJSON)) {
 					const systems = new Set(
 						Array.from(unionLeaderToSystemIds[countryId] ?? []).filter((systemId) => {
 							const coordinate = getSystemCoordinates(systemId);
-							const point = helpers.point(pointToGeoJSON(coordinate));
-							return booleanPointInPolygon(point, polygon);
+							const point = turf.point(pointToGeoJSON(coordinate));
+							return turf.booleanPointInPolygon(point, polygon);
 						}),
 					);
 					if (systems.size === 0) {
@@ -251,9 +243,9 @@ export default function processBorders(
 								const geojson = makeBorderCircleGeojson(gameState, getSystemCoordinates, cur);
 								if (acc == null) return geojson;
 								if (geojson == null) return acc;
-								return union(acc, geojson);
+								return turf.union(acc, geojson);
 							}, null);
-							const outOfBounds = bounds == null ? null : difference(polygon, bounds);
+							const outOfBounds = bounds == null ? null : turf.difference(polygon, bounds);
 							fragments.push(...getPolygons(outOfBounds));
 							unassignedFragments.push(
 								...getPolygons(outOfBounds).map<(typeof unassignedFragments)[number]>((geojson) => [
@@ -268,7 +260,7 @@ export default function processBorders(
 					boundedOuterBorderGeoJSON =
 						boundedOuterBorderGeoJSON == null
 							? null
-							: difference(boundedOuterBorderGeoJSON, fragment);
+							: turf.difference(boundedOuterBorderGeoJSON, fragment);
 				}
 			}
 
@@ -308,11 +300,7 @@ export default function processBorders(
 	const unionLeaderToPositionStrings: Record<number, Set<string>> = Object.fromEntries(
 		borders.map((border) => [
 			border.countryId,
-			new Set(
-				border.geojson == null
-					? []
-					: (coordAll(border.geojson) as [number, number][]).map(positionToString),
-			),
+			new Set(border.geojson == null ? [] : turf.coordAll(border.geojson).map(positionToString)),
 		]),
 	);
 
@@ -336,7 +324,7 @@ export default function processBorders(
 			unionLeaderId == null ? null : borders.find((b) => b.countryId === unionLeaderId);
 		const geojson = border == null ? null : border.geojson;
 		if (border && geojson) {
-			border.geojson = union(geojson, fragment);
+			border.geojson = turf.union(geojson, fragment);
 		}
 	}
 
@@ -349,9 +337,9 @@ export default function processBorders(
 		const smoothedInnerBorderGeoJSON =
 			smoothedOuterBorderGeoJSON == null
 				? null
-				: (buffer(smoothedOuterBorderGeoJSON, -settings.borderStroke.width / SCALE, {
+				: (turf.buffer(smoothedOuterBorderGeoJSON, -settings.borderStroke.width / SCALE, {
 						units: 'degrees',
-					}) as ReturnType<typeof buffer> | null);
+					}) as ReturnType<typeof turf.buffer> | null);
 		border.outerPath =
 			smoothedOuterBorderGeoJSON == null
 				? ''
@@ -363,7 +351,7 @@ export default function processBorders(
 		const borderOnlyGeoJSON =
 			smoothedInnerBorderGeoJSON == null || smoothedOuterBorderGeoJSON == null
 				? smoothedOuterBorderGeoJSON
-				: difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
+				: turf.difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
 		border.borderPath = borderOnlyGeoJSON
 			? multiPolygonToPath(borderOnlyGeoJSON, settings.borderStroke.smoothing)
 			: '';

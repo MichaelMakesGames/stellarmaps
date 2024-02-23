@@ -1,4 +1,4 @@
-import * as helpers from '@turf/helpers';
+import * as turf from '@turf/turf';
 
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
@@ -22,7 +22,7 @@ export default function processSystemOwnership(
 	const unionLeaderToSystemIds: Record<string, Set<number>> = {};
 	const unionLeaderToUnionMembers: Record<number, Set<number>> = {};
 	const unionLeaderToSectors: Record<number, Set<number>> = {};
-	const ownedSystemPoints: helpers.Point[] = [];
+	const ownedSystemPoints: turf.Point[] = [];
 	const systemIdToCountry: Record<string, number> = {};
 	const systemIdToUnionLeader: Record<string, number> = {};
 	for (const system of Object.values(gameState.galactic_object)) {
@@ -40,9 +40,7 @@ export default function processSystemOwnership(
 			getOrSetDefault(sectorToSystemIds, sectorId, new Set()).add(system.id);
 			sectorToCountry[sectorId] = ownerId;
 			const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, ['joinedBorders']);
-			ownedSystemPoints.push(
-				helpers.point(pointToGeoJSON(getSystemCoordinates(system.id))).geometry,
-			);
+			ownedSystemPoints.push(turf.point(pointToGeoJSON(getSystemCoordinates(system.id))).geometry);
 			getOrSetDefault(countryToSystemIds, ownerId, new Set()).add(system.id);
 			getOrSetDefault(unionLeaderToSystemIds, joinedUnionLeaderId, new Set()).add(system.id);
 			getOrSetDefault(unionLeaderToUnionMembers, joinedUnionLeaderId, new Set()).add(ownerId);

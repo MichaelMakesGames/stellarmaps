@@ -1,8 +1,4 @@
-import centerOfMass from '@turf/center-of-mass';
-import convex from '@turf/convex';
-import difference from '@turf/difference';
-import * as helpers from '@turf/helpers';
-import union from '@turf/union';
+import * as turf from '@turf/turf';
 import { interpolateBasis } from 'd3-interpolate';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
@@ -41,7 +37,7 @@ export default function processCircularGalaxyBorders(
 		systems: Set<number>;
 		outliers: Set<number>;
 		bBox: { xMin: number; xMax: number; yMin: number; yMax: number };
-		points: helpers.FeatureCollection<helpers.Point>;
+		points: turf.FeatureCollection<turf.Point>;
 	}[] = [];
 
 	for (const go of Object.values(gameState.galactic_object)) {
@@ -55,9 +51,7 @@ export default function processCircularGalaxyBorders(
 				yMin: getSystemCoordinates(go.id)[1],
 				yMax: getSystemCoordinates(go.id)[1],
 			},
-			points: helpers.featureCollection([
-				helpers.point(pointToGeoJSON(getSystemCoordinates(go.id))),
-			]),
+			points: turf.featureCollection([turf.point(pointToGeoJSON(getSystemCoordinates(go.id)))]),
 		};
 		const edge = go.hyperlane.map((hyperlane) => hyperlane.to);
 		const edgeSet = new Set(edge);
@@ -68,7 +62,7 @@ export default function processCircularGalaxyBorders(
 			const next = gameState.galactic_object[nextId];
 			if (next != null && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
-				cluster.points.features.push(helpers.point(pointToGeoJSON(getSystemCoordinates(nextId))));
+				cluster.points.features.push(turf.point(pointToGeoJSON(getSystemCoordinates(nextId))));
 				const nextHyperlanes = next.hyperlane;
 				const isOutlier = nextHyperlanes[0] != null && nextHyperlanes[0].length > OUTLIER_DISTANCE;
 				if (isOutlier) {
@@ -143,7 +137,7 @@ export default function processCircularGalaxyBorders(
 		// don't cut out inner shape if the core is too small (eg has gigastructures core)
 		if (innerRadii.every((r) => r > CIRCLE_INNER_PADDING)) {
 			const interpolateInnerRadii = interpolateBasis(innerRadii);
-			starburstGeoJSON = difference(
+			starburstGeoJSON = turf.difference(
 				starburstGeoJSON,
 				makeStarburstPolygon(innerStartAngle, interpolateInnerRadii, -CIRCLE_INNER_PADDING),
 			);
@@ -159,9 +153,9 @@ export default function processCircularGalaxyBorders(
 				cx = 0;
 				cy = 0;
 			} else {
-				const hull = convex(cluster.points);
+				const hull = turf.convex(cluster.points);
 				if (hull) {
-					const hullCenter = centerOfMass(hull);
+					const hullCenter = turf.centerOfMass(hull);
 					const point = pointFromGeoJSON(hullCenter.geometry.coordinates);
 					cx = point[0];
 					cy = point[1];
@@ -245,11 +239,11 @@ export default function processCircularGalaxyBorders(
 			if (galaxyBorderCirclesGeoJSON == null) {
 				galaxyBorderCirclesGeoJSON = polygon;
 			} else {
-				galaxyBorderCirclesGeoJSON = union(galaxyBorderCirclesGeoJSON, polygon);
+				galaxyBorderCirclesGeoJSON = turf.union(galaxyBorderCirclesGeoJSON, polygon);
 			}
 		} else if (circle.type === 'inner-padded') {
 			if (galaxyBorderCirclesGeoJSON != null) {
-				galaxyBorderCirclesGeoJSON = difference(galaxyBorderCirclesGeoJSON, polygon);
+				galaxyBorderCirclesGeoJSON = turf.difference(galaxyBorderCirclesGeoJSON, polygon);
 			}
 		}
 	}
@@ -334,7 +328,7 @@ function makeStarburstPolygon(
 	interpolateRadii: (n: number) => number,
 	padding: number,
 ): PolygonalFeature {
-	const positions: helpers.Position[] = [];
+	const positions: turf.Position[] = [];
 	for (let i = 0; i < STARBURST_NUM_SLICES; i++) {
 		const sliceIndex = i;
 		const fromAngle = startAngle + STARBURST_SLICE_ANGLE * sliceIndex;
@@ -352,5 +346,5 @@ function makeStarburstPolygon(
 	if (positions[0]) {
 		positions.push(positions[0]);
 	}
-	return helpers.polygon([positions]);
+	return turf.polygon([positions]);
 }

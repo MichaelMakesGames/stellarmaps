@@ -1,5 +1,4 @@
-import booleanContains from '@turf/boolean-contains';
-import * as helpers from '@turf/helpers';
+import * as turf from '@turf/turf';
 import polylabel from 'polylabel';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
@@ -39,19 +38,19 @@ export default function processLabels(
 							const p = feature.geometry;
 							if (settings.labelsAvoidHoles === 'all') return p;
 							if (settings.labelsAvoidHoles === 'none')
-								return helpers.polygon([p.coordinates[0] ?? []]).geometry;
+								return turf.polygon([p.coordinates[0] ?? []]).geometry;
 							// settings.labelsAvoidHoles === 'owned'
-							return helpers.polygon([
+							return turf.polygon([
 								p.coordinates[0] ?? [],
 								...p.coordinates.slice(1).filter((hole) => {
-									const holePolygon = helpers.polygon([hole.slice().reverse()]);
+									const holePolygon = turf.polygon([hole.slice().reverse()]);
 									return ownedSystemPoints.some((ownedSystemPoint) =>
-										booleanContains(holePolygon, ownedSystemPoint),
+										turf.booleanPointInPolygon(ownedSystemPoint, holePolygon),
 									);
 								}),
 							]).geometry;
 						})
-						.map<[helpers.Polygon, helpers.Position]>((polygon) => [
+						.map<[turf.Polygon, turf.Position]>((polygon) => [
 							polygon,
 							aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
 						])
@@ -142,8 +141,8 @@ function findLargestContainedRect({
 	iterations,
 	xBuffer = 0,
 }: {
-	polygon: helpers.Polygon;
-	relativePoint: helpers.Position;
+	polygon: turf.Polygon;
+	relativePoint: turf.Position;
 	relativePointType: 'top' | 'bottom' | 'middle';
 	ratio: number;
 	iterations: number;
@@ -179,14 +178,14 @@ function findLargestContainedRect({
 }
 
 function makeRect(
-	relativePoint: helpers.Position,
+	relativePoint: turf.Position,
 	relativePointType: 'top' | 'bottom' | 'middle',
 	width: number,
 	height: number,
-): helpers.Polygon {
+): turf.Polygon {
 	const dx = width / 2;
 	const dy = height / 2;
-	const center: helpers.Position = [relativePoint[0], relativePoint[1]];
+	const center: turf.Position = [relativePoint[0], relativePoint[1]];
 	if (relativePointType === 'top') center[1] += dy;
 	if (relativePointType === 'bottom') center[1] -= dy;
 	// clockwise: [0,0],[0,1],[1,1],[1,0],[0,0]
@@ -197,34 +196,34 @@ function makeRect(
 		[center[0] + dx, center[1] - dy],
 		[center[0] - dx, center[1] - dy],
 	];
-	return helpers.polygon([points]).geometry;
+	return turf.polygon([points]).geometry;
 }
 
 function aspectRatioSensitivePolylabel(
-	polygon: helpers.Position[][],
+	polygon: turf.Position[][],
 	precision: number,
 	aspectRatio: number,
 ) {
 	const scaledPolygon = polygon.map((ring) =>
 		ring.map((point) => [point[0] * aspectRatio, point[1]]),
 	);
-	const scaledPoint = polylabel(scaledPolygon, precision) as unknown as helpers.Position;
-	const point: helpers.Position = [scaledPoint[0] / aspectRatio, scaledPoint[1]];
+	const scaledPoint = polylabel(scaledPolygon, precision) as unknown as turf.Position;
+	const point: turf.Position = [scaledPoint[0] / aspectRatio, scaledPoint[1]];
 	return point;
 }
 
 // The booleanContains function from turf doesn't seem to work with concave polygons
 // This is stricter and simplified a bit since we know the inner shape is a rectangle
-function contains(polygon: helpers.Polygon, rect: helpers.Polygon) {
+function contains(polygon: turf.Polygon, rect: turf.Polygon) {
 	const [r1, r2, r3, r4] = rect.coordinates[0] ?? [];
 	if (r1 == null || r2 == null || r3 == null || r4 == null) {
 		throw new Error('rect has too few points!');
 	}
 	if (
-		!booleanContains(polygon, helpers.point(r1)) ||
-		!booleanContains(polygon, helpers.point(r2)) ||
-		!booleanContains(polygon, helpers.point(r3)) ||
-		!booleanContains(polygon, helpers.point(r4))
+		!turf.booleanPointInPolygon(turf.point(r1), polygon) ||
+		!turf.booleanPointInPolygon(turf.point(r2), polygon) ||
+		!turf.booleanPointInPolygon(turf.point(r3), polygon) ||
+		!turf.booleanPointInPolygon(turf.point(r4), polygon)
 	)
 		return false;
 	const xs = [r1[0], r2[0], r3[0], r4[0]];
