@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
+	import { RangeSlider, SlideToggle, popup } from '@skeletonlabs/skeleton';
 	import { onDestroy } from 'svelte';
 	import type { FormEventHandler } from 'svelte/elements';
 	import { get, type Readable } from 'svelte/store';
@@ -7,6 +7,7 @@
 	import ColorSettingControl from './ColorSettingControl.svelte';
 	import IconSettingControl from './IconSettingControl.svelte';
 	import StrokeSettingControl from './StrokeSettingControl.svelte';
+	import HeroiconInfoMini from './icons/HeroiconInfoMini.svelte';
 	import {
 		editedMapSettings,
 		emptyOptions,
@@ -60,6 +61,22 @@
 	<label class="label" for={config.id} transition:slide>
 		<div class="flex items-center">
 			{config.name}
+			{#if config.tooltip}
+				<button
+					type="button"
+					class="text-secondary-500-400-token ms-1 [&>*]:pointer-events-none"
+					use:popup={{ event: 'hover', target: `${config.id}-tooltip`, placement: 'top' }}
+				>
+					<HeroiconInfoMini />
+				</button>
+				<div
+					class="card variant-filled-secondary z-10 max-w-96 p-2 text-sm"
+					data-popup="{config.id}-tooltip"
+				>
+					{@html config.tooltip}
+					<div class="variant-filled-secondary arrow" />
+				</div>
+			{/if}
 			<div class="grow" />
 			{#if config.type === 'stroke' || config.type === 'icon'}
 				<div class="relative top-1 inline-block">

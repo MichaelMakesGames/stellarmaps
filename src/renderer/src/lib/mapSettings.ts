@@ -128,6 +128,7 @@ type RequiresReprocessingFunc<T> = (prev: T, next: T) => boolean;
 interface MapSettingConfigBase extends IdAndName {
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<any>;
 	hideIf?: (settings: MapSettings) => boolean;
+	tooltip?: string;
 }
 
 interface MapSettingConfigToggle extends MapSettingConfigBase {
@@ -693,12 +694,25 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Circular Galaxy Borders',
 				requiresReprocessing: true,
 				type: 'toggle',
+				tooltip: `<ul class="list-disc ms-4">
+					<li>When enabled, the overall border of the galaxy will be circular in shape, and there will be no "holes" between systems.</li>
+					<li>If the galaxy is a "Starburst", a special spiral shape will be used instead of a circle.</li>
+				</ul>`,
 			},
 			{
 				id: 'hyperlaneSensitiveBorders',
 				name: 'Hyperlane Sensitive Borders',
 				requiresReprocessing: true,
 				type: 'toggle',
+				tooltip: `<ul class="list-disc ms-4">
+					<li>When enabled, borders will follow hyperlanes.</li>
+					<li>When disabled, only solar systems affect borders.</li>
+					<li>Not supported if the following are enabled:</li>
+					<li><ul class="list-disc ms-5">
+						<li>Metro-style Hyperlanes</li>
+						<li>Align Solar Systems to Grid</li>
+					</ul></li>
+				</ul>`,
 			},
 			{
 				id: 'voronoiGridSize',
@@ -707,15 +721,12 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'number',
 				step: 1,
 				min: 1,
-			},
-			{
-				id: 'claimVoidBorderThreshold',
-				name: 'Claim Bordering Void Threshold',
-				requiresReprocessing: true,
-				type: 'range',
-				step: 0.05,
-				min: 0,
-				max: 1,
+				tooltip: `<ul class="list-disc ms-4">
+					<li>Higher values make borders "looser".</li>
+					<li>Lower values make borders "tighter".</li>
+					<li>Lower values take longer to process.</li>
+					<li><strong class="text-warning-500">WARNING</strong>: values below 10 can take a very long time to process.</li>
+				</ul>`,
 			},
 			{
 				id: 'claimVoidMaxSize',
@@ -725,6 +736,26 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				step: 1,
 				min: 0,
 				optional: true,
+				tooltip: `<ul class="list-disc ms-4">
+					<li>Empty "void" between systems can be claimed by neighboring country borders.</li>
+					<li>Only void smaller than this size can be claimed.</li>
+					<li>Set to 0 or leave empty to disable this behavior entirely.</li>
+				</ul>`,
+			},
+			{
+				id: 'claimVoidBorderThreshold',
+				name: 'Claim Bordering Void Threshold',
+				requiresReprocessing: true,
+				type: 'range',
+				step: 0.05,
+				min: 0,
+				max: 1,
+				tooltip: `<ul class="list-disc ms-4">
+					<li>Empty pockets of "void" between systems can be claimed by neighboring country borders.</li>
+					<li>To claim void, a country much control at least this much of the void's border.</li>
+					<li>Set to full so only fully enclosed void is claimed.</li>
+					<li>Set to empty so all void bordering at least one country is claimed.</li>
+				</ul>`,
 			},
 		],
 	},
