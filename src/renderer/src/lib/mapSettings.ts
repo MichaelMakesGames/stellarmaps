@@ -578,6 +578,10 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				requiresReprocessing: true,
 				hideIf: (settings) =>
 					!settings.hyperlaneStroke.enabled && !settings.hyperRelayStroke.enabled,
+				tooltip: `<ul class="list-disc ps-4">
+					<li>Draw hyperlanes in the style of metro/subway maps.</li>
+					<li>Automatically enables "Align Solar Systems to Grid".</li>
+				</ul>`,
 			},
 		],
 	},
