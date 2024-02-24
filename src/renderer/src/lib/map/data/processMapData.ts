@@ -17,7 +17,11 @@ import processTerraIncognitaPath from './processTerraIncognitaPath';
 import processVoronoi from './processVoronoi';
 import { createHyperlanePaths } from './utils';
 
-export default async function processMapData(gameState: GameState, settings: MapSettings) {
+export default async function processMapData(gameState: GameState, rawSettings: MapSettings) {
+	const settings = { ...rawSettings };
+	if (settings.hyperlaneMetroStyle) settings.alignStarsToGrid = true;
+	if (settings.alignStarsToGrid) settings.hyperlaneSensitiveBorders = false;
+
 	// get these started right away; await just before needed
 	const emblemsPromise = timeItAsync('emblems', processEmblems, Object.values(gameState.country));
 	const countryNamesPromise = timeItAsync('names', processNames, gameState);

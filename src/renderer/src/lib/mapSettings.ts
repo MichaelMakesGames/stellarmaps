@@ -682,6 +682,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				name: 'Align Solar Systems to Grid',
 				type: 'toggle',
 				requiresReprocessing: true,
+				hideIf: (settings) => settings.hyperlaneMetroStyle,
 			},
 		],
 	},
@@ -713,6 +714,7 @@ export const mapSettingConfig: MapSettingGroup[] = [
 						<li>Align Solar Systems to Grid</li>
 					</ul></li>
 				</ul>`,
+				hideIf: (settings) => settings.hyperlaneMetroStyle || settings.alignStarsToGrid,
 			},
 			{
 				id: 'voronoiGridSize',

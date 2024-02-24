@@ -18,7 +18,7 @@ export default function processVoronoi(
 		voronoiIndexToSystem[i] = system.id;
 		return getSystemCoordinates(system.id);
 	});
-	if (!settings.alignStarsToGrid && settings.hyperlaneSensitiveBorders) {
+	if (settings.hyperlaneSensitiveBorders) {
 		for (const system of Object.values(gameState.galactic_object)) {
 			const [fromX, fromY] = getSystemCoordinates(system.id);
 			for (const hyperlane of system.hyperlane) {
