@@ -11,6 +11,7 @@
 	import {
 		editedMapSettings,
 		emptyOptions,
+		validateSetting,
 		type MapSettingConfig,
 		type SelectOption,
 	} from './mapSettings';
@@ -51,6 +52,8 @@
 	function handleStrokeToggle(e: Event) {
 		value = { ...value, enabled: (e.currentTarget as HTMLInputElement).checked };
 	}
+
+	$: [valid, invalidMessage] = validateSetting(value, config);
 
 	onDestroy(() => {
 		unsubscribe();
@@ -94,6 +97,7 @@
 		{#if config.type === 'number'}
 			<input
 				class="input"
+				class:input-error={!valid}
 				type="number"
 				value={value ?? ''}
 				on:input={handleNumberInput}
@@ -138,6 +142,9 @@
 			<IconSettingControl bind:value {config} />
 		{:else}
 			<span>WARNING: unimplemented control</span>
+		{/if}
+		{#if !valid && invalidMessage}
+			<span class="text-error-300">{invalidMessage}</span>
 		{/if}
 	</label>
 {/if}

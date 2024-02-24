@@ -1192,7 +1192,7 @@ function validateAndResetSettings(unvalidatedSettings: MapSettings): MapSettings
 			console.warn(`no config found for setting ${key}; deleting`);
 			delete settings[key as keyof MapSettings];
 		} else {
-			const valid = validateSetting(settings[key as keyof MapSettings], config);
+			const [valid] = validateSetting(settings[key as keyof MapSettings], config);
 			if (!valid) {
 				console.warn(`invalid value for setting ${key}; setting default`);
 				(settings as any)[key] = (defaultMapSettings as any)[key];
@@ -1208,78 +1208,89 @@ function validateAndResetSettings(unvalidatedSettings: MapSettings): MapSettings
 	return settings;
 }
 
-function validateSetting<T extends MapSettingConfig>(value: unknown, config: T): boolean {
+export function validateSetting<T extends MapSettingConfig>(
+	value: unknown,
+	config: T,
+): [boolean] | [boolean, string] {
 	switch (config.type) {
 		case 'color': {
 			const result = colorSettingSchema.safeParse(value);
 			if (result.success) {
 				const { data } = result;
 				if (config.allowedAdjustments) {
-					return data.colorAdjustments.every(
-						(adjustment) =>
-							adjustment.type == null || config.allowedAdjustments?.includes(adjustment.type),
-					);
+					return [
+						data.colorAdjustments.every(
+							(adjustment) =>
+								adjustment.type == null || config.allowedAdjustments?.includes(adjustment.type),
+						),
+					];
 				} else {
-					return true;
+					return [true];
 				}
 			} else {
-				return false;
+				return [false];
 			}
 		}
 		case 'icon': {
 			const result = iconSettingSchema.safeParse(value);
-			return result.success;
+			return [result.success];
 		}
 		case 'number': {
 			if (typeof value === 'number') {
 				const min = config.min ?? -Infinity;
 				const max = config.max ?? Infinity;
-				return value >= min && value <= max;
+				const message =
+					Number.isFinite(min) && Number.isFinite(max)
+						? `Min: ${min}, Max: ${max}`
+						: Number.isFinite(min)
+							? `Min: ${min}`
+							: `Max: ${max}`;
+				return [value >= min && value <= max, message];
 			} else if (value == null) {
-				return Boolean(config.optional);
+				return [Boolean(config.optional), 'Required'];
 			} else {
-				return false;
+				return [false];
 			}
 		}
 		case 'range': {
 			if (typeof value === 'number') {
-				return value >= config.min && value <= config.max;
+				return [value >= config.min && value <= config.max];
 			} else {
-				return false;
+				return [false];
 			}
 		}
 		case 'select': {
 			if (typeof value === 'string') {
 				if (config.dynamicOptions) {
 					// dynamic options aren't checked for now; assume valid
-					return true;
+					return [true];
 				} else {
-					return config.options.some((option) => option.id === value);
+					return [config.options.some((option) => option.id === value)];
 				}
 			} else {
-				return false;
+				return [false];
 			}
 		}
 		case 'stroke': {
 			const result = strokeSettingSchema.safeParse(value);
 			if (result.success) {
 				const { data } = result;
-				if (data.dashed && config.noDashed) return false;
-				if (data.smoothing && config.noSmoothing) return false;
-				return true;
+				if (data.dashed && config.noDashed) return [false];
+				if (data.smoothing && config.noSmoothing) return [false];
+				return [true];
 			} else {
-				return false;
+				return [false];
 			}
 		}
 		case 'text': {
-			return typeof value === 'string';
+			return [typeof value === 'string'];
 		}
 		case 'toggle': {
-			return typeof value === 'boolean';
+			return [typeof value === 'boolean'];
 		}
 		default: {
 			console.warn(`unknown setting type ${(config as { type?: unknown }).type}`);
-			return false;
+			return [false];
 		}
 	}
 }
