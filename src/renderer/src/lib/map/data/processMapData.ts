@@ -129,6 +129,8 @@ export default async function processMapData(gameState: GameState, rawSettings: 
 		processLabels,
 		gameState,
 		settings,
+		countryToGeojson,
+		unionLeaderToUnionMembers,
 		borders,
 		countryNames,
 		knownCountries,

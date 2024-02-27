@@ -6,17 +6,39 @@ import type processBorders from './processBorders';
 import type processNames from './processNames';
 import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
-import { SCALE, getPolygons, inverseX, isUnionLeader, pointFromGeoJSON } from './utils';
+import {
+	SCALE,
+	getPolygons,
+	inverseX,
+	isUnionLeader,
+	pointFromGeoJSON,
+	type PolygonalFeature,
+} from './utils';
 
 export default function processLabels(
 	gameState: GameState,
 	settings: MapSettings,
+	countryToGeojson: Record<number, PolygonalFeature>,
+	unionLeaderToUnionMembers: Record<number, Set<number>>,
 	borders: ReturnType<typeof processBorders>,
 	countryNames: Awaited<ReturnType<typeof processNames>>,
 	knownCountries: ReturnType<typeof processTerraIncognita>['knownCountries'],
 	ownedSystemPoints: ReturnType<typeof processSystemOwnership>['ownedSystemPoints'],
 ) {
-	const labels = borders.map(({ countryId, geojson }) => {
+	const idGeojsonPairs: [number, PolygonalFeature | null][] = !settings.unionMode
+		? borders.map((border) => [border.countryId, border.geojson])
+		: borders.flatMap((border) =>
+				Array.from(unionLeaderToUnionMembers[border.countryId] ?? []).map<
+					[number, PolygonalFeature | null]
+				>((memberId) => {
+					const memberGeojson = countryToGeojson[memberId];
+					if (!memberGeojson || !border.geojson) return [memberId, null];
+					// the member geojson hasn't had fragments removed
+					// intersect with the union leader geojson from border so that labels are drawn for those polygons
+					return [memberId, turf.intersect(memberGeojson, border.geojson)];
+				}),
+			);
+	const labels = idGeojsonPairs.map(([countryId, geojson]) => {
 		const name = countryNames[countryId] ?? '';
 		const country = gameState.country[countryId];
 
