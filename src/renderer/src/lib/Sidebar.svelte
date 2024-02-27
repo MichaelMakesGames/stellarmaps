@@ -287,9 +287,9 @@
 	</div>
 
 	<div class="flex-shrink flex-grow overflow-y-auto">
-		<Accordion>
+		<Accordion spacing="space-y-2">
 			{#each mapSettingConfig as settingGroup (settingGroup.id)}
-				<AccordionItem>
+				<AccordionItem regionPanel="space-y-6">
 					<svelte:fragment slot="summary">
 						<h3 class="h4 font-bold">
 							{settingGroup.name}
