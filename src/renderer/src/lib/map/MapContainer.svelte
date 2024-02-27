@@ -357,6 +357,18 @@
 					This could take a few seconds...
 				</div>
 			</div>
+		{:catch reason}
+			<div class="absolute left-0 top-0 flex h-full w-full items-center bg-error-800">
+				<div class="h1 w-full text-center text-error-200">
+					Something has gone wrong
+					<br />
+					<code class="mt-3 inline-block max-w-96 text-sm">
+						{reason.toString().length > 200
+							? `${reason.toString().substring(0, 200)}...`
+							: reason.toString()}
+					</code>
+				</div>
+			</div>
 		{/await}
 		<svg
 			bind:this={svg}
