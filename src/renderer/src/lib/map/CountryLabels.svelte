@@ -1,15 +1,15 @@
 <script lang="ts">
+	import debug from '../debug';
 	import { lastProcessedMapSettings, mapSettings } from '../mapSettings';
 	import type { MapData } from './data/processMapData';
 
 	export let data: MapData;
-	export let debug: boolean;
 </script>
 
 {#each data.labels.filter((label) => label.isKnown || !$mapSettings.terraIncognita) as label}
 	{#each label.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
-		{#if debug}<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />{/if}
-		{#if debug && emblemWidth && emblemHeight}
+		{#if $debug}<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />{/if}
+		{#if $debug && emblemWidth && emblemHeight}
 			<rect
 				stroke-width={1}
 				stroke="#F0F"
@@ -41,7 +41,7 @@
 				</text>
 			{/if}
 		{/if}
-		{#if debug && textWidth && textHeight}
+		{#if $debug && textWidth && textHeight}
 			<rect
 				stroke-width={1}
 				stroke="#F0F"

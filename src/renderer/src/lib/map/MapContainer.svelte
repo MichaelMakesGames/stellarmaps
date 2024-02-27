@@ -10,6 +10,7 @@
 	import { ADDITIONAL_COLORS } from '../colors';
 	import convertBlobToDataUrl from '../convertBlobToDataUrl';
 	import convertSvgToPng from '../convertSvgToPng';
+	import debug from '../debug';
 	import HeroiconArrowsPointingOut from '../icons/HeroiconArrowsPointingOut.svelte';
 	import {
 		loadStellarisData,
@@ -219,21 +220,26 @@
 				)
 			: Promise.resolve('');
 
-		timeItAsync(
-			`render map ${newPngDataUrlRequestId}-${newZoomedPngDataUrlRequestId}`,
-			async () => {
-				let newPngDataUrl = await newPngDataUrlPromise;
-				if (newPngDataUrlRequestId === pngDataUrlRequestId) {
-					pngDataUrl = newPngDataUrl;
-				}
-				let newZoomedPngDataUrl = await newZoomedPngDataUrlPromise;
-				if (newZoomedPngDataUrlRequestId === zoomedPngDataUrlRequestId) {
-					lastRenderedTransform = newRenderedTransform;
-					lastRenderedTransformPngDataUrl = newZoomedPngDataUrl;
-					zoomedPngDataUrl = newZoomedPngDataUrl;
-				}
-			},
-		);
+		async function finalizeRender() {
+			let newPngDataUrl = await newPngDataUrlPromise;
+			if (newPngDataUrlRequestId === pngDataUrlRequestId) {
+				pngDataUrl = newPngDataUrl;
+			}
+			let newZoomedPngDataUrl = await newZoomedPngDataUrlPromise;
+			if (newZoomedPngDataUrlRequestId === zoomedPngDataUrlRequestId) {
+				lastRenderedTransform = newRenderedTransform;
+				lastRenderedTransformPngDataUrl = newZoomedPngDataUrl;
+				zoomedPngDataUrl = newZoomedPngDataUrl;
+			}
+		}
+		if ($debug) {
+			timeItAsync(
+				`render map ${newPngDataUrlRequestId}-${newZoomedPngDataUrlRequestId}`,
+				finalizeRender,
+			);
+		} else {
+			finalizeRender();
+		}
 	}
 
 	const renderOnTransformChange = debounce(() => renderMap(true), 500);

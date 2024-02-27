@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { afterUpdate, createEventDispatcher } from 'svelte';
-	import { writable } from 'svelte/store';
+	import debug from '../debug';
 	import { mapSettings } from '../mapSettings';
-	import { saveToWindow } from '../utils';
 	import BypassLinks from './BypassLinks.svelte';
 	import CountryBorders from './CountryBorders.svelte';
 	import CountryLabels from './CountryLabels.svelte';
@@ -24,9 +23,6 @@
 			src: url(${orbitronDataUrl});
 		}
 	</style>`;
-
-	const debug = writable(false);
-	saveToWindow('debug', debug);
 
 	const dispatch = createEventDispatcher();
 	afterUpdate(() => {
@@ -94,7 +90,7 @@
 			<TerraIncognita {data} />
 			<BypassLinks {data} {colors} />
 			<SystemIcons {data} {colors} />
-			<CountryLabels {data} debug={$debug} />
+			<CountryLabels {data} />
 			{#if $debug}
 				{#each data.galaxyBorderCircles as circle}
 					<circle
