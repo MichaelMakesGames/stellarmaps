@@ -19,7 +19,8 @@
       "identifier": "fs:scope"
     },
     "dialog:allow-open",
-    "dialog:allow-save"
+    "dialog:allow-save",
+    "webview:allow-internal-toggle-devtools"
   ],
   "platforms": [
     "linux",
