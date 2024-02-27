@@ -37,7 +37,7 @@ export default function processCircularGalaxyBorders(
 		systems: Set<number>;
 		outliers: Set<number>;
 		bBox: { xMin: number; xMax: number; yMin: number; yMax: number };
-		points: turf.FeatureCollection<turf.Point>;
+		nonOutlierPoints: turf.FeatureCollection<turf.Point>;
 	}[] = [];
 
 	for (const go of Object.values(gameState.galactic_object)) {
@@ -51,7 +51,9 @@ export default function processCircularGalaxyBorders(
 				yMin: getSystemCoordinates(go.id)[1],
 				yMax: getSystemCoordinates(go.id)[1],
 			},
-			points: turf.featureCollection([turf.point(pointToGeoJSON(getSystemCoordinates(go.id)))]),
+			nonOutlierPoints: turf.featureCollection([
+				turf.point(pointToGeoJSON(getSystemCoordinates(go.id))),
+			]),
 		};
 		const edge = go.hyperlane.map((hyperlane) => hyperlane.to);
 		const edgeSet = new Set(edge);
@@ -62,12 +64,16 @@ export default function processCircularGalaxyBorders(
 			const next = gameState.galactic_object[nextId];
 			if (next != null && !cluster.systems.has(nextId)) {
 				cluster.systems.add(nextId);
-				cluster.points.features.push(turf.point(pointToGeoJSON(getSystemCoordinates(nextId))));
 				const nextHyperlanes = next.hyperlane;
 				const isOutlier =
 					nextHyperlanes.length === 1 &&
 					nextHyperlanes[0] != null &&
 					nextHyperlanes[0].length > OUTLIER_DISTANCE;
+				if (!isOutlier) {
+					cluster.nonOutlierPoints.features.push(
+						turf.point(pointToGeoJSON(getSystemCoordinates(nextId))),
+					);
+				}
 				if (isOutlier) {
 					cluster.outliers.add(nextId);
 				} else {
@@ -156,7 +162,7 @@ export default function processCircularGalaxyBorders(
 				cx = 0;
 				cy = 0;
 			} else {
-				const hull = turf.convex(cluster.points);
+				const hull = turf.convex(cluster.nonOutlierPoints);
 				if (hull) {
 					const hullCenter = turf.centerOfMass(hull);
 					const point = pointFromGeoJSON(hullCenter.geometry.coordinates);
