@@ -64,7 +64,10 @@ export default function processCircularGalaxyBorders(
 				cluster.systems.add(nextId);
 				cluster.points.features.push(turf.point(pointToGeoJSON(getSystemCoordinates(nextId))));
 				const nextHyperlanes = next.hyperlane;
-				const isOutlier = nextHyperlanes[0] != null && nextHyperlanes[0].length > OUTLIER_DISTANCE;
+				const isOutlier =
+					nextHyperlanes.length === 1 &&
+					nextHyperlanes[0] != null &&
+					nextHyperlanes[0].length > OUTLIER_DISTANCE;
 				if (isOutlier) {
 					cluster.outliers.add(nextId);
 				} else {
