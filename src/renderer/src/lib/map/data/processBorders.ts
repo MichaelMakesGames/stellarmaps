@@ -349,9 +349,11 @@ export default function processBorders(
 				? ''
 				: multiPolygonToPath(smoothedInnerBorderGeoJSON, settings.borderStroke.smoothing);
 		const borderOnlyGeoJSON =
-			smoothedInnerBorderGeoJSON == null || smoothedOuterBorderGeoJSON == null
-				? smoothedOuterBorderGeoJSON
-				: turf.difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
+			settings.borderStroke.width === 0
+				? null
+				: smoothedInnerBorderGeoJSON == null || smoothedOuterBorderGeoJSON == null
+					? smoothedOuterBorderGeoJSON
+					: turf.difference(smoothedOuterBorderGeoJSON, smoothedInnerBorderGeoJSON);
 		border.borderPath = borderOnlyGeoJSON
 			? multiPolygonToPath(borderOnlyGeoJSON, settings.borderStroke.smoothing)
 			: '';
