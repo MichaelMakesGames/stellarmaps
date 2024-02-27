@@ -260,12 +260,14 @@
 		map.$destroy();
 	});
 
+	const TOOLTIP_MAX_DISTANCE = 32;
+	const TOOLTIP_AUTOCLOSE_DISTANCE = TOOLTIP_MAX_DISTANCE * 2;
 	let tooltip: {
 		x: number;
 		y: number;
 		system: GalacticObject;
 	} | null = null;
-	function onMouseMove(e: MouseEvent) {
+	function onMouseMoveInner(e: MouseEvent) {
 		if (dataOrNull != null && !resizing && !zooming) {
 			let viewBoxWidth = 1000;
 			let viewBoxHeight = 1000;
@@ -299,7 +301,10 @@
 
 					if (settings.terraIncognita && !processedSystem.systemIsKnown) {
 						tooltip = null;
-					} else if (Math.hypot(tooltipPoint[0] - e.offsetX, tooltipPoint[1] - e.offsetY) > 32) {
+					} else if (
+						Math.hypot(tooltipPoint[0] - e.offsetX, tooltipPoint[1] - e.offsetY) >
+						TOOLTIP_MAX_DISTANCE
+					) {
 						tooltip = null;
 					} else {
 						tooltip = {
@@ -311,6 +316,16 @@
 				}
 			}
 		}
+	}
+	const onMouseMoveInnerDebounced = debounce(onMouseMoveInner, 50);
+	function onMouseMove(e: MouseEvent) {
+		if (
+			tooltip &&
+			Math.hypot(tooltip.x - e.offsetX, tooltip.y - e.offsetY) > TOOLTIP_AUTOCLOSE_DISTANCE
+		) {
+			tooltip = null;
+		}
+		onMouseMoveInnerDebounced(e);
 	}
 </script>
 
@@ -370,13 +385,17 @@
 				</div>
 			</div>
 		{/await}
+		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 		<svg
 			bind:this={svg}
 			width={outputWidth}
 			height={outputHeight}
 			viewBox="0 0 {outputWidth} {outputHeight}"
 			role="presentation"
-			on:mousemove={debounce(onMouseMove, 100)}
+			on:mousemove={onMouseMove}
+			on:mouseout={() => {
+				tooltip = null;
+			}}
 			class="h-full w-full"
 		>
 			<g bind:this={g}>
