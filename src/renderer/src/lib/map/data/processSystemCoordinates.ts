@@ -2,7 +2,11 @@ import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { positionToString } from './utils';
 
-export default function processSystemCoordinates(gameState: GameState, settings: MapSettings) {
+export const processSystemCoordinatesDeps = ['alignStarsToGrid'] satisfies (keyof MapSettings)[];
+export default function processSystemCoordinates(
+	gameState: GameState,
+	settings: Pick<MapSettings, (typeof processSystemCoordinatesDeps)[number]>,
+) {
 	const systemIdToCoordinates: Record<number, [number, number]> = {};
 	const usedCoordinates = new Set(
 		...Object.values(gameState.galactic_object).map((go) =>

@@ -4,9 +4,16 @@ import { isDefined } from '../../utils';
 import type processSystemOwnership from './processSystemOwnership';
 import { getCountryColors } from './utils';
 
+export const processSystemsDeps = [
+	'unionMode',
+	'unionFederations',
+	'unionSubjects',
+	'unionFederationsColor',
+] satisfies (keyof MapSettings)[];
+
 export default function processSystems(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processSystemsDeps)[number]>,
 	systemIdToCountry: ReturnType<typeof processSystemOwnership>['systemIdToCountry'],
 	knownCountries: Set<number>,
 	knownSystems: Set<number>,

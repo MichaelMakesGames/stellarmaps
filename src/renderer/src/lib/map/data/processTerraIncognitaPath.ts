@@ -2,9 +2,11 @@ import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 import { applyGalaxyBoundary, multiPolygonToPath, type PolygonalFeature } from './utils';
 
+export const processTerraIncognitaPathDeps = ['borderStroke'] satisfies (keyof MapSettings)[];
+
 export default function processTerraIncognitaPath(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processTerraIncognitaPathDeps)[number]>,
 	terraIncognitaGeojson: PolygonalFeature | null,
 	galaxyBorderCirclesGeoJSON: PolygonalFeature | null,
 ) {

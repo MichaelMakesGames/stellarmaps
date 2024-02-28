@@ -1,7 +1,14 @@
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../mapSettings';
 
-export default function processTerraIncognita(gameState: GameState, settings: MapSettings) {
+export const processTerraIncognitaDeps = [
+	'terraIncognitaPerspectiveCountry',
+] satisfies (keyof MapSettings)[];
+
+export default function processTerraIncognita(
+	gameState: GameState,
+	settings: Pick<MapSettings, (typeof processTerraIncognitaDeps)[number]>,
+) {
 	const terraIncognitaPerspectiveCountryId =
 		settings.terraIncognitaPerspectiveCountry === 'player'
 			? gameState.player.filter((p) => gameState.country[p.country])[0]?.country

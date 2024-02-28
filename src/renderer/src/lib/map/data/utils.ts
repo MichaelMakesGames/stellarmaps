@@ -26,7 +26,10 @@ export function inverseX([x, y]: [number, number]): [number, number] {
 export function getUnionLeaderId(
 	countryId: number,
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<
+		MapSettings,
+		'unionMode' | 'unionFederations' | 'unionSubjects' | 'unionFederationsColor'
+	>,
 	values: ('joinedBorders' | 'separateBorders' | 'off')[],
 ): number {
 	const isIncludedValue = (value: string) => (values as string[]).includes(value);
@@ -58,7 +61,11 @@ export function getUnionLeaderId(
 	}
 }
 
-export function isUnionLeader(countryId: number, gameState: GameState, settings: MapSettings) {
+export function isUnionLeader(
+	countryId: number,
+	gameState: GameState,
+	settings: Pick<MapSettings, 'unionMode' | 'unionFederations' | 'unionSubjects'>,
+) {
 	const country = gameState.country[countryId];
 	if (country == null) return false;
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
@@ -133,7 +140,14 @@ export function getPolygons(
 	});
 }
 
-export function getCountryColors(countryId: number, gameState: GameState, settings: MapSettings) {
+export function getCountryColors(
+	countryId: number,
+	gameState: GameState,
+	settings: Pick<
+		MapSettings,
+		'unionMode' | 'unionFederations' | 'unionSubjects' | 'unionFederationsColor'
+	>,
+) {
 	return gameState.country[
 		getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
 	]?.flag?.colors;
@@ -160,7 +174,7 @@ export function getAllPositionArrays(geoJSON: PolygonalFeatureCollection | Polyg
 
 export function createHyperlanePaths(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, 'hyperlaneMetroStyle'>,
 	relayMegastructures: Set<number>,
 	systemIdToUnionLeader: Record<number, number>,
 	owner: null | number,

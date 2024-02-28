@@ -5,9 +5,16 @@ import type { MapSettings } from '../../mapSettings';
 import { getOrSetDefault } from '../../utils';
 import { getFrontierSectorPseudoId, getUnionLeaderId, pointToGeoJSON } from './utils';
 
+export const processSystemOwnershipDeps = [
+	'unionMode',
+	'unionFederations',
+	'unionSubjects',
+	'unionFederationsColor',
+] satisfies (keyof MapSettings)[];
+
 export default function processSystemOwnership(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processSystemOwnershipDeps)[number]>,
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	const fleetToCountry: Record<string, number> = {};

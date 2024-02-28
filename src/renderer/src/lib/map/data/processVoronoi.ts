@@ -5,9 +5,17 @@ import { getOrSetDefault } from '../../utils';
 import type { BorderCircle } from './processCircularGalaxyBorder';
 
 const MAX_BORDER_DISTANCE = 700; // systems further from the center than this will not have country borders
+
+export const processVoronoiDeps = [
+	'hyperlaneSensitiveBorders',
+	'voronoiGridSize',
+	'alignStarsToGrid',
+	'circularGalaxyBorders',
+] satisfies (keyof MapSettings)[];
+
 export default function processVoronoi(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processVoronoiDeps)[number]>,
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 	galaxyBorderCircles: BorderCircle[],
 ) {

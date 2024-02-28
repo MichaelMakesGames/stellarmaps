@@ -21,9 +21,15 @@ import {
 
 type TopojsonPolygonal = MultiPolygon | Polygon;
 
+export const processPolygonsDeps = [
+	'claimVoidMaxSize',
+	'claimVoidBorderThreshold',
+	'voronoiGridSize',
+] satisfies (keyof MapSettings)[];
+
 export default function processPolygons(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processPolygonsDeps)[number]>,
 	voronoi: Voronoi<[number, number]>,
 	systemIdToVoronoiIndexes: Record<number, number[]>,
 	sectorToSystemIds: Record<number, Set<number>>,

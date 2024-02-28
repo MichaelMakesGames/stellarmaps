@@ -28,9 +28,14 @@ export interface BorderCircle {
 	isMainCluster: boolean;
 	systems: Set<number>;
 }
+
+export const processCircularGalaxyBordersDeps = [
+	'circularGalaxyBorders',
+] satisfies (keyof MapSettings)[];
+
 export default function processCircularGalaxyBorders(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processCircularGalaxyBordersDeps)[number]>,
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 ) {
 	const clusters: {

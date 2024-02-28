@@ -26,9 +26,20 @@ import {
 	type PolygonalFeature,
 } from './utils';
 
+export const processBordersDeps = [
+	'unionMode',
+	'unionFederations',
+	'unionSubjects',
+	'unionFederationsColor',
+	'hyperlaneMetroStyle',
+	'borderStroke',
+	'unionBorderStroke',
+	'sectorBorderStroke',
+] satisfies (keyof MapSettings)[];
+
 export default function processBorders(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processBordersDeps)[number]>,
 	unionLeaderToGeojson: Record<number, PolygonalFeature>,
 	countryToGeojson: Record<number, PolygonalFeature>,
 	sectorToGeojson: Record<number, PolygonalFeature>,

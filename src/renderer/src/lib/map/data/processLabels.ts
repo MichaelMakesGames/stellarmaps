@@ -15,9 +15,24 @@ import {
 	type PolygonalFeature,
 } from './utils';
 
+export const processLabelsDeps = [
+	'unionMode',
+	'unionFederations',
+	'unionSubjects',
+	'borderStroke',
+	'labelsAvoidHoles',
+	'countryEmblems',
+	'countryEmblemsMinSize',
+	'countryEmblemsMaxSize',
+	'countryNames',
+	'countryNamesFont',
+	'countryNamesMinSize',
+	'countryNamesMaxSize',
+] satisfies (keyof MapSettings)[];
+
 export default function processLabels(
 	gameState: GameState,
-	settings: MapSettings,
+	settings: Pick<MapSettings, (typeof processLabelsDeps)[number]>,
 	countryToGeojson: Record<number, PolygonalFeature>,
 	unionLeaderToUnionMembers: Record<number, Set<number>>,
 	borders: ReturnType<typeof processBorders>,
