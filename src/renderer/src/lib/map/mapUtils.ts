@@ -1,6 +1,7 @@
 import { lab } from 'd3-color';
 import { interpolateRgb } from 'd3-interpolate';
 import type { SVGAttributes } from 'svelte/elements';
+import { ADDITIONAL_COLORS } from '../colors';
 import type {
 	ColorSetting,
 	ColorSettingAdjustment,
@@ -148,4 +149,16 @@ export function getFillColorAttributes(resolveColorOptions: Parameters<typeof re
 		fill: color.formatRgb(),
 		'fill-opacity': opacity,
 	};
+}
+
+export function getBackgroundColor(
+	colors: Record<string, string> | null | undefined,
+	mapSettings: MapSettings | null | undefined,
+) {
+	if (!colors || !mapSettings) return ADDITIONAL_COLORS.very_black;
+	return resolveColor({
+		mapSettings: mapSettings,
+		colors: colors,
+		colorStack: [mapSettings.backgroundColor],
+	});
 }

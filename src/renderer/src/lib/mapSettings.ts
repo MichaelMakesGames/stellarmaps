@@ -18,7 +18,8 @@ type NumberOptionalMapSettings =
 	| 'countryEmblemsMinSize'
 	| 'countryNamesMaxSize'
 	| 'countryNamesMinSize'
-	| 'claimVoidMaxSize';
+	| 'claimVoidMaxSize'
+	| 'starScapeStarsCount';
 
 type StringMapSettings =
 	| 'labelsAvoidHoles'
@@ -39,7 +40,11 @@ type BooleanMapSettings =
 	| 'hyperlaneMetroStyle'
 	| 'terraIncognita'
 	| 'unionLeaderUnderline'
-	| 'unionMode';
+	| 'unionMode'
+	| 'starScapeDust'
+	| 'starScapeNebula'
+	| 'starScapeCore'
+	| 'starScapeStars';
 
 const colorSettingSchema = z.object({
 	color: z.string(),
@@ -68,7 +73,13 @@ type ColorMapSettings =
 	| 'unownedHyperRelayColor'
 	| 'wormholeStrokeColor'
 	| 'lGateStrokeColor'
-	| 'shroudTunnelStrokeColor';
+	| 'shroudTunnelStrokeColor'
+	| 'starScapeDustColor'
+	| 'starScapeNebulaColor'
+	| 'starScapeNebulaAccentColor'
+	| 'starScapeCoreColor'
+	| 'starScapeCoreAccentColor'
+	| 'starScapeStarsColor';
 
 const strokeSettingSchema = z.object({
 	enabled: z.boolean(),
@@ -765,6 +776,87 @@ export const mapSettingConfig: MapSettingGroup[] = [
 			},
 		],
 	},
+	{
+		id: 'starScape',
+		name: 'Starscape (experimental)',
+		settings: [
+			{
+				id: 'starScapeDust',
+				name: 'Dust',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeDustColor',
+				name: 'Dust Color',
+				type: 'color',
+				allowedDynamicColors: [],
+
+				hideIf: (settings) => !settings.starScapeDust,
+			},
+			{
+				id: 'starScapeNebula',
+				name: 'Nebulas',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeNebulaColor',
+				name: 'Nebula Color',
+				type: 'color',
+				allowedDynamicColors: [],
+
+				hideIf: (settings) => !settings.starScapeNebula,
+			},
+			{
+				id: 'starScapeNebulaAccentColor',
+				name: 'Nebula Accent Color',
+				type: 'color',
+				allowedDynamicColors: [],
+
+				hideIf: (settings) => !settings.starScapeNebula,
+			},
+			{
+				id: 'starScapeCore',
+				name: 'Core',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeCoreColor',
+				name: 'Core Color',
+				type: 'color',
+				allowedDynamicColors: [],
+
+				hideIf: (settings) => !settings.starScapeCore,
+			},
+			{
+				id: 'starScapeCoreAccentColor',
+				name: 'Core Accent Color',
+				type: 'color',
+				allowedDynamicColors: [],
+
+				hideIf: (settings) => !settings.starScapeCore,
+			},
+			{
+				id: 'starScapeStars',
+				name: 'Stars',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeStarsColor',
+				name: 'Stars Color',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.starScapeStars,
+			},
+			{
+				id: 'starScapeStarsCount',
+				name: 'Star Count',
+				type: 'number',
+				min: 0,
+				step: 1,
+				hideIf: (settings) => !settings.starScapeStars,
+			},
+		],
+	},
 ];
 
 const defaultMapSettings: MapSettings = {
@@ -970,6 +1062,41 @@ const defaultMapSettings: MapSettings = {
 	hyperlaneSensitiveBorders: true,
 	claimVoidBorderThreshold: 0.6,
 	claimVoidMaxSize: 200,
+	starScapeDust: false,
+	starScapeDustColor: {
+		color: 'ochre_brown',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.5 }],
+	},
+	starScapeNebula: false,
+	starScapeNebulaColor: {
+		color: 'bright_purple',
+		colorAdjustments: [{ type: 'OPACITY', value: 1 }],
+	},
+	starScapeNebulaAccentColor: {
+		color: 'intense_purple',
+		colorAdjustments: [{ type: 'OPACITY', value: 1 }],
+	},
+	starScapeCore: false,
+	starScapeCoreColor: {
+		color: 'ochre_brown',
+		colorAdjustments: [
+			{ type: 'OPACITY', value: 1 },
+			{ type: 'LIGHTEN', value: 1 },
+		],
+	},
+	starScapeCoreAccentColor: {
+		color: 'off_white',
+		colorAdjustments: [{ type: 'OPACITY', value: 1 }],
+	},
+	starScapeStars: false,
+	starScapeStarsColor: {
+		color: 'desert_yellow',
+		colorAdjustments: [
+			{ type: 'OPACITY', value: 1 },
+			{ type: 'LIGHTEN', value: 1 },
+		],
+	},
+	starScapeStarsCount: 5000,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

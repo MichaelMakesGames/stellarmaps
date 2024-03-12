@@ -12,6 +12,7 @@
 	import ApplyChangesButton from './ApplyChangesButton.svelte';
 	import { gameStatePromise, gameStateSchema } from './GameState';
 	import MapSettingControl from './MapSettingControl.svelte';
+	import debug from './debug';
 	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import { localizeText } from './map/data/locUtils';
 	import {
@@ -129,9 +130,10 @@
 				const promise = wait(100)
 					.then(() => timeItAsync('loadSave', stellarMapsApi.loadSave, path))
 					.then((unvalidated) =>
-						timeIt('validateSave', () =>
-							gameStateSchema.parse(saveToWindow('unvalidatedGameState', unvalidated)),
-						),
+						timeIt('validateSave', () => {
+							if ($debug) saveToWindow('unvalidatedGameState', unvalidated);
+							return gameStateSchema.parse(unvalidated);
+						}),
 					);
 				promise.then(async (gameState) => {
 					Promise.all(

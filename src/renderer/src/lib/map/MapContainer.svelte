@@ -23,7 +23,8 @@
 	import Map from './Map.svelte';
 	import MapTooltip from './MapTooltip.svelte';
 	import processMapData from './data/processMapData';
-	import { resolveColor } from './mapUtils';
+	import { getBackgroundColor } from './mapUtils';
+	import processStarScape from './starScape/renderStarScape';
 
 	const modalStore = getModalStore();
 
@@ -65,7 +66,7 @@
 			modalStore.trigger({
 				type: 'component',
 				component: 'export',
-				meta: { colors, mapData, svg: mapTarget.firstChild },
+				meta: { colors, mapData, gameState: gameStateOrNull, svg: mapTarget.firstChild },
 			});
 		});
 	}
@@ -102,6 +103,9 @@
 	let pngDataUrl = '';
 	let zoomedPngDataUrlRequestId: null | string = null;
 	let zoomedPngDataUrl = '';
+	let starScapeDataUrlRequestId: null | string = null;
+	let starScapeDataUrl = '';
+	let unzoomedStarScapeDataUrl = '';
 
 	const mapTarget = document.createElement('div');
 	const map = new Map({
@@ -139,6 +143,10 @@
 		zoomedPngDataUrl = '';
 		lastRenderedTransformPngDataUrl = '';
 		lastRenderedTransform = null;
+		starScapeDataUrl = '';
+		unzoomedStarScapeDataUrl = '';
+		lastRenderedTransformStarScapePngDataUrl = '';
+		lastRenderedTransformStarScape = null;
 		onResizeEnd();
 	});
 	$: if (container) {
@@ -152,6 +160,8 @@
 	let transform: ZoomTransform | null = null;
 	let lastRenderedTransform: ZoomTransform | null = null;
 	let lastRenderedTransformPngDataUrl = '';
+	let lastRenderedTransformStarScape: ZoomTransform | null = null;
+	let lastRenderedTransformStarScapePngDataUrl = '';
 	let zooming = false;
 	let endZooming = debounce(() => {
 		zooming = false;
@@ -162,6 +172,8 @@
 		endZooming();
 		zoomedPngDataUrl = '';
 		zoomedPngDataUrlRequestId = null;
+		starScapeDataUrl = '';
+		starScapeDataUrlRequestId = null;
 		transform = e.transform;
 		if (g) g.setAttribute('transform', e.transform.toString());
 	});
@@ -185,6 +197,8 @@
 		pngDataUrlRequestId = newPngDataUrlRequestId;
 		let newZoomedPngDataUrlRequestId = (Math.random() * 1000000).toFixed(0);
 		zoomedPngDataUrlRequestId = newZoomedPngDataUrlRequestId;
+		let newStarScapeDataUrlRequestId = (Math.random() * 1000000).toFixed(0);
+		starScapeDataUrlRequestId = newStarScapeDataUrlRequestId;
 
 		let width = 1000;
 		let height = 1000;
@@ -220,6 +234,22 @@
 				)
 			: Promise.resolve('');
 
+		const newStarScapeDataUrlPromise =
+			gameStateOrNull && colorsOrNull
+				? processStarScape(
+						gameStateOrNull,
+						$mapSettings,
+						colorsOrNull,
+						{
+							left,
+							top,
+							width,
+							height,
+						},
+						{ width: outputWidth, height: outputHeight },
+					)
+				: Promise.resolve('');
+
 		async function finalizeRender() {
 			let newPngDataUrl = await newPngDataUrlPromise;
 			if (newPngDataUrlRequestId === pngDataUrlRequestId) {
@@ -230,6 +260,18 @@
 				lastRenderedTransform = newRenderedTransform;
 				lastRenderedTransformPngDataUrl = newZoomedPngDataUrl;
 				zoomedPngDataUrl = newZoomedPngDataUrl;
+			}
+			let newStarScapeDataUrl = await newStarScapeDataUrlPromise;
+			if (newStarScapeDataUrlRequestId === starScapeDataUrlRequestId) {
+				if (newRenderedTransform == null) {
+					unzoomedStarScapeDataUrl = newStarScapeDataUrl;
+					lastRenderedTransformStarScapePngDataUrl = '';
+					starScapeDataUrl = '';
+				} else {
+					lastRenderedTransformStarScape = newRenderedTransform;
+					lastRenderedTransformStarScapePngDataUrl = newStarScapeDataUrl;
+					starScapeDataUrl = newStarScapeDataUrl;
+				}
 			}
 		}
 		if ($debug) {
@@ -248,13 +290,9 @@
 	}
 
 	$: bg =
-		colorsOrNull == null || dataOrNull == null
+		dataOrNull == null
 			? ADDITIONAL_COLORS.very_black
-			: resolveColor({
-					mapSettings: $mapSettings,
-					colors: colorsOrNull ?? {},
-					colorStack: [$mapSettings.backgroundColor],
-				});
+			: getBackgroundColor(colorsOrNull, $mapSettings);
 
 	onDestroy(() => {
 		map.$destroy();
@@ -398,11 +436,59 @@
 			}}
 			class="h-full w-full"
 		>
+			<g transform={transform?.toString()}>
+				{#if unzoomedStarScapeDataUrl}
+					<image
+						x="0"
+						y="0"
+						width={outputWidth}
+						height={outputHeight}
+						href={unzoomedStarScapeDataUrl}
+					/>
+				{/if}
+			</g>
 			<g bind:this={g}>
 				{#if pngDataUrl}
 					<image x="0" y="0" width={outputWidth} height={outputHeight} href={pngDataUrl} />
 				{/if}
 			</g>
+			{#if starScapeDataUrl}
+				<rect
+					x="0"
+					y="0"
+					width={outputWidth}
+					height={outputHeight}
+					fill={getBackgroundColor(colorsOrNull, $mapSettings)}
+				/>
+				<image x="0" y="0" width={outputWidth} height={outputHeight} href={starScapeDataUrl} />
+			{:else if lastRenderedTransformStarScapePngDataUrl}
+				<g transform={transform?.toString()}>
+					<rect
+						x="0"
+						y="0"
+						width={outputWidth}
+						height={outputHeight}
+						fill={getBackgroundColor(colorsOrNull, $mapSettings)}
+						transform={lastRenderedTransformStarScape
+							? `scale(${
+									1 / lastRenderedTransformStarScape.k
+								}) translate(${-lastRenderedTransformStarScape.x},${-lastRenderedTransformStarScape.y})`
+							: undefined}
+					/>
+					<image
+						x="0"
+						y="0"
+						width={outputWidth}
+						height={outputHeight}
+						href={lastRenderedTransformStarScapePngDataUrl}
+						transform={lastRenderedTransformStarScape
+							? `scale(${
+									1 / lastRenderedTransformStarScape.k
+								}) translate(${-lastRenderedTransformStarScape.x},${-lastRenderedTransformStarScape.y})`
+							: undefined}
+					/>
+				</g>
+			{/if}
 			{#if zoomedPngDataUrl}
 				<image x="0" y="0" width={outputWidth} height={outputHeight} href={zoomedPngDataUrl} />
 			{:else if lastRenderedTransformPngDataUrl}

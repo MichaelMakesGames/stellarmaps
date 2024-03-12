@@ -7,10 +7,21 @@ interface ConvertSvgToPngOptions {
 	height: number;
 	outputWidth: number;
 	outputHeight: number;
+	backgroundImageUrl?: string;
+	backgroundColor?: string;
 }
 export default async function convertSvgToPng(
 	svg: SVGElement,
-	{ left, top, width, height, outputWidth, outputHeight }: ConvertSvgToPngOptions,
+	{
+		left,
+		top,
+		width,
+		height,
+		outputWidth,
+		outputHeight,
+		backgroundImageUrl,
+		backgroundColor,
+	}: ConvertSvgToPngOptions,
 ) {
 	const canvas = document.createElement('canvas');
 	canvas.width = outputWidth;
@@ -19,6 +30,19 @@ export default async function convertSvgToPng(
 	if (ctx == null) {
 		throw new Error('no canvas ctx');
 	}
+
+	const bgImg = document.createElement('img');
+	bgImg.width = outputWidth;
+	bgImg.height = outputHeight;
+	bgImg.style.display = 'none';
+	document.body.append(bgImg);
+	const bgImgReady =
+		backgroundImageUrl == null
+			? Promise.resolve()
+			: new Promise<void>((resolve) => {
+					bgImg.addEventListener('load', () => resolve(), { once: true });
+				});
+	bgImg.src = backgroundImageUrl ?? '';
 
 	const img = document.createElement('img');
 	img.width = outputWidth;
@@ -32,6 +56,14 @@ export default async function convertSvgToPng(
 				// the data url images within the SVG haven't necessarily loaded at this point
 				// wait a bit to give them time to render
 				await wait(100);
+				if (backgroundColor != null) {
+					ctx.fillStyle = backgroundColor;
+					ctx.fillRect(0, 0, outputWidth, outputHeight);
+				}
+				if (backgroundImageUrl != null) {
+					await bgImgReady;
+					ctx.drawImage(bgImg, 0, 0);
+				}
 				ctx.drawImage(img, 0, 0);
 				canvas.toBlob(
 					async (b) => {
@@ -45,6 +77,7 @@ export default async function convertSvgToPng(
 					0.95,
 				);
 				document.body.removeChild(img);
+				document.body.removeChild(bgImg);
 				canvas.remove();
 			},
 			{ once: true },

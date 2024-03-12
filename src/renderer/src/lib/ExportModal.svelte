@@ -6,9 +6,11 @@
 		getToastStore,
 		localStorageStore,
 	} from '@skeletonlabs/skeleton';
+	import type { GameState } from './GameState';
 	import convertSvgToPng from './convertSvgToPng';
 	import type { MapData } from './map/data/processMapData';
-	import { getFillColorAttributes, resolveColor } from './map/mapUtils';
+	import { getBackgroundColor, getFillColorAttributes, resolveColor } from './map/mapUtils';
+	import processStarScape from './map/starScape/renderStarScape';
 	import { mapSettings } from './mapSettings';
 	import stellarMapsApi from './stellarMapsApi';
 	import { toastError } from './utils';
@@ -19,6 +21,7 @@
 	const svg: SVGGElement = $modalStore[0]?.meta?.svg;
 	const colors: Record<string, string> = $modalStore[0]?.meta?.colors;
 	const mapData: MapData = $modalStore[0]?.meta?.mapData;
+	const gameState: GameState = $modalStore[0]?.meta?.gameState;
 
 	const defaultExportSettings = {
 		lockAspectRatio: true,
@@ -95,6 +98,21 @@
 	}
 
 	async function exportPng() {
+		const backgroundImageUrl = await processStarScape(
+			gameState,
+			$mapSettings,
+			colors,
+			{
+				left: mapLeft,
+				top: mapTop,
+				width: mapWidth,
+				height: mapHeight,
+			},
+			{
+				width: imageWidth,
+				height: imageHeight,
+			},
+		);
 		const buffer = await convertSvgToPng(svg, {
 			left: mapLeft,
 			top: mapTop,
@@ -102,6 +120,8 @@
 			height: mapHeight,
 			outputWidth: imageWidth,
 			outputHeight: imageHeight,
+			backgroundImageUrl,
+			backgroundColor: getBackgroundColor(colors, $mapSettings),
 		}).then((blob) => blob.arrayBuffer());
 		const savePath = await stellarMapsApi.dialog.save({
 			defaultPath: await stellarMapsApi.path.join(
@@ -136,12 +156,44 @@
 		svg.setAttribute('width', imageWidth.toString());
 		svg.setAttribute('height', imageHeight.toString());
 		svg.setAttribute('viewBox', `${mapLeft} ${mapTop} ${mapWidth} ${mapHeight}`);
-		const bgRect = svg.firstChild as SVGRectElement;
+
+		const bgImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+		bgImage.setAttribute('x', mapLeft.toString());
+		bgImage.setAttribute('y', mapTop.toString());
+		bgImage.setAttribute('width', mapWidth.toString());
+		bgImage.setAttribute('height', mapHeight.toString());
+		bgImage.setAttribute(
+			'xlink:href',
+			await processStarScape(
+				gameState,
+				$mapSettings,
+				colors,
+				{
+					left: mapLeft,
+					top: mapTop,
+					width: mapWidth,
+					height: mapHeight,
+				},
+				{
+					width: imageWidth,
+					height: imageHeight,
+				},
+			),
+		);
+		svg.prepend(bgImage);
+
+		const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
 		bgRect.setAttribute('x', mapLeft.toString());
 		bgRect.setAttribute('y', mapTop.toString());
 		bgRect.setAttribute('width', mapWidth.toString());
 		bgRect.setAttribute('height', mapHeight.toString());
+		bgRect.setAttribute('fill', getBackgroundColor(colors, $mapSettings));
+		svg.prepend(bgRect);
+
 		const svgString = svg.outerHTML;
+		svg.removeChild(bgImage);
+		svg.removeChild(bgRect);
+
 		const savePath = await stellarMapsApi.dialog.save({
 			defaultPath: await stellarMapsApi.path.join(
 				await stellarMapsApi.path.pictureDir(),

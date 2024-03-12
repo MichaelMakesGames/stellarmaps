@@ -11,7 +11,6 @@
 	import TerraIncognita from './TerraIncognita.svelte';
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
 	import type { MapData } from './data/processMapData';
-	import { resolveColor } from './mapUtils';
 
 	export let id: string = '';
 	export let data: null | MapData;
@@ -31,19 +30,6 @@
 </script>
 
 <svg {id} xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-	<rect
-		x="-1000"
-		y="-1000"
-		width="2000"
-		height="2000"
-		fill={colors
-			? resolveColor({
-					mapSettings: $mapSettings,
-					colors,
-					colorStack: [$mapSettings.backgroundColor],
-				})
-			: 'rgb(17,17,17)'}
-	/>
 	{@html fontFace}
 	<defs>
 		{#if data}

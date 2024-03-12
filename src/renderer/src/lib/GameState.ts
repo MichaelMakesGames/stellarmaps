@@ -206,6 +206,24 @@ const federationSchema = z.object({
  */
 export type Federation = WithId<z.infer<typeof federationSchema>>;
 
+const nebulaSchema = z
+	.object({
+		radius: z.number(),
+		galactic_object: z.number().optional(),
+		$multiKeys: z.object({ galactic_object: preprocessedArray(z.number()).optional() }).optional(),
+	})
+	.transform((obj) => ({
+		...obj,
+		galactic_object: (obj.galactic_object == null ? [] : [obj.galactic_object]).concat(
+			obj.$multiKeys?.galactic_object ?? [],
+		),
+	}));
+
+/**
+ * @public
+ */
+export type Nebula = z.infer<typeof nebulaSchema>;
+
 function addIds<T>(db: Record<number, T>): Record<number, WithId<T>> {
 	return Object.fromEntries(
 		Object.entries(db).map(([id, obj]) => [id, { ...obj, id: parseInt(id) }]),
@@ -215,20 +233,27 @@ function stellarisDb<T extends z.ZodType>(schema: T) {
 	return z.record(z.coerce.number(), schema).default({}).transform(addIds);
 }
 
-export const gameStateSchema = z.object({
-	galactic_object: stellarisDb(galacticObjectSchema),
-	country: stellarisDb(countrySchema),
-	ships: stellarisDb(shipSchema),
-	fleet: stellarisDb(fleetSchema),
-	starbase_mgr: z.object({ starbases: stellarisDb(starbaseSchema) }).default({ starbases: {} }),
-	bypasses: stellarisDb(bypassSchema),
-	megastructures: stellarisDb(megastructureSchema),
-	sectors: stellarisDb(sectorSchema),
-	federation: stellarisDb(federationSchema),
-	player: preprocessedArray(z.object({ name: z.string(), country: z.number() })),
-	galaxy: z.object({ shape: z.string() }),
-	planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
-});
+export const gameStateSchema = z
+	.object({
+		galactic_object: stellarisDb(galacticObjectSchema),
+		country: stellarisDb(countrySchema),
+		ships: stellarisDb(shipSchema),
+		fleet: stellarisDb(fleetSchema),
+		starbase_mgr: z.object({ starbases: stellarisDb(starbaseSchema) }).default({ starbases: {} }),
+		bypasses: stellarisDb(bypassSchema),
+		megastructures: stellarisDb(megastructureSchema),
+		sectors: stellarisDb(sectorSchema),
+		federation: stellarisDb(federationSchema),
+		player: preprocessedArray(z.object({ name: z.string(), country: z.number() })),
+		galaxy: z.object({ shape: z.string(), core_radius: z.number() }),
+		planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
+		nebula: nebulaSchema.optional(),
+		$multiKeys: z.object({ nebula: preprocessedArray(nebulaSchema).optional() }).optional(),
+	})
+	.transform((obj) => ({
+		...obj,
+		nebula: (obj.nebula == null ? [] : [obj.nebula]).concat(obj.$multiKeys?.nebula ?? []),
+	}));
 
 /**
  * @public
