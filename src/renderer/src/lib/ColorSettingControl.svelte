@@ -14,12 +14,22 @@
 	export let config: MapSettingConfigColor;
 
 	$: options = [...colorOptions, ...$colorDynamicOptions];
-	$: groups = Array.from(new Set(options.map((option) => option.group).filter(isDefined)));
+	$: groups = Array.from(
+		new Set(
+			options
+				.map((option) => option.group)
+				.filter(isDefined)
+				.filter(
+					// don't show dynamic colors group if no dynamic colors are allowed
+					(group) => !(group === 'Dynamic Colors' && config.allowedDynamicColors?.length === 0),
+				),
+		),
+	);
 	$: selectValue = options.find((option) => option.id === value.color)?.id;
 
 	function filterAllowedOption(option: SelectOption) {
 		if (option.group !== 'Dynamic Colors') return true;
-		if (!config.allowedDynamicColors) return true;
+		if (config.allowedDynamicColors == null) return true;
 		return (config.allowedDynamicColors as string[]).includes(option.id);
 	}
 </script>
