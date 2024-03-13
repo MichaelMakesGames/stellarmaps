@@ -13,7 +13,7 @@
 		const points = R.range(0, n).map((i) =>
 			pointOnCircle(i / n - 0.25 - (flatTop ? 0.5 / n : 0), 90),
 		);
-		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`))} z`;
+		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`)).join(' ')} z`;
 	}
 
 	function makeStarPath(n: number) {
@@ -21,7 +21,7 @@
 			pointOnCircle(i / n - 0.25, 90),
 			pointOnCircle((i * 2 + 1) / (n * 2) - 0.25, 30),
 		]);
-		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`))} z`;
+		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`)).join(' ')} z`;
 	}
 </script>
 
