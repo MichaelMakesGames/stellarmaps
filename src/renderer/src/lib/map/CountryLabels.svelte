@@ -52,7 +52,7 @@
 				fill="transparent"
 			/>
 		{/if}
-		{#if textWidth && textHeight && label.name}
+		{#if textWidth && textHeight && label.primaryName}
 			<text
 				x={point[0]}
 				y={point[1] + (emblemHeight ? textHeight / 2 : 0)}
@@ -68,7 +68,23 @@
 					: ''}
 				style:text-shadow="0px 0px 3px black"
 			>
-				{label.name}
+				{label.primaryName}
+			</text>
+		{/if}
+		{#if textWidth && textHeight && label.secondaryName}
+			<text
+				x={point[0]}
+				y={point[1] +
+					(emblemHeight ? textHeight / 2 : 0) +
+					textHeight * ($lastProcessedMapSettings.countryNamesSecondaryRelativeSize ?? 1) * 1.25}
+				text-anchor="middle"
+				dominant-baseline="middle"
+				font-size={textHeight * ($lastProcessedMapSettings.countryNamesSecondaryRelativeSize ?? 1)}
+				fill="white"
+				font-family={$lastProcessedMapSettings.countryNamesFont}
+				style:text-shadow="0px 0px 3px black"
+			>
+				{label.secondaryName}
 			</text>
 		{/if}
 	{/each}

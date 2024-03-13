@@ -18,11 +18,13 @@ type NumberOptionalMapSettings =
 	| 'countryEmblemsMinSize'
 	| 'countryNamesMaxSize'
 	| 'countryNamesMinSize'
+	| 'countryNamesSecondaryRelativeSize'
 	| 'claimVoidMaxSize'
 	| 'starScapeStarsCount';
 
 type StringMapSettings =
 	| 'labelsAvoidHoles'
+	| 'countryNamesType'
 	| 'countryNamesFont'
 	| 'unionFederations'
 	| 'unionFederationsColor'
@@ -418,6 +420,30 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				type: 'toggle',
 			},
 			{
+				id: 'countryNamesType',
+				name: 'Name Type',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [
+					{
+						id: 'countryOnly',
+						name: 'Country Name Only',
+					},
+					{
+						id: 'playerOnly',
+						name: 'Player Name Only',
+					},
+					{
+						id: 'countryThenPlayer',
+						name: 'Country then Player Name',
+					},
+					{
+						id: 'playerThenCountry',
+						name: 'Player then Country Name',
+					},
+				],
+			},
+			{
 				id: 'countryNamesMinSize',
 				name: 'Name Min Size',
 				requiresReprocessing: true,
@@ -436,6 +462,16 @@ export const mapSettingConfig: MapSettingGroup[] = [
 				step: 1,
 				optional: true,
 				hideIf: (settings) => !settings.countryNames,
+			},
+			{
+				id: 'countryNamesSecondaryRelativeSize',
+				name: 'Secondary Name Relative Size',
+				type: 'number',
+				min: 0,
+				step: 0.05,
+				optional: true,
+				hideIf: (settings) =>
+					!['countryThenPlayer', 'playerThenCountry'].includes(settings.countryNamesType),
 			},
 			{
 				id: 'countryNamesFont',
@@ -908,8 +944,10 @@ const defaultMapSettings: MapSettings = {
 		colorAdjustments: [{ type: 'OPACITY', value: 0.15 }],
 	},
 	countryNames: true,
+	countryNamesType: 'countryOnly',
 	countryNamesMinSize: 5,
 	countryNamesMaxSize: null,
+	countryNamesSecondaryRelativeSize: 0.75,
 	countryNamesFont: 'Orbitron',
 	countryEmblems: true,
 	countryEmblemsMinSize: null,
@@ -1310,7 +1348,7 @@ export function isColorDynamic(color: string, settings: MapSettings): boolean {
 	);
 }
 
-function validateAndResetSettings(unvalidatedSettings: MapSettings): MapSettings {
+export function validateAndResetSettings(unvalidatedSettings: MapSettings): MapSettings {
 	const settings = { ...unvalidatedSettings };
 	const configs = mapSettingConfig.flatMap((category) => category.settings);
 	for (const key of Object.keys(settings)) {

@@ -25,6 +25,7 @@ export const processLabelsDeps = [
 	'countryEmblemsMinSize',
 	'countryEmblemsMaxSize',
 	'countryNames',
+	'countryNamesType',
 	'countryNamesFont',
 	'countryNamesMinSize',
 	'countryNamesMaxSize',
@@ -54,11 +55,36 @@ export default function processLabels(
 				}),
 			);
 	const labels = idGeojsonPairs.map(([countryId, geojson]) => {
-		const name = countryNames[countryId] ?? '';
+		const countryName = countryNames[countryId] ?? '';
+		const playerName = gameState.player.find((player) => player.country === countryId)?.name ?? '';
+		let primaryName = '';
+		let secondaryName = '';
+		switch (settings.countryNamesType) {
+			case 'countryOnly': {
+				primaryName = countryName;
+				break;
+			}
+			case 'playerOnly': {
+				primaryName = playerName;
+				break;
+			}
+			case 'countryThenPlayer': {
+				primaryName = countryName;
+				secondaryName = playerName;
+				break;
+			}
+			case 'playerThenCountry': {
+				primaryName = playerName !== '' ? playerName : countryName;
+				secondaryName = playerName !== '' ? countryName : '';
+				break;
+			}
+		}
 		const country = gameState.country[countryId];
 
 		const textAspectRatio =
-			name && settings.countryNames ? getTextAspectRatio(name, settings.countryNamesFont) : 0;
+			primaryName && settings.countryNames
+				? getTextAspectRatio(primaryName, settings.countryNamesFont)
+				: 0;
 		const emblemAspectRatio = settings.countryEmblems ? 1 / 1 : 0;
 		let searchAspectRatio = 0;
 		if (settings.countryEmblems && settings.countryNames) {
@@ -153,7 +179,8 @@ export default function processLabels(
 			: null;
 		return {
 			labelPoints,
-			name,
+			primaryName,
+			secondaryName,
 			emblemKey,
 			isUnionLeader: isUnionLeader(countryId, gameState, settings),
 			isKnown: knownCountries.has(countryId),
