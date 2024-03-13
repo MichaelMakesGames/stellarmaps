@@ -1,4 +1,6 @@
 <script lang="ts">
+	import * as R from 'rambda';
+
 	let viewBox = '-100 -100 200 200';
 
 	function pointOnCircle(radianFraction: number, radius: number) {
@@ -6,27 +8,103 @@
 			Math.sin(radianFraction * 2 * Math.PI) * radius
 		}`;
 	}
+
+	function makeRegularPolygonPath(n: number, { flatTop }: { flatTop: boolean }) {
+		const points = R.range(0, n).map((i) =>
+			pointOnCircle(i / n - 0.25 - (flatTop ? 0.5 / n : 0), 90),
+		);
+		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`))} z`;
+	}
+
+	function makeStarPath(n: number) {
+		const points = R.range(0, n).flatMap((i) => [
+			pointOnCircle(i / n - 0.25, 90),
+			pointOnCircle((i * 2 + 1) / (n * 2) - 0.25, 30),
+		]);
+		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`))} z`;
+	}
 </script>
+
+<symbol id="icon-triangle" {viewBox}>
+	<path d={makeRegularPolygonPath(3, { flatTop: false })} />
+</symbol>
+
+<symbol id="icon-triangle-flat" {viewBox}>
+	<path d={makeRegularPolygonPath(3, { flatTop: true })} />
+</symbol>
+
+<symbol id="icon-diamond" {viewBox}>
+	<path d={makeRegularPolygonPath(4, { flatTop: false })} />
+</symbol>
+
+<symbol id="icon-square" {viewBox}>
+	<path d={makeRegularPolygonPath(4, { flatTop: true })} />
+</symbol>
+
+<symbol id="icon-pentagon" {viewBox}>
+	<path d={makeRegularPolygonPath(5, { flatTop: false })} />
+</symbol>
+
+<symbol id="icon-pentagon-flat" {viewBox}>
+	<path d={makeRegularPolygonPath(5, { flatTop: true })} />
+</symbol>
+
+<symbol id="icon-hexagon" {viewBox}>
+	<path d={makeRegularPolygonPath(6, { flatTop: false })} />
+</symbol>
+
+<symbol id="icon-hexagon-flat" {viewBox}>
+	<path d={makeRegularPolygonPath(6, { flatTop: true })} />
+</symbol>
+
+<symbol id="icon-heptagon" {viewBox}>
+	<path d={makeRegularPolygonPath(7, { flatTop: false })} />
+</symbol>
+
+<symbol id="icon-heptagon-flat" {viewBox}>
+	<path d={makeRegularPolygonPath(7, { flatTop: true })} />
+</symbol>
+
+<symbol id="icon-octagon" {viewBox}>
+	<path d={makeRegularPolygonPath(8, { flatTop: false })} />
+</symbol>
+
+<symbol id="icon-octagon-flat" {viewBox}>
+	<path d={makeRegularPolygonPath(8, { flatTop: true })} />
+</symbol>
 
 <symbol id="icon-circle" {viewBox}>
 	<circle cx="0" cy="0" r="90" />
 </symbol>
 
-<symbol id="icon-square" {viewBox}>
-	<rect x="-90" y="-90" width="180" height="180" />
+<symbol id="icon-3-pointed-star" {viewBox}>
+	<path d={makeStarPath(3)} />
 </symbol>
 
-<symbol id="icon-diamond" {viewBox}>
-	<path d="M0,-90 L90,0 L0,90 L-90,0 z" />
+<symbol id="icon-4-pointed-star" {viewBox}>
+	<path d={makeStarPath(4)} />
+</symbol>
+
+<symbol id="icon-5-pointed-star" {viewBox}>
+	<path d={makeStarPath(5)} />
+</symbol>
+
+<symbol id="icon-6-pointed-star" {viewBox}>
+	<path d={makeStarPath(6)} />
+</symbol>
+
+<symbol id="icon-7-pointed-star" {viewBox}>
+	<path d={makeStarPath(7)} />
+</symbol>
+
+<symbol id="icon-8-pointed-star" {viewBox}>
+	<path d={makeStarPath(8)} />
 </symbol>
 
 <symbol id="icon-cross" {viewBox}>
 	<rect x="-90" y="-30" width="180" height="60" />
-	<rect x="-30" y="-90" width="60" height="180" />
-</symbol>
-
-<symbol id="icon-triangle" {viewBox}>
-	<path d="M0,-90 L{pointOnCircle(1 / 12, 90)} L{pointOnCircle(5 / 12, 90)} z" />
+	<rect x="-30" y="-90" width="60" height="60" />
+	<rect x="-30" y="30" width="60" height="60" />
 </symbol>
 
 <symbol id="icon-wormhole" {viewBox}>
