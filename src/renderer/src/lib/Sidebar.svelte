@@ -24,6 +24,7 @@
 		mapSettings,
 		presetMapSettings,
 		settingsAreDifferent,
+		validateAndResetSettings,
 		type SavedMapSettings,
 	} from './mapSettings';
 	import stellarMapsApi, { type StellarisSaveMetadata } from './stellarMapsApi';
@@ -78,9 +79,10 @@
 		if (confirmed) {
 			loadedSettingsKey.set(`${type}|${savedSettings.name}`);
 			if (settingsAreDifferent(savedSettings.settings, $mapSettings)) {
-				editedMapSettings.set(savedSettings.settings);
-				mapSettings.set(savedSettings.settings);
-				lastProcessedMapSettings.set(savedSettings.settings);
+				const validated = validateAndResetSettings(savedSettings.settings);
+				editedMapSettings.set(validated);
+				mapSettings.set(validated);
+				lastProcessedMapSettings.set(validated);
 			}
 		}
 	}
