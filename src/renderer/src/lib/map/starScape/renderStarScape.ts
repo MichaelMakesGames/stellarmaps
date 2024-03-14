@@ -39,8 +39,6 @@ const initPromise = app.init({
 	manageImports: false,
 });
 
-const graphicsPool: PIXI.Graphics[] = [];
-
 export default async function renderStarScape(
 	gameState: GameState,
 	settings: MapSettings,
@@ -53,7 +51,8 @@ export default async function renderStarScape(
 	},
 	output: { width: number; height: number } = { width: 1000, height: 1000 },
 ) {
-	const usedGraphics: PIXI.Graphics[] = [];
+	const sprites: PIXI.Sprite[] = [];
+	const textures: PIXI.Texture[] = [];
 	await initPromise;
 	const outputRatio = output.width / viewBox.width;
 
@@ -62,6 +61,10 @@ export default async function renderStarScape(
 			((-x - viewBox.left) * output.width) / viewBox.width,
 			((y - viewBox.top) * output.height) / viewBox.height,
 		];
+	}
+
+	function getDistanceFromStage([x, y]: [number, number]): number {
+		return Math.max(-x, -y, x - output.width, y - output.height);
 	}
 
 	const systemCoords = Object.values(gameState.galactic_object).map((system) =>
@@ -196,17 +199,15 @@ export default async function renderStarScape(
 		const c = new PIXI.Color(layer.color);
 		c.premultiply(layer.opacity);
 		c.setAlpha(layer.opacity);
+		const container = new PIXI.Container({ isRenderGroup: true });
 		if (isStarLayer) {
-			const container = new PIXI.Container({ isRenderGroup: true });
-			const gc = new PIXI.GraphicsContext().circle(0, 0, 1).fill(c);
+			const g = new PIXI.Graphics().circle(0, 0, 1).fill(c);
+			const t = app.renderer.generateTexture(g);
+			textures.push(t);
+			g.destroy(true);
+
 			const rng = alea(0);
-			let i = 0;
-			while (i < (settings.starScapeStarsCount ?? 0)) {
-				i++;
-				const g = graphicsPool.pop() ?? new PIXI.Graphics();
-				usedGraphics.push(g);
-				g.clear();
-				g.context = gc;
+			for (let i = 0; i < (settings.starScapeStarsCount ?? 0); i++) {
 				const origin = layer.sourceCoordinates[Math.floor(rng() * layer.sourceCoordinates.length)];
 				if (!origin) continue;
 				const distance = (rng() * 20 + 5) * outputRatio;
@@ -216,10 +217,15 @@ export default async function renderStarScape(
 				const cx = origin[0] + dx;
 				const cy = origin[1] + dy;
 				const r = rng();
-				g.x = cx;
-				g.y = cy;
-				g.scale = { x: r, y: r };
-				container.addChild(g);
+				if (getDistanceFromStage([cx, cy]) <= 5) {
+					const sprite = PIXI.Sprite.from(t);
+					sprites.push(sprite);
+					sprite.anchor = 0.5;
+					sprite.x = cx;
+					sprite.y = cy;
+					sprite.scale = { x: r, y: r };
+					container.addChild(sprite);
+				}
 			}
 			container.filters = [
 				new PIXI.AlphaFilter({ alpha: Math.max(0.1, 1 - 1 / Math.sqrt(outputRatio)) }),
@@ -231,36 +237,44 @@ export default async function renderStarScape(
 			];
 			app.stage.addChild(container);
 		} else {
-			const container = new PIXI.Container({ isRenderGroup: true });
-			const gc = new PIXI.GraphicsContext()
+			const g = new PIXI.Graphics()
 				.circle(0, 0, layer.radius * outputRatio * galaxySizeRadiusAdjustment)
 				.fill(c);
-			for (const [cx, cy] of layer.sourceCoordinates) {
-				const g = graphicsPool.pop() ?? new PIXI.Graphics();
-				usedGraphics.push(g);
-				g.clear();
-				g.context = gc;
-				g.x = cx;
-				g.y = cy;
-				container.addChild(g);
+			const t = app.renderer.generateTexture(g);
+			textures.push(t);
+			g.destroy(true);
+
+			const MAX_BLUR = 2000; // start getting WebGL errors if blur strength is too large
+			const blurStrength = Math.max(
+				1,
+				Math.min(MAX_BLUR, Math.round(layer.blur * galaxySizeRadiusAdjustment * outputRatio)),
+			);
+			const radiusPlusBur = layer.radius * outputRatio * galaxySizeRadiusAdjustment + blurStrength;
+
+			const container = new PIXI.Container({ isRenderGroup: true });
+			for (const [cx, cy] of layer.sourceCoordinates.filter(
+				(p) => getDistanceFromStage(p) < radiusPlusBur,
+			)) {
+				const sprite = PIXI.Sprite.from(t);
+				sprites.push(sprite);
+				sprite.anchor = 0.5;
+				sprite.x = cx;
+				sprite.y = cy;
+				container.addChild(sprite);
 			}
 			app.stage.addChild(container);
 
-			const MAX_BLUR = 2000; // start getting WebGL errors if blur strength is too large
 			const blurFilter = new PIXI.BlurFilter({
-				strength: Math.max(
-					1,
-					Math.min(MAX_BLUR, Math.round(layer.blur * galaxySizeRadiusAdjustment * outputRatio)),
-				),
+				strength: blurStrength,
 				quality: Math.max(1, Math.round(layer.blur / 4)),
 				kernelSize: 15,
 			});
-			const cloudFilter = new PIXI.Filter({
-				glProgram: PIXI.GlProgram.from({
+			const cloudFilter = PIXI.Filter.from({
+				gl: {
 					name: 'CloudFilter',
 					vertex: PIXI.defaultFilterVert,
 					fragment: shaderString.replace('$OCTAVES$', layer.octaves.toFixed(1)),
-				}),
+				},
 				resources: {
 					filterUniforms: new PIXI.UniformGroup({
 						uScale: { type: 'f32', value: layer.scale },
@@ -288,12 +302,20 @@ export default async function renderStarScape(
 		}
 	});
 	app.render();
-	for (const g of usedGraphics) {
-		g.clear();
-		g.scale = { x: 1, y: 1 };
+
+	const dataUrl = canvas.toDataURL();
+
+	for (const child of app.stage.children) {
+		child.filters = [];
 	}
-	graphicsPool.push(...usedGraphics);
-	return canvas.toDataURL('image/png');
+	for (const s of sprites) {
+		s.destroy(true);
+	}
+	for (const t of textures) {
+		t.destroy(true);
+	}
+
+	return dataUrl;
 }
 
 function removeOpacity(color: ColorSetting): ColorSetting {

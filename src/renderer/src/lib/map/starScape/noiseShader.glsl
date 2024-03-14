@@ -37,21 +37,21 @@ float noise(vec2 p){
 
 void main() {
 	vec4 color = texture(uTexture, vTextureCoord);
-	float randomValue = 0.0;
-	vec2 mapCoordinate = vec2(
-		gl_FragCoord.x * uViewBoxWidth / uOutputWidth + uViewBoxLeft,
-		(uOutputHeight - gl_FragCoord.y) * uViewBoxHeight / uOutputHeight + uViewBoxTop
-	);
-	for (float o=0.0; o<$OCTAVES$; o++) {
-		randomValue += noise(mapCoordinate * uScale * pow(uLacunarity, o)) * pow(uGain, o);
-	}
-	randomValue *= uNormalization;
-
 	if (color.a > 0.0) {
+		float randomValue = 0.0;
+		vec2 mapCoordinate = vec2(
+			gl_FragCoord.x * uViewBoxWidth / uOutputWidth + uViewBoxLeft,
+			(uOutputHeight - gl_FragCoord.y) * uViewBoxHeight / uOutputHeight + uViewBoxTop
+		);
+		for (float o=0.0; o<$OCTAVES$; o++) {
+			randomValue += noise(mapCoordinate * uScale * pow(uLacunarity, o)) * pow(uGain, o);
+		}
+		randomValue *= uNormalization;
+
 		color.rgb /= color.a;
+		color.a *= randomValue * (uMax - uMin) + uMin;
+		color.rgb *= color.a;
 	}
-	color.a *= randomValue * (uMax - uMin) + uMin;
-	color.rgb *= color.a;
 
 	finalColor = color;
 }
