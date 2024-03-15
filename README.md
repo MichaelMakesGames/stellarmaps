@@ -14,18 +14,21 @@ Stylized and customizable Stellaris maps
 - Gateways and wormholes
 - Unions mode
 - Terra incognita
+- Background galaxy graphics
 - PNG and SVG export
 - Modded emblem and name support
 - Save and load multiple setting profiles
 
 ## Planned
 
-- Nebulae
-- Legend
 - Time-lapses
+- Map Modes
+- Map Legend
 
 ## Known Issues
 
+- There is a memory leak related to background galaxy graphics
+  - For now, I recommend occasionally restarting the application
 - Does not work with mod packs using Irony's "Compressed" merge
 - Exported SVGs are tested with Inkscape and web browsers. Other viewers/editors may or may not work
 - If viewing an SVG with Inkscape, the default Orbitron font will not work unless installed on your computer. [You can download it here.](https://fonts.google.com/specimen/Orbitron)
@@ -35,6 +38,8 @@ Stylized and customizable Stellaris maps
 The app icon is [Orbital](https://game-icons.net/1x1/lorc/orbital.html) by Lorc, licensed under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0/).
 
 Map icons are made by me. Basic shapes are released to the public domain, but others (Wormhole, Gateway, L-Gate, etc) are based on icons from the game Stellaris, and should not be used other than for tools or mods for the game.
+
+The Discord icon is from https://discord.com/branding.
 
 Other interface icons from [Heroicons](https://heroicons.com), licensed under the [MIT license](https://github.com/tailwindlabs/heroicons/blob/master/LICENSE).
 
