@@ -1260,6 +1260,10 @@ export const presetMapSettings: SavedMapSettings[] = [
 				color: 'border',
 				colorAdjustments: [{ type: 'OPACITY', value: 0 }],
 			},
+			backgroundColor: {
+				color: 'true_black',
+				colorAdjustments: [],
+			},
 			borderFillFade: 0.15,
 			starScapeCore: true,
 			starScapeDust: true,
@@ -1279,6 +1283,10 @@ export const presetMapSettings: SavedMapSettings[] = [
 			borderFillColor: {
 				color: 'border',
 				colorAdjustments: [{ type: 'OPACITY', value: 0 }],
+			},
+			backgroundColor: {
+				color: 'true_black',
+				colorAdjustments: [],
 			},
 			borderFillFade: 0.15,
 			starScapeDust: true,
