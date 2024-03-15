@@ -1111,10 +1111,10 @@ const defaultMapSettings: MapSettings = {
 		color: 'intense_purple',
 		colorAdjustments: [],
 	},
-	voronoiGridSize: 10,
+	voronoiGridSize: 30,
 	hyperlaneSensitiveBorders: true,
 	claimVoidBorderThreshold: 0.6,
-	claimVoidMaxSize: 200,
+	claimVoidMaxSize: 1000,
 	starScapeDust: false,
 	starScapeDustColor: {
 		color: 'ochre_brown',
@@ -1190,6 +1190,15 @@ export const presetMapSettings: SavedMapSettings[] = [
 		},
 	},
 	{
+		name: 'Tight',
+		settings: {
+			...defaultMapSettings,
+			voronoiGridSize: 10,
+			claimVoidBorderThreshold: 0.6,
+			claimVoidMaxSize: 200,
+		},
+	},
+	{
 		name: 'Circular',
 		settings: {
 			...defaultMapSettings,
@@ -1236,6 +1245,76 @@ export const presetMapSettings: SavedMapSettings[] = [
 				glow: true,
 			},
 			countryNames: false,
+		},
+	},
+	{
+		name: 'Starry Gold',
+		settings: {
+			...defaultMapSettings,
+			countryNames: false,
+			borderColor: {
+				color: 'primary',
+				colorAdjustments: [{ type: 'MIN_LIGHTNESS', value: 0.6 }],
+			},
+			borderFillColor: {
+				color: 'border',
+				colorAdjustments: [{ type: 'OPACITY', value: 0 }],
+			},
+			borderFillFade: 0.15,
+			starScapeCore: true,
+			starScapeDust: true,
+			starScapeNebula: true,
+			starScapeStars: true,
+		},
+	},
+	{
+		name: 'Starry Blue',
+		settings: {
+			...defaultMapSettings,
+			countryNames: false,
+			borderColor: {
+				color: 'primary',
+				colorAdjustments: [{ type: 'MIN_LIGHTNESS', value: 0.6 }],
+			},
+			borderFillColor: {
+				color: 'border',
+				colorAdjustments: [{ type: 'OPACITY', value: 0 }],
+			},
+			borderFillFade: 0.15,
+			starScapeDust: true,
+			starScapeDustColor: {
+				color: 'blue',
+				colorAdjustments: [{ type: 'OPACITY', value: 0.75 }],
+			},
+			starScapeNebula: true,
+			starScapeNebulaColor: {
+				color: 'red_orange',
+				colorAdjustments: [{ type: 'OPACITY', value: 1 }],
+			},
+			starScapeNebulaAccentColor: {
+				color: 'intense_red',
+				colorAdjustments: [{ type: 'OPACITY', value: 1 }],
+			},
+			starScapeCore: true,
+			starScapeCoreColor: {
+				color: 'wave_blue',
+				colorAdjustments: [
+					{ type: 'OPACITY', value: 1 },
+					{ type: 'LIGHTEN', value: 0.2 },
+				],
+			},
+			starScapeCoreAccentColor: {
+				color: 'white',
+				colorAdjustments: [{ type: 'OPACITY', value: 1 }],
+			},
+			starScapeStars: true,
+			starScapeStarsColor: {
+				color: 'mist_blue',
+				colorAdjustments: [
+					{ type: 'OPACITY', value: 1 },
+					{ type: 'LIGHTEN', value: 1 },
+				],
+			},
 		},
 	},
 	{
