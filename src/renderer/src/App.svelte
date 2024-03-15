@@ -12,6 +12,7 @@
 	import ExportModal from './lib/ExportModal.svelte';
 	import Sidebar from './lib/Sidebar.svelte';
 	import VersionInfo from './lib/VersionInfo.svelte';
+	import Discord from './lib/icons/Discord.svelte';
 	import MapContainer from './lib/map/MapContainer.svelte';
 
 	initializeStores();
@@ -22,7 +23,17 @@
 <Modal components={{ export: { ref: ExportModal } }} />
 <AppShell slotPageContent="h-full" regionPage="h-full">
 	<svelte:fragment slot="header">
-		<AppBar>StellarMaps <VersionInfo /></AppBar>
+		<AppBar>
+			<svelte:fragment slot="lead">
+				StellarMaps
+				<VersionInfo />
+			</svelte:fragment>
+			<svelte:fragment slot="trail">
+				<a class="anchor" href="https://discord.gg/72kaXW782b" target="_blank" rel="noopener">
+					<Discord />
+				</a>
+			</svelte:fragment>
+		</AppBar>
 	</svelte:fragment>
 	<svelte:fragment slot="sidebarLeft">
 		<Sidebar />
