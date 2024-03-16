@@ -4,7 +4,7 @@ on: workflow_dispatch
 # This workflow will build your tauri app without uploading it anywhere.
 
 jobs:
-  test-tauri:
+  build-tauri:
     strategy:
       fail-fast: false
       matrix:
@@ -42,4 +42,4 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          path: ${{ steps.build.outputs.artifactPaths }}
+          path: "${{ join(fromJSON(steps.build.outputs.artifacts), '\n') }}"
