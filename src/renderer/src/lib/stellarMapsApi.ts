@@ -1,10 +1,6 @@
-import { core, path } from '@tauri-apps/api';
-import * as dialog from '@tauri-apps/plugin-dialog';
-import * as fs from '@tauri-apps/plugin-fs';
+import { dialog, fs, invoke, path } from '@tauri-apps/api';
 import type { StellarMapsAPI } from '../../../shared/StellarMapsApi';
 import { gameStateFilter } from './GameState';
-
-const { invoke } = core;
 
 let stellarMapsApi: StellarMapsAPI = (window as any).api; // this is from electron preload
 if (stellarMapsApi == null) {

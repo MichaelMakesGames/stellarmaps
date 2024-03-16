@@ -26,8 +26,8 @@ const api: StellarMapsAPI = {
 		pictureDir: () => platformPaths.pictures(),
 	},
 	fs: {
-		writeTextFile: (path, content) => fs.writeFile(path, content, { encoding: 'utf-8' }),
-		writeFile: (path, content) => fs.writeFile(path, content),
+		writeFile: (path, content) => fs.writeFile(path, content, { encoding: 'utf-8' }),
+		writeBinaryFile: (path, content) => fs.writeFile(path, new DataView(content)),
 	},
 	revealFile: (path) => Promise.resolve(shell.showItemInFolder(path)),
 };
