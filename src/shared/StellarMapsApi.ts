@@ -14,23 +14,11 @@ export interface StellarMapsAPI {
 	loadFonts(): Promise<string[]>;
 	loadEmblem(installPath: string, category: string, file: string): Promise<string>;
 	dialog: {
-		open<
-			T extends {
-				directory: boolean;
-				multiple: boolean;
-				title: string;
-			},
-		>(
-			options: T,
-		): Promise<
-			T['directory'] extends true
-				? T['multiple'] extends true
-					? string[] | null
-					: string | null
-				: T['multiple'] extends true
-					? { path: string }[] | null
-					: { path: string } | null
-		>;
+		open(options: {
+			directory: boolean;
+			multiple: boolean;
+			title: string;
+		}): Promise<null | string | string[]>;
 		save(options: {
 			defaultPath: string;
 			filters: { extensions: string[]; name: string }[];
@@ -41,8 +29,8 @@ export interface StellarMapsAPI {
 		pictureDir(): Promise<string>;
 	};
 	fs: {
-		writeFile: (path: string, data: Uint8Array) => Promise<void>;
-		writeTextFile: (path: string, data: string) => Promise<void>;
+		writeFile: (path: string, content: string) => Promise<void>;
+		writeBinaryFile: (path: string, content: ArrayBuffer) => Promise<void>;
 	};
 	revealFile: (path: string) => Promise<void>;
 }

@@ -131,7 +131,7 @@
 			filters: [{ extensions: ['png'], name: 'Image' }],
 		});
 		if (savePath && svg) {
-			await stellarMapsApi.fs.writeFile(savePath, new Uint8Array(buffer)).then(() => {
+			await stellarMapsApi.fs.writeBinaryFile(savePath, new Uint8Array(buffer)).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
 					message: 'Export Successful',
@@ -202,7 +202,7 @@
 			filters: [{ extensions: ['svg'], name: 'Image' }],
 		});
 		if (savePath && svg) {
-			await stellarMapsApi.fs.writeTextFile(savePath, svgString).then(() => {
+			await stellarMapsApi.fs.writeFile(savePath, svgString).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
 					message: 'Export Successful',
