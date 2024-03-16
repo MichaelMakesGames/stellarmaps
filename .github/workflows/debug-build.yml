@@ -33,7 +33,13 @@ jobs:
 
       # If tagName and releaseId are omitted tauri-action will only build the app and won't try to upload any asstes.
       - uses: tauri-apps/tauri-action@v0
+        id: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           includeDebug: true
+          includeRelease: false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          path: ${{ steps.build.outputs.artifactPaths }}
