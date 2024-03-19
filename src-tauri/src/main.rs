@@ -40,9 +40,7 @@ fn main() {
 }
 
 #[tauri::command]
-async fn get_stellaris_colors_cmd(
-	path: String,
-) -> Result<Vec<String>, String> {
+async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
 	let paths = get_stellaris_data_paths(
 		Path::new(&path).to_path_buf(),
 		Path::new("flags").to_path_buf(),
@@ -60,15 +58,12 @@ async fn get_stellaris_colors_cmd(
 }
 
 #[tauri::command]
-async fn get_stellaris_loc_cmd(
-	path: String,
-) -> Result<HashMap<String, String>, String> {
+async fn get_stellaris_loc_cmd(path: String) -> Result<HashMap<String, String>, String> {
 	return get_stellaris_loc(path).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
-async fn get_stellaris_save_metadata_cmd(
-) -> Result<Vec<Vec<StellarisSave>>, String> {
+async fn get_stellaris_save_metadata_cmd() -> Result<Vec<Vec<StellarisSave>>, String> {
 	get_stellaris_save_metadata().map_err(|err| err.to_string())
 }
 
@@ -78,13 +73,8 @@ async fn get_stellaris_save_cmd(path: String, filter: Value) -> Result<Value, St
 }
 
 #[tauri::command]
-async fn get_emblem_cmd(
-	path: String,
-	category: String,
-	file: String,
-) -> Result<String, String> {
-	return get_emblem(Path::new(&path).to_path_buf(), category, file)
-		.map_err(|err| err.to_string());
+async fn get_emblem_cmd(path: String, category: String, file: String) -> Result<String, String> {
+	return get_emblem(Path::new(&path).to_path_buf(), category, file).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
@@ -146,9 +136,7 @@ fn get_steam_user_data_dirs() -> anyhow::Result<Vec<PathBuf>> {
 	return get_sub_dirs(&steam_user_data_dir);
 }
 
-fn get_mod_path(
-	enabled_mod: &serde_json::Value,
-) -> anyhow::Result<PathBuf> {
+fn get_mod_path(enabled_mod: &serde_json::Value) -> anyhow::Result<PathBuf> {
 	let user_data_dir = get_stellaris_user_data_dir();
 	let enabled_mod_descriptor = user_data_dir.join(
 		enabled_mod
@@ -255,7 +243,9 @@ fn get_stellaris_save(path: String, filter: Value) -> anyhow::Result<Value> {
 	let file = fs::File::open(path)?;
 	let reader = io::BufReader::new(file);
 	let mut archive = zip::ZipArchive::new(reader)?;
-	let game_state_string = io::read_to_string(archive.by_name("gamestate")?)?;
+	let mut bytes = vec![];
+	archive.by_name("gamestate")?.read_to_end(&mut bytes)?;
+	let game_state_string = String::from_utf8_lossy(&bytes);
 	println!("read in: {}", now.elapsed().as_millis());
 
 	let now = Instant::now();
@@ -368,9 +358,7 @@ fn get_stellaris_data_paths(
 		.collect();
 }
 
-fn get_stellaris_loc(
-	path: String,
-) -> anyhow::Result<HashMap<String, String>> {
+fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
 	let loc_file_paths = get_stellaris_data_paths(
 		Path::new(&path).to_path_buf(),
 		Path::new("localisation").to_path_buf(),
@@ -397,11 +385,7 @@ fn get_stellaris_loc(
 	return Ok(locs);
 }
 
-fn get_emblem(
-	install_path: PathBuf,
-	category: String,
-	file: String,
-) -> anyhow::Result<String> {
+fn get_emblem(install_path: PathBuf, category: String, file: String) -> anyhow::Result<String> {
 	let mut dirs = get_stellaris_data_dirs(install_path).to_owned();
 	dirs.reverse();
 	for dir in dirs {
