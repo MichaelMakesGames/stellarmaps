@@ -1,6 +1,18 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines. Note: this was not set up until v0.10.0
+All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
+
+## [0.10.1](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.0...stellarmaps-v0.10.1) (2024-03-19)
+
+### Features
+
+- **ui:** add button to manually select save ([0d81501](https://github.com/MichaelMakesGames/stellarmaps/commit/0d8150169498b60b2ff57d19043041443e927058))
+
+### Bug Fixes
+
+- **export:** handle errors finding default export path ([d91092f](https://github.com/MichaelMakesGames/stellarmaps/commit/d91092f47d0fc64a1e3193fcd9b5c748e0c4bcd0))
+- **parser:** fix validation error if player name contains only numbers ([7a1f4d1](https://github.com/MichaelMakesGames/stellarmaps/commit/7a1f4d1646df311b93dfc1a06e78082f6a5e0a52))
+- **parser:** handle invalid utf-8 in gamestate ([7b3e250](https://github.com/MichaelMakesGames/stellarmaps/commit/7b3e250c2ab46d8b58658543c87584d8a47bdeeb))
 
 ## 0.10.0 (2024-03-15)
 
