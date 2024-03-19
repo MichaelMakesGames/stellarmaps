@@ -244,7 +244,7 @@ export const gameStateSchema = z
 		megastructures: stellarisDb(megastructureSchema),
 		sectors: stellarisDb(sectorSchema),
 		federation: stellarisDb(federationSchema),
-		player: preprocessedArray(z.object({ name: z.string(), country: z.number() })),
+		player: preprocessedArray(z.object({ name: z.coerce.string(), country: z.number() })),
 		galaxy: z.object({ shape: z.string(), core_radius: z.number() }),
 		planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
 		nebula: nebulaSchema.optional(),
