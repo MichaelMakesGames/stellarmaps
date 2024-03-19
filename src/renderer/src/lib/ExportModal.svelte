@@ -195,10 +195,9 @@
 		svg.removeChild(bgRect);
 
 		const savePath = await stellarMapsApi.dialog.save({
-			defaultPath: await stellarMapsApi.path.join(
-				await stellarMapsApi.path.pictureDir(),
-				'map.svg',
-			),
+			defaultPath: await stellarMapsApi.path
+				.join(await stellarMapsApi.path.pictureDir(), 'map.svg')
+				.catch(() => ''),
 			filters: [{ extensions: ['svg'], name: 'Image' }],
 		});
 		if (savePath && svg) {
