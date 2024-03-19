@@ -2,6 +2,7 @@ import { electronApp, is, optimizer } from '@electron-toolkit/utils';
 import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron';
 import { join } from 'path';
 import icon from '../../resources/icon.png?asset';
+import { StellarMapsAPI } from '../shared/StellarMapsApi';
 import { loadColors } from './loadColors';
 import loadEmblem from './loadEmblem';
 import loadFonts from './loadFonts';
@@ -57,37 +58,32 @@ app.whenReady().then(() => {
 	ipcMain.handle('loadEmblem', (_e, installPath, category, file) =>
 		loadEmblem(installPath, category, file),
 	);
-	ipcMain.handle(
-		'dialog.open',
-		(_e, options: { directory: boolean; multiple: boolean; title: string }) => {
-			return dialog
-				.showOpenDialog({
-					title: options.title,
-					properties: [
-						options.directory ? 'openDirectory' : 'openFile',
-						...(options.multiple ? ['multiSelections' as const] : []),
-					],
-				})
-				.then(({ filePaths }) => {
-					if (filePaths.length === 0) {
-						return null;
-					} else {
-						return options.multiple ? filePaths : filePaths[0];
-					}
-				});
-		},
-	);
-	ipcMain.handle(
-		'dialog.save',
-		(_e, options: { defaultPath: string; filters: { extensions: string[]; name: string }[] }) => {
-			return dialog
-				.showSaveDialog({
-					defaultPath: options.defaultPath,
-					filters: options.filters,
-				})
-				.then(({ filePath }) => filePath ?? null);
-		},
-	);
+	ipcMain.handle('dialog.open', (_e, options: Parameters<StellarMapsAPI['dialog']['open']>[0]) => {
+		return dialog
+			.showOpenDialog({
+				title: options.title,
+				filters: options.filters,
+				properties: [
+					options.directory ? 'openDirectory' : 'openFile',
+					...(options.multiple ? ['multiSelections' as const] : []),
+				],
+			})
+			.then(({ filePaths }) => {
+				if (filePaths.length === 0) {
+					return null;
+				} else {
+					return options.multiple ? filePaths : filePaths[0];
+				}
+			});
+	});
+	ipcMain.handle('dialog.save', (_e, options: Parameters<StellarMapsAPI['dialog']['save']>[0]) => {
+		return dialog
+			.showSaveDialog({
+				defaultPath: options.defaultPath,
+				filters: options.filters,
+			})
+			.then(({ filePath }) => filePath ?? null);
+	});
 	// Set app user model id for windows
 	electronApp.setAppUserModelId('games.michaelmakes.stellarmaps');
 
