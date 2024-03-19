@@ -53,10 +53,69 @@
 		);
 	}
 	let savesPromise = loadSaves();
+
 	function refreshSaves() {
 		selectedSaveGroup = null;
 		selectedSave = null;
 		savesPromise = loadSaves();
+	}
+
+	function manuallySelectSave() {
+		stellarMapsApi.dialog
+			.open({
+				directory: false,
+				multiple: false,
+				title: 'Select Save',
+				filters: [{ name: 'Stellaris Save', extensions: ['sav'] }],
+			})
+			.then((path) => {
+				if (typeof path === 'string') {
+					selectedSaveGroup = null;
+					selectedSave = null;
+					loadSave(path);
+				}
+			});
+	}
+
+	function loadSave(path: string) {
+		const promise = wait(100)
+			.then(() => timeItAsync('loadSave', stellarMapsApi.loadSave, path))
+			.then((unvalidated) =>
+				timeIt('validateSave', () => {
+					if ($debug) saveToWindow('unvalidatedGameState', unvalidated);
+					return gameStateSchema.parse(unvalidated);
+				}),
+			);
+		promise.then(async (gameState) => {
+			Promise.all(
+				Object.entries(gameState.country)
+					.filter(([_id, country]) => country.type === 'default')
+					.map(([id, country]) => localizeText(country.name).then((name) => ({ id, name }))),
+			).then(countryOptions.set);
+		});
+		gameStatePromise.set(promise);
+
+		// update settings that depend on save-specific options
+		editedMapSettings.update((prev) => ({
+			...prev,
+			terraIncognitaPerspectiveCountry: 'player',
+		}));
+		mapSettings.update((prev) => ({
+			...prev,
+			terraIncognitaPerspectiveCountry: 'player',
+		}));
+		lastProcessedMapSettings.update((prev) => ({
+			...prev,
+			terraIncognitaPerspectiveCountry: 'player',
+		}));
+
+		promise.catch(
+			toastError({
+				title: `Failed to load ${path}`,
+				defaultValue: null,
+				toastStore,
+			}),
+		);
 	}
 
 	const loadedSettingsKey = localStorageStore('loadedSettingsKey', 'PRESET|Default');
@@ -128,52 +187,18 @@
 		on:submit|preventDefault={() => {
 			loadedSave = selectedSave;
 			if (selectedSave) {
-				const { path } = selectedSave;
-				const promise = wait(100)
-					.then(() => timeItAsync('loadSave', stellarMapsApi.loadSave, path))
-					.then((unvalidated) =>
-						timeIt('validateSave', () => {
-							if ($debug) saveToWindow('unvalidatedGameState', unvalidated);
-							return gameStateSchema.parse(unvalidated);
-						}),
-					);
-				promise.then(async (gameState) => {
-					Promise.all(
-						Object.entries(gameState.country)
-							.filter(([_id, country]) => country.type === 'default')
-							.map(([id, country]) => localizeText(country.name).then((name) => ({ id, name }))),
-					).then(countryOptions.set);
-				});
-				gameStatePromise.set(promise);
-
-				// update settings that depend on save-specific options
-				editedMapSettings.update((prev) => ({
-					...prev,
-					terraIncognitaPerspectiveCountry: 'player',
-				}));
-				mapSettings.update((prev) => ({
-					...prev,
-					terraIncognitaPerspectiveCountry: 'player',
-				}));
-				lastProcessedMapSettings.update((prev) => ({
-					...prev,
-					terraIncognitaPerspectiveCountry: 'player',
-				}));
-
-				promise.catch(
-					toastError({
-						title: `Failed to load ${selectedSave.path}`,
-						defaultValue: null,
-						toastStore,
-					}),
-				);
+				loadSave(selectedSave.path);
 			}
 		}}
 	>
-		<div class="flex justify-between">
-			<h2 class="label">Save Game</h2>
+		<div class="flex">
+			<h2 class="label flex-1">Save Game</h2>
+			<button type="button" class="text-sm text-surface-300" on:click={manuallySelectSave}>
+				Select Manually
+			</button>
+			<span class="px-2 text-surface-600">|</span>
 			<button type="button" class="text-sm text-surface-300" on:click={refreshSaves}>
-				Refresh Save List
+				Refresh
 			</button>
 		</div>
 		<select class="select mb-1" bind:value={selectedSaveGroup}>

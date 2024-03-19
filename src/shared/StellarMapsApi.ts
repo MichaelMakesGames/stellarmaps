@@ -18,6 +18,7 @@ export interface StellarMapsAPI {
 			directory: boolean;
 			multiple: boolean;
 			title: string;
+			filters?: { extensions: string[]; name: string }[];
 		}): Promise<null | string | string[]>;
 		save(options: {
 			defaultPath: string;
