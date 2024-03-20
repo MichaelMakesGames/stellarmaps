@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.10.2](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.1...stellarmaps-v0.10.2) (2024-03-20)
+
+### Bug Fixes
+
+- **parser:** fix localization files that start with comments are not loaded ([b9157c2](https://github.com/MichaelMakesGames/stellarmaps/commit/b9157c241f22513eb576f8654b05cff16c892131))
+
 ## [0.10.1](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.0...stellarmaps-v0.10.1) (2024-03-19)
 
 ### Features
