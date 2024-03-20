@@ -373,6 +373,16 @@ fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
 		let mut buf_reader = io::BufReader::new(fs::File::open(path)?);
 		let mut first_line = String::new();
 		let _ = buf_reader.read_line(&mut first_line)?;
+		// skip BOM
+		if first_line.as_bytes().starts_with(&[0xEF, 0xBB, 0xBF]) {
+			first_line = first_line[3..].to_owned();
+		}
+		// skip comments (max 20 lines)
+		let mut line_number: u8 = 0;
+		while first_line.trim().starts_with('#') && line_number < 20 {
+			line_number += 1;
+			let _ = buf_reader.read_line(&mut first_line)?;
+		}
 		if first_line.contains("l_english") {
 			let re = Regex::new(r#"(?m)^\s*([\w\.\-]+)\s*:\d*\s*"(.*)".*$"#).unwrap();
 			let mut raw_content = String::new();
