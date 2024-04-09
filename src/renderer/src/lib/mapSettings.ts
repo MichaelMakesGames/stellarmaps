@@ -1145,7 +1145,7 @@ const defaultMapSettings: MapSettings = {
 	starScapeStarsColor: {
 		color: 'desert_yellow',
 		colorAdjustments: [
-			{ type: 'OPACITY', value: 1 },
+			{ type: 'OPACITY', value: 0.75 },
 			{ type: 'LIGHTEN', value: 1 },
 		],
 	},
@@ -1319,7 +1319,7 @@ export const presetMapSettings: SavedMapSettings[] = [
 			starScapeStarsColor: {
 				color: 'mist_blue',
 				colorAdjustments: [
-					{ type: 'OPACITY', value: 1 },
+					{ type: 'OPACITY', value: 0.75 },
 					{ type: 'LIGHTEN', value: 1 },
 				],
 			},
