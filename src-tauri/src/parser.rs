@@ -158,7 +158,7 @@ fn skip_value<'source>(
 	lex: &mut Lexer<'source, Token<'source>>,
 ) -> anyhow::Result<Option<&'source str>> {
 	let mut token = lex.next();
-	let mut depth: u8 = 0;
+	let mut depth: u64 = 0;
 	while token != None {
 		match token {
 			Some(Ok(Token::Text(s))) | Some(Ok(Token::String(s))) => {
