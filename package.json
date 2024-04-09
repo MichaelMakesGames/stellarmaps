@@ -86,7 +86,6 @@
 		"fast-glob": "^3.3.2",
 		"font-list": "^1.5.1",
 		"magickwand.js": "^1.0.2",
-		"pixi-filters": "^6.0.0",
 		"pixi.js": "^8.0.2",
 		"platform-paths": "^1.2.2",
 		"polylabel": "^1.1.0",

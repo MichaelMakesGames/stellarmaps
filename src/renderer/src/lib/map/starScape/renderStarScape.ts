@@ -1,5 +1,5 @@
 import alea from 'alea';
-import { GlowFilter } from 'pixi-filters';
+import { rgb } from 'd3-color';
 import * as PIXI from 'pixi.js';
 import 'pixi.js/app';
 import 'pixi.js/filters';
@@ -39,6 +39,67 @@ const initPromise = app.init({
 	manageImports: false,
 });
 
+function getStarTexture(layer: Layer, outputRatio: number) {
+	const innerRadius = Math.ceil(layer.radius * outputRatio);
+	const outerRadius = Math.ceil((layer.radius + layer.blur) * outputRatio);
+	const canvas = document.createElement('canvas');
+	canvas.width = outerRadius * 2;
+	canvas.height = outerRadius * 2;
+	const ctx = canvas.getContext('2d');
+	if (!ctx) throw new Error('no 2d context');
+	const gradient = ctx.createRadialGradient(
+		outerRadius,
+		outerRadius,
+		innerRadius,
+		outerRadius,
+		outerRadius,
+		outerRadius,
+	);
+	gradient.addColorStop(0, layer.color);
+	const transparent50 = rgb(layer.color);
+	transparent50.opacity *= 0.5;
+	gradient.addColorStop(0.01, transparent50.formatRgb());
+	const transparent = rgb(layer.color);
+	transparent.opacity = 0;
+	gradient.addColorStop(1, transparent.formatRgb());
+	ctx.fillStyle = gradient;
+	ctx.fillRect(0, 0, outerRadius * 2, outerRadius * 2);
+	return PIXI.Texture.from(canvas);
+}
+
+function getCircleGradientTexture(
+	layer: Layer,
+	outputRatio: number,
+	galaxySizeRadiusAdjustment: number,
+) {
+	const innerRadius = Math.ceil(layer.radius * outputRatio * galaxySizeRadiusAdjustment);
+	const outerRadius = Math.ceil(
+		(layer.radius + layer.blur) * outputRatio * galaxySizeRadiusAdjustment,
+	);
+	const canvas = document.createElement('canvas');
+	canvas.width = outerRadius * 2;
+	canvas.height = outerRadius * 2;
+	const ctx = canvas.getContext('2d');
+	if (!ctx) throw new Error('no 2d context');
+	const gradient = ctx.createRadialGradient(
+		outerRadius,
+		outerRadius,
+		innerRadius,
+		outerRadius,
+		outerRadius,
+		outerRadius,
+	);
+	gradient.addColorStop(0, layer.color);
+	const transparent = rgb(layer.color);
+	transparent.opacity = 0;
+	gradient.addColorStop(1, transparent.formatRgb());
+	ctx.fillStyle = gradient;
+	ctx.fillRect(0, 0, outerRadius * 2, outerRadius * 2);
+	return PIXI.Texture.from(canvas);
+}
+
+const spritePool: PIXI.Sprite[] = [];
+
 export default async function renderStarScape(
 	gameState: GameState,
 	settings: MapSettings,
@@ -51,8 +112,8 @@ export default async function renderStarScape(
 	},
 	output: { width: number; height: number } = { width: 1000, height: 1000 },
 ) {
-	const sprites: PIXI.Sprite[] = [];
 	const textures: PIXI.Texture[] = [];
+	const sprites: PIXI.Sprite[] = [];
 	await initPromise;
 	const outputRatio = output.width / viewBox.width;
 
@@ -86,15 +147,15 @@ export default async function renderStarScape(
 						color: resolveColor({
 							mapSettings: settings,
 							colors,
-							colorStack: [removeOpacity(settings.starScapeDustColor)],
+							colorStack: [settings.starScapeDustColor],
 						}),
 						opacity: getOpacity(settings.starScapeDustColor),
-						radius: 15,
-						blur: 25,
+						radius: 0,
+						blur: 30,
 						scale: 1 / 32,
-						octaves: 8,
-						gain: 0.6,
-						min: 0.3,
+						octaves: 6,
+						gain: 0.75,
+						min: 0.05,
 						sourceCoordinates: systemCoords,
 					},
 				]
@@ -106,11 +167,11 @@ export default async function renderStarScape(
 						color: resolveColor({
 							mapSettings: settings,
 							colors,
-							colorStack: [removeOpacity(settings.starScapeStarsColor)],
+							colorStack: [settings.starScapeStarsColor],
 						}),
 						opacity: getOpacity(settings.starScapeStarsColor),
-						radius: -1,
-						blur: -1,
+						radius: 1,
+						blur: 2,
 						octaves: -1,
 						scale: -1,
 						sourceCoordinates: systemCoords,
@@ -127,7 +188,7 @@ export default async function renderStarScape(
 							colorStack: [removeOpacity(settings.starScapeCoreColor)],
 						}),
 						opacity: getOpacity(settings.starScapeCoreColor),
-						radius: gameState.galaxy.core_radius * 0.8,
+						radius: gameState.galaxy.core_radius * 0.5,
 						blur: gameState.galaxy.core_radius,
 						scale: 4,
 						octaves: 1,
@@ -142,7 +203,7 @@ export default async function renderStarScape(
 							colorStack: [removeOpacity(settings.starScapeCoreAccentColor)],
 						}),
 						opacity: getOpacity(settings.starScapeCoreAccentColor),
-						radius: gameState.galaxy.core_radius * 0.8,
+						radius: gameState.galaxy.core_radius * 0.5,
 						blur: gameState.galaxy.core_radius * 0.6,
 						scale: 1 / 32,
 						octaves: 4,
@@ -161,12 +222,12 @@ export default async function renderStarScape(
 							colorStack: [removeOpacity(settings.starScapeNebulaColor)],
 						}),
 						opacity: getOpacity(settings.starScapeNebulaColor),
-						radius: 15,
-						blur: 10,
+						radius: 0,
+						blur: 20,
 						scale: 1 / 16,
 						octaves: 12,
 						gain: 0.75,
-						min: 0.25,
+						min: 0,
 						sourceCoordinates: nebulaCoords,
 					},
 					// nebula highlights
@@ -177,8 +238,8 @@ export default async function renderStarScape(
 							colorStack: [removeOpacity(settings.starScapeNebulaAccentColor)],
 						}),
 						opacity: getOpacity(settings.starScapeNebulaAccentColor),
-						radius: 15,
-						blur: 10,
+						radius: 0,
+						blur: 20,
 						scale: 1 / 8,
 						octaves: 12,
 						gain: 0.5,
@@ -194,19 +255,16 @@ export default async function renderStarScape(
 	);
 	app.renderer.resize(output.width, output.height);
 	app.stage.removeChildren();
-	layers.forEach((layer) => {
+	for (const layer of layers) {
 		const isStarLayer = layer.octaves === -1;
 		const c = new PIXI.Color(layer.color);
 		c.premultiply(layer.opacity);
 		c.setAlpha(layer.opacity);
-		const container = new PIXI.Container({ isRenderGroup: true });
+		const container = new PIXI.Container();
 		if (isStarLayer) {
-			const g = new PIXI.Graphics().circle(0, 0, 1).fill(c);
-			const t = app.renderer.generateTexture(g);
-			textures.push(t);
-			g.destroy(true);
-
 			const rng = alea(0);
+			const texture = getStarTexture(layer, outputRatio);
+			textures.push(texture);
 			for (let i = 0; i < (settings.starScapeStarsCount ?? 0); i++) {
 				const origin = layer.sourceCoordinates[Math.floor(rng() * layer.sourceCoordinates.length)];
 				if (!origin) continue;
@@ -216,59 +274,44 @@ export default async function renderStarScape(
 				const dy = Math.sin(angle) * distance;
 				const cx = origin[0] + dx;
 				const cy = origin[1] + dy;
-				const r = rng();
+				const scale = (0.5 + rng() * 0.5) / (layer.radius * 4);
 				if (getDistanceFromStage([cx, cy]) <= 5) {
-					const sprite = PIXI.Sprite.from(t);
+					const sprite = spritePool.pop() ?? PIXI.Sprite.from(texture);
+					sprite.texture = texture;
 					sprites.push(sprite);
 					sprite.anchor = 0.5;
 					sprite.x = cx;
 					sprite.y = cy;
-					sprite.scale = { x: r, y: r };
+					sprite.scale = {
+						x: scale,
+						y: scale,
+					};
 					container.addChild(sprite);
 				}
 			}
-			container.filters = [
-				new PIXI.AlphaFilter({ alpha: Math.max(0.1, 1 - 1 / Math.sqrt(outputRatio)) }),
-				new GlowFilter({
-					color: c.toNumber(),
-					outerStrength: 2 * outputRatio,
-					quality: 0.9,
-				}),
-			];
-			app.stage.addChild(container);
 		} else {
-			const g = new PIXI.Graphics()
-				.circle(0, 0, layer.radius * outputRatio * galaxySizeRadiusAdjustment)
-				.fill(c);
-			const t = app.renderer.generateTexture(g);
-			textures.push(t);
-			g.destroy(true);
-
-			const MAX_BLUR = 2000; // start getting WebGL errors if blur strength is too large
-			const blurStrength = Math.max(
-				1,
-				Math.min(MAX_BLUR, Math.round(layer.blur * galaxySizeRadiusAdjustment * outputRatio)),
+			const gradientTexture = getCircleGradientTexture(
+				layer,
+				outputRatio,
+				galaxySizeRadiusAdjustment,
 			);
-			const radiusPlusBur = layer.radius * outputRatio * galaxySizeRadiusAdjustment + blurStrength;
+			textures.push(gradientTexture);
 
-			const container = new PIXI.Container({ isRenderGroup: true });
+			const radiusPlusBur = (layer.radius + layer.blur) * outputRatio * galaxySizeRadiusAdjustment;
+
 			for (const [cx, cy] of layer.sourceCoordinates.filter(
 				(p) => getDistanceFromStage(p) < radiusPlusBur,
 			)) {
-				const sprite = PIXI.Sprite.from(t);
+				const sprite = spritePool.pop() ?? new PIXI.Sprite();
+				sprite.texture = gradientTexture;
 				sprites.push(sprite);
 				sprite.anchor = 0.5;
 				sprite.x = cx;
 				sprite.y = cy;
+				sprite.scale = { x: 1, y: 1 };
 				container.addChild(sprite);
 			}
-			app.stage.addChild(container);
 
-			const blurFilter = new PIXI.BlurFilter({
-				strength: blurStrength,
-				quality: Math.max(1, Math.round(layer.blur / 4)),
-				kernelSize: 15,
-			});
 			const cloudFilter = PIXI.Filter.from({
 				gl: {
 					name: 'CloudFilter',
@@ -298,21 +341,24 @@ export default async function renderStarScape(
 				},
 			});
 			container.filterArea = new PIXI.Rectangle(0, 0, output.width, output.height);
-			container.filters = [blurFilter, cloudFilter];
+			container.filters = [cloudFilter];
 		}
-	});
+		app.stage.addChild(container);
+	}
 	app.render();
 
 	const dataUrl = canvas.toDataURL();
 
 	for (const child of app.stage.children) {
 		child.filters = [];
+		child.removeFromParent();
+		child.destroy();
 	}
-	for (const s of sprites) {
-		s.destroy(true);
+	for (const sprite of sprites) {
+		spritePool.push(sprite);
 	}
-	for (const t of textures) {
-		t.destroy(true);
+	for (const texture of textures) {
+		texture.destroy(true);
 	}
 
 	return dataUrl;
