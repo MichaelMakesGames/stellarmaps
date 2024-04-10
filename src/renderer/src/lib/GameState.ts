@@ -28,17 +28,18 @@ export interface LocalizedText {
 		value: LocalizedText;
 	}[];
 }
-const localizedTextSchema: z.ZodType<LocalizedText> = z.object({
+const localizedTextSchemaNoDefault: z.ZodType<LocalizedText> = z.object({
 	key: z.coerce.string(),
 	variables: z
 		.array(
 			z.object({
 				key: z.coerce.string(),
-				value: z.lazy(() => localizedTextSchema),
+				value: z.lazy(() => localizedTextSchemaNoDefault),
 			}),
 		)
 		.optional(),
 });
+const localizedTextSchema = localizedTextSchemaNoDefault.default({ key: 'UNKNOWN' });
 
 const galacticObjectSchema = z.object({
 	name: localizedTextSchema,
