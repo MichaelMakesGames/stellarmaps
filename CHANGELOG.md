@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.10.3](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.2...stellarmaps-v0.10.3) (2024-04-16)
+
+### Bug Fixes
+
+- **parser:** increase maximum nested object depth when skipping a value ([2f754e1](https://github.com/MichaelMakesGames/stellarmaps/commit/2f754e129c3387c9a9c5c2b0f1aae22e6f64295c)), closes [#7](https://github.com/MichaelMakesGames/stellarmaps/issues/7)
+- **parser:** provide default for value UNKNOWN if name is missing ([cc76cdd](https://github.com/MichaelMakesGames/stellarmaps/commit/cc76cdd97b2483a8893891a8ce7b988d11a3ec18))
+
 ## [0.10.2](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.1...stellarmaps-v0.10.2) (2024-03-20)
 
 ### Bug Fixes

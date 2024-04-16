@@ -1,6 +1,6 @@
 [package]
 name = "stellarmaps"
-version = "0.10.2"
+version = "0.10.3"
 description = "Stellaris map renderer"
 authors = ["Michael Moore"]
 license = ""
