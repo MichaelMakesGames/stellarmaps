@@ -27,8 +27,6 @@ Stylized and customizable Stellaris maps
 
 ## Known Issues
 
-- There is a memory leak related to background galaxy graphics
-  - For now, I recommend occasionally restarting the application
 - Does not work with mod packs using Irony's "Compressed" merge
 - Exported SVGs are tested with Inkscape and web browsers. Other viewers/editors may or may not work
 - If viewing an SVG with Inkscape, the default Orbitron font will not work unless installed on your computer. [You can download it here.](https://fonts.google.com/specimen/Orbitron)
