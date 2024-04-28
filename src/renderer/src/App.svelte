@@ -9,6 +9,7 @@
 		storePopup,
 	} from '@skeletonlabs/skeleton';
 	import './app.postcss';
+	import { t } from './intl';
 	import ExportModal from './lib/ExportModal.svelte';
 	import Sidebar from './lib/Sidebar.svelte';
 	import VersionInfo from './lib/VersionInfo.svelte';
@@ -25,7 +26,7 @@
 	<svelte:fragment slot="header">
 		<AppBar>
 			<svelte:fragment slot="lead">
-				StellarMaps
+				{$t('top_bar.stellar_maps')}
 				<VersionInfo />
 			</svelte:fragment>
 			<svelte:fragment slot="trail">

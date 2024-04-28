@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+	import { t } from '../intl';
 	import ColorSettingControl from './ColorSettingControl.svelte';
 	import {
 		ICON_POSITIONS,
@@ -28,12 +29,12 @@
 </script>
 
 {#if !value.enabled}
-	<div class="rounded-lg bg-surface-800 p-2 text-surface-300">Disabled</div>
+	<div class="rounded-lg bg-surface-800 p-2 text-surface-300">{$t('generic.disabled')}</div>
 {:else}
 	<div class="rounded-lg bg-surface-800">
 		<div class="p-2 pb-0">
 			<label class="flex items-baseline">
-				<span class="w-24">Icon</span>
+				<span class="w-24">{$t('control.icon.label')}</span>
 				<select
 					class="select"
 					value={value.icon}
@@ -44,14 +45,14 @@
 					{#each groups as group}
 						<optgroup label={group}>
 							{#each iconOptions.filter((opt) => opt.group === group) as option (option.id)}
-								<option value={option.id}>{option.name}</option>
+								<option value={option.id}>{option.literalName ?? $t(option.name)}</option>
 							{/each}
 						</optgroup>
 					{/each}
 				</select>
 			</label>
 			<label class="mt-2 flex items-baseline">
-				<span class="w-24">Size</span>
+				<span class="w-24">{$t('control.icon.size')}</span>
 				<input
 					class="input"
 					type="number"
@@ -74,10 +75,14 @@
 			regionPanel="pt-0"
 		>
 			<AccordionItem>
-				<svelte:fragment slot="summary">Advanced Options</svelte:fragment>
+				<svelte:fragment slot="summary">
+					{$t('control.icon.advanced_options.header')}
+				</svelte:fragment>
 				<div slot="content" class="flex-col space-y-1">
 					<div class="flex items-baseline text-sm">
-						<label for="{config.id}-smoothing" class="ms-1 w-24 cursor-pointer">Position</label>
+						<label for="{config.id}-smoothing" class="ms-1 w-24 cursor-pointer">
+							{$t('control.icon.advanced_options.position')}
+						</label>
 						<select
 							id="{config.id}-position"
 							class="select p-1 text-sm"
@@ -90,12 +95,14 @@
 							}}
 						>
 							{#each ICON_POSITIONS as position}
-								<option value={position}>{position}</option>
+								<option value={position}>{$t(`option.icon_position.${position}`)}</option>
 							{/each}
 						</select>
 					</div>
 					<div class="flex items-baseline text-sm">
-						<label for="{config.id}-smoothing" class="ms-1 w-24 cursor-pointer">Priority</label>
+						<label for="{config.id}-smoothing" class="ms-1 w-24 cursor-pointer">
+							{$t('control.icon.advanced_options.priority')}
+						</label>
 						<input
 							id="{config.id}-priority"
 							class="input p-1 text-sm"
@@ -117,7 +124,7 @@
 		</Accordion>
 		<ColorSettingControl
 			bind:value={color}
-			config={{ id: asAny(`${config.id}-color`), name: `${config.name} Color`, type: 'color' }}
+			config={{ id: asAny(`${config.id}-color`), type: 'color' }}
 		/>
 	</div>
 {/if}

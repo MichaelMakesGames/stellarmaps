@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	import { onDestroy, onMount } from 'svelte';
+	import { t } from '../../intl';
 	import type { GalacticObject, GameState } from '../GameState';
 	import HeroiconUserMicro from '../icons/HeroiconUserMicro.svelte';
 	import { isDefined } from '../utils';
@@ -69,7 +70,7 @@
 >
 	<div class="arrow bg-surface-600" bind:this={arrowEl} />
 	{#await localizeText(system.name)}
-		Loading...
+		{$t('generic.loading')}
 	{:then name}
 		{name}
 	{/await}
@@ -79,7 +80,7 @@
 				<li class="flex flex-row justify-between text-sm">
 					<span>
 						{#await localizeText(planet.name)}
-							Loading...
+							{$t('generic.loading')}
 						{:then name}
 							{name}
 						{/await}

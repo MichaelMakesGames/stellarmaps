@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '../intl';
 	import HeroiconPaintBrushMini from './icons/HeroiconPaintBrushMini.svelte';
 	import {
 		editedMapSettings,
@@ -23,7 +24,7 @@
 		disabled={!valid}
 	>
 		<span><HeroiconPaintBrushMini /></span>
-		<span>Apply Changes</span>
+		<span>{$t('side_bar.apply_changes_button')}</span>
 		<span class="invisible"><HeroiconPaintBrushMini /></span>
 	</button>
 {/if}

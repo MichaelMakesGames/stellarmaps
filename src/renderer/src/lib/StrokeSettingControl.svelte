@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
 	import { fade } from 'svelte/transition';
+	import { t } from '../intl';
 	import type { MapSettingConfigStroke, StrokeSetting } from './mapSettings';
 
 	export let value: StrokeSetting;
@@ -8,12 +9,12 @@
 </script>
 
 {#if !value.enabled}
-	<div class="rounded-lg bg-surface-800 p-2 text-surface-300">Disabled</div>
+	<div class="rounded-lg bg-surface-800 p-2 text-surface-300">{$t('generic.disabled')}</div>
 {:else}
 	<div class="rounded-lg bg-surface-800">
 		<div class="p-2 pb-0">
 			<label class="flex items-baseline">
-				<span class="w-24">Width</span>
+				<span class="w-24">{$t('control.stroke.width')}</span>
 				<input
 					class="input"
 					type="number"
@@ -36,7 +37,7 @@
 			regionPanel="pt-0"
 		>
 			<AccordionItem>
-				<svelte:fragment slot="summary">More Styles</svelte:fragment>
+				<svelte:fragment slot="summary">{$t('control.stroke.more_styles.header')}</svelte:fragment>
 				<div slot="content" class="flex-col space-y-1">
 					{#if !config.noSmoothing}
 						<div class="flex text-sm">
@@ -52,7 +53,9 @@
 									};
 								}}
 							/>
-							<label for="{config.id}-smoothing" class="ms-1 grow cursor-pointer">Smoothing</label>
+							<label for="{config.id}-smoothing" class="ms-1 grow cursor-pointer">
+								{$t('control.stroke.more_styles.smoothed')}
+							</label>
 						</div>
 					{/if}
 					<div class="flex text-sm">
@@ -68,7 +71,9 @@
 								};
 							}}
 						/>
-						<label for="{config.id}-glow" class="ms-1 grow cursor-pointer">Glow</label>
+						<label for="{config.id}-glow" class="ms-1 grow cursor-pointer">
+							{$t('control.stroke.more_styles.glow')}
+						</label>
 					</div>
 					{#if !config.noDashed}
 						<div class="flex text-sm">
@@ -84,10 +89,12 @@
 									};
 								}}
 							/>
-							<label for="{config.id}-dashed" class="ms-1 grow cursor-pointer">Dashed</label>
+							<label for="{config.id}-dashed" class="ms-1 grow cursor-pointer">
+								{$t('control.stroke.more_styles.dashed')}
+							</label>
 							{#if value.dashed}
 								<label class="text-surface-300" for="{config.id}-dashArray" transition:fade>
-									Pattern
+									{$t('control.stroke.more_styles.dash_pattern')}
 								</label>
 								<input
 									id="{config.id}-dashArray"

@@ -4,6 +4,7 @@
 	import type { FormEventHandler } from 'svelte/elements';
 	import { get, type Readable } from 'svelte/store';
 	import { slide } from 'svelte/transition';
+	import { t } from '../intl';
 	import ColorSettingControl from './ColorSettingControl.svelte';
 	import IconSettingControl from './IconSettingControl.svelte';
 	import StrokeSettingControl from './StrokeSettingControl.svelte';
@@ -53,7 +54,13 @@
 		value = { ...value, enabled: (e.currentTarget as HTMLInputElement).checked };
 	}
 
-	$: [valid, invalidMessage] = validateSetting(value, config);
+	$: [valid, invalidMessage, invalidMessageValues] = validateSetting(value, config);
+
+	const richTextHandlers = {
+		ul: (s: string[]) => `<ul class="list-disc ps-4">${s.join()}</ul>`,
+		li: (s: string[]) => `<li>${s.join()}</li>`,
+		strong: (s: string[]) => `<strong class="text-warning-500">${s.join()}</strong>`,
+	};
 
 	onDestroy(() => {
 		unsubscribe();
@@ -63,7 +70,7 @@
 {#if !hidden}
 	<label class="label" for={config.id} transition:slide>
 		<div class="flex items-center">
-			{config.name}
+			{$t(`setting.${config.id}`)}
 			{#if config.tooltip}
 				<button
 					type="button"
@@ -76,7 +83,7 @@
 					class="card variant-filled-secondary z-10 max-w-96 p-2 text-sm"
 					data-popup="{config.id}-tooltip"
 				>
-					{@html config.tooltip}
+					{@html $t(config.tooltip, richTextHandlers)}
 					<div class="variant-filled-secondary arrow" />
 				</div>
 			{/if}
@@ -118,12 +125,12 @@
 		{:else if config.type === 'select'}
 			<select class="select" bind:value>
 				{#each options.filter((opt) => opt.group == null) as option (option.id)}
-					<option value={option.id}>{option.name}</option>
+					<option value={option.id}>{option.literalName ?? $t(option.name)}</option>
 				{/each}
 				{#each groups as group}
-					<optgroup label={group}>
+					<optgroup label={$t(group)}>
 						{#each options.filter((opt) => opt.group === group) as option (option.id)}
-							<option value={option.id}>{option.name}</option>
+							<option value={option.id}>{option.literalName ?? $t(option.name)}</option>
 						{/each}
 					</optgroup>
 				{/each}
@@ -131,7 +138,7 @@
 		{:else if config.type === 'toggle'}
 			<div>
 				<SlideToggle name={config.id} bind:checked={value} active="bg-primary-500">
-					{value ? 'Enabled' : 'Disabled'}
+					{value ? $t('generic.enabled') : $t('generic.disabled')}
 				</SlideToggle>
 			</div>
 		{:else if config.type === 'color'}
@@ -144,7 +151,7 @@
 			<span>WARNING: unimplemented control</span>
 		{/if}
 		{#if !valid && invalidMessage}
-			<span class="text-error-300">{invalidMessage}</span>
+			<span class="text-error-300">{$t(invalidMessage, invalidMessageValues)}</span>
 		{/if}
 	</label>
 {/if}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { t } from '../intl';
 	import { VERSION } from './constants';
 
 	const latestReleasePromise: Promise<string> = fetch(
@@ -8,7 +9,7 @@
 		.then((data) => data[0].name);
 </script>
 
-<span class="text-surface-300">(v{VERSION})</span>
+<span class="px-1 text-surface-300">(v{VERSION})</span>
 {#await latestReleasePromise then latestRelease}
 	{#if !latestRelease.endsWith(VERSION)}
 		<a
@@ -17,7 +18,8 @@
 			target="_blank"
 			rel="noopener"
 		>
-			Download Latest Release {latestRelease.substring(latestRelease.lastIndexOf('v'))}
+			{$t('top_bar.download_latest_release')}
+			{latestRelease.substring(latestRelease.lastIndexOf('v'))}
 		</a>
 	{/if}
 {/await}

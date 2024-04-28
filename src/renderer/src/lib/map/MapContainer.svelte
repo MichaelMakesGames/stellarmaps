@@ -5,6 +5,7 @@
 	import { onDestroy } from 'svelte';
 	import { get } from 'svelte/store';
 	import { fade } from 'svelte/transition';
+	import { t } from '../../intl';
 	import orbitronPath from '../../static/Orbitron-VariableFont_wght.ttf';
 	import { gameStatePromise, type GalacticObject, type GameState } from '../GameState';
 	import { ADDITIONAL_COLORS } from '../colors';
@@ -36,19 +37,18 @@
 	const toastStore = getToastStore();
 	$: $stellarisDataPromiseStore.catch(
 		toastError({
-			title: 'Failed to load Stellaris data',
-			description:
-				'Please try manually selecting your install location. This should be the folder that contains the <pre class="inline">common</pre>, <pre class="inline">flags</pre>, and <pre class="inline">localisation</pre> folders (among others).',
+			title: $t('notification.failed_to_load_stellaris_data.title'),
+			description: $t('notification.failed_to_load_stellaris_data.description'),
 			defaultValue: {} as Record<string, string>,
 			toastStore,
 			action: {
-				label: 'Select Install',
+				label: $t('notification.failed_to_load_stellaris_data.action'),
 				response: () =>
 					stellarMapsApi.dialog
 						.open({
 							directory: true,
 							multiple: false,
-							title: 'Select Stellaris Install',
+							title: $t('prompt.select_stellaris_install'),
 						})
 						.then((result) => {
 							if (typeof result === 'string') {
@@ -384,7 +384,7 @@
 		transition:fade
 		on:click={openExportModal}
 	>
-		Export
+		{$t('export.button')}
 	</button>
 	{#if tooltip != null && !zooming && !resizing}
 		<div class="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
@@ -394,7 +394,7 @@
 	{#if !$gameStatePromise}
 		<div class="flex h-full w-full items-center" style:background={bg}>
 			<div class="h1 w-full text-center" style="lineHeight: 100%;">
-				Select a save in the top left
+				{$t('map.select_save')}
 			</div>
 		</div>
 	{:else if resizing}
@@ -407,13 +407,13 @@
 				class="absolute left-0 top-0 flex h-full w-full items-center backdrop-blur backdrop-brightness-75"
 			>
 				<div class="h1 w-full text-center" style="lineHeight: 100%;">
-					This could take a few seconds...
+					{$t('map.loading')}
 				</div>
 			</div>
 		{:catch reason}
 			<div class="absolute left-0 top-0 flex h-full w-full items-center bg-error-800">
 				<div class="h1 w-full text-center text-error-200">
-					Something has gone wrong
+					{$t('map.error')}
 					<br />
 					<code class="mt-3 inline-block max-w-96 text-sm">
 						{reason.toString().length > 200

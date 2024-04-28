@@ -9,6 +9,7 @@
 		localStorageStore,
 		popup,
 	} from '@skeletonlabs/skeleton';
+	import { t } from '../intl';
 	import ApplyChangesButton from './ApplyChangesButton.svelte';
 	import { gameStatePromise, gameStateSchema } from './GameState';
 	import MapSettingControl from './MapSettingControl.svelte';
@@ -46,7 +47,7 @@
 	function loadSaves() {
 		return stellarMapsApi.loadSaveMetadata().catch(
 			toastError({
-				title: 'Failed to load Stellaris saves',
+				title: $t('notification.failed_to_load_save_list'),
 				defaultValue: [] as StellarisSaveMetadata[][],
 				toastStore,
 			}),
@@ -65,8 +66,8 @@
 			.open({
 				directory: false,
 				multiple: false,
-				title: 'Select Save',
-				filters: [{ name: 'Stellaris Save', extensions: ['sav'] }],
+				title: $t('prompt.select_save_file'),
+				filters: [{ name: $t('prompt.select_save_file_filter_name'), extensions: ['sav'] }],
 			})
 			.then((path) => {
 				if (typeof path === 'string') {
@@ -90,7 +91,9 @@
 			Promise.all(
 				Object.entries(gameState.country)
 					.filter(([_id, country]) => country.type === 'default')
-					.map(([id, country]) => localizeText(country.name).then((name) => ({ id, name }))),
+					.map(([id, country]) =>
+						localizeText(country.name).then((name) => ({ id, literalName: name })),
+					),
 			).then(countryOptions.set);
 		});
 		gameStatePromise.set(promise);
@@ -111,7 +114,7 @@
 
 		promise.catch(
 			toastError({
-				title: `Failed to load ${path}`,
+				title: $t('notification.failed_to_load_save_file', { filePath: path }),
 				defaultValue: null,
 				toastStore,
 			}),
@@ -129,8 +132,8 @@
 			confirmed = await new Promise<boolean>((resolve) => {
 				modalStore.trigger({
 					type: 'confirm',
-					title: 'Are you sure?',
-					body: 'You have customized your map setting that you have not saved. These changes will be lost.',
+					title: $t('generic.confirmation'),
+					body: $t('confirmation.unsaved_setting_profile'),
 					response: resolve,
 				});
 			});
@@ -150,7 +153,7 @@
 	function saveSettings() {
 		modalStore.trigger({
 			type: 'prompt',
-			title: 'Enter a name',
+			title: $t('prompt.enter_settings_profile_name'),
 			value: $loadedSettingsKey.substring($loadedSettingsKey.indexOf('|') + 1),
 			response: (response) => {
 				if (typeof response === 'string') {
@@ -167,7 +170,7 @@
 					);
 					loadedSettingsKey.set(`CUSTOM|${response}`);
 					toastStore.trigger({
-						message: `"${response}" settings saved`,
+						message: $t('notification.settings_profile_saved', { name: response }),
 						background: 'variant-filled-success',
 					});
 				}
@@ -192,18 +195,18 @@
 		}}
 	>
 		<div class="flex">
-			<h2 class="label flex-1">Save Game</h2>
+			<h2 class="label flex-1">{$t('side_bar.save_game')}</h2>
 			<button type="button" class="text-sm text-surface-300" on:click={manuallySelectSave}>
-				Select Manually
+				{$t('side_bar.select_manually_button')}
 			</button>
 			<span class="px-2 text-surface-600">|</span>
 			<button type="button" class="text-sm text-surface-300" on:click={refreshSaves}>
-				Refresh
+				{$t('side_bar.refresh_saves_button')}
 			</button>
 		</div>
 		<select class="select mb-1" bind:value={selectedSaveGroup}>
 			{#if selectedSaveGroup == null}
-				<option value={null} disabled>Select a save...</option>
+				<option value={null} disabled>{$t('side_bar.select_save_placeholder')}</option>
 			{/if}
 			{#await savesPromise then saves}
 				{#each saves as saveGroup}
@@ -232,13 +235,15 @@
 			class:variant-filled-primary={selectedSave && selectedSave !== loadedSave}
 			class:variant-filled-surface={!selectedSave || selectedSave === loadedSave}
 		>
-			Load Save
+			{$t('side_bar.load_save_button')}
 		</button>
 	</form>
 
 	<div class="flex items-baseline p-4 pb-1" style="transition-duration: 50ms;">
-		<h2 class="h3 flex-1">Map Settings</h2>
-		<button type="button" class="mx-2 text-primary-500" on:click={saveSettings}>Save</button>
+		<h2 class="h3 flex-1">{$t('side_bar.map_settings')}</h2>
+		<button type="button" class="mx-2 text-primary-500" on:click={saveSettings}>
+			{$t('side_bar.save_settings_button')}
+		</button>
 		<button
 			type="button"
 			class="text-primary-500"
@@ -249,13 +254,13 @@
 				closeQuery: '.listbox-item',
 			}}
 		>
-			Load
+			{$t('side_bar.load_settings_button')}
 		</button>
 		<div class="card z-10 w-64 py-2 shadow-xl" data-popup="popupCombobox">
 			<ListBox rounded="rounded-none" active="variant-filled-primary">
 				{#if $customSavedSettings.length > 0}
 					<div class="px-4 pt-2 text-secondary-300" style="font-variant-caps: small-caps;">
-						Custom
+						{$t('side_bar.custom_setting_profiles')}
 					</div>
 					{#each $customSavedSettings as saved}
 						<ListBoxItem
@@ -275,8 +280,8 @@
 									on:click={() => {
 										modalStore.trigger({
 											type: 'confirm',
-											title: 'Are you sure?',
-											body: `You are about to delete "${saved.name}". This cannot be undone.`,
+											title: $t('generic.confirmation'),
+											body: $t('confirmation.delete_setting_profile', { name: saved.name }),
 											buttonTextConfirm: 'Delete',
 											response: (response) => {
 												if (response) {
@@ -295,7 +300,7 @@
 					{/each}
 				{/if}
 				<div class="px-4 pt-2 text-secondary-300" style="font-variant-caps: small-caps;">
-					Presets
+					{$t('side_bar.preset_setting_profiles')}
 				</div>
 				{#each presetMapSettings as preset}
 					<ListBoxItem
@@ -321,7 +326,7 @@
 				<AccordionItem regionPanel="space-y-6">
 					<svelte:fragment slot="summary">
 						<h3 class="h4 font-bold">
-							{settingGroup.name}
+							{$t(settingGroup.name)}
 						</h3>
 					</svelte:fragment>
 					<svelte:fragment slot="content">

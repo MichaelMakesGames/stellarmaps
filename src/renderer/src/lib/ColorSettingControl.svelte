@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+	import { t } from '../intl';
 	import ColorSettingAdjustmentControl from './ColorSettingAdjustmentControl.svelte';
 	import {
 		colorDynamicOptions,
@@ -21,14 +22,15 @@
 				.filter(isDefined)
 				.filter(
 					// don't show dynamic colors group if no dynamic colors are allowed
-					(group) => !(group === 'Dynamic Colors' && config.allowedDynamicColors?.length === 0),
+					(group) =>
+						!(group === 'option.color.group.dynamic' && config.allowedDynamicColors?.length === 0),
 				),
 		),
 	);
 	$: selectValue = options.find((option) => option.id === value.color)?.id;
 
 	function filterAllowedOption(option: SelectOption) {
-		if (option.group !== 'Dynamic Colors') return true;
+		if (option.group !== 'option.color.group.dynamic') return true;
 		if (config.allowedDynamicColors == null) return true;
 		return (config.allowedDynamicColors as string[]).includes(option.id);
 	}
@@ -37,7 +39,7 @@
 <div class="rounded-lg bg-surface-800">
 	<div class="p-2 pb-0">
 		<label class="flex items-baseline">
-			<span class="w-24">Color</span>
+			<span class="w-24">{$t('control.color.label')}</span>
 			<select
 				class="select"
 				value={selectValue}
@@ -46,11 +48,11 @@
 				}}
 			>
 				{#each groups as group}
-					<optgroup label={group}>
+					<optgroup label={$t(group)}>
 						{#each options
 							.filter((opt) => opt.group === group)
 							.filter(filterAllowedOption) as option (option.id)}
-							<option value={option.id}>{option.name}</option>
+							<option value={option.id}>{option.literalName ?? $t(option.name)}</option>
 						{/each}
 					</optgroup>
 				{/each}
@@ -66,7 +68,8 @@
 	>
 		<AccordionItem>
 			<svelte:fragment slot="summary">
-				Color Adjustments <div class="relative inline-block">
+				{$t('control.color.adjustment.header')}
+				<div class="relative inline-block">
 					<span class="variant-filled-secondary badge-icon absolute left-0 top-[-14px]">
 						{value.colorAdjustments?.length ?? 0}
 					</span>
@@ -111,7 +114,7 @@
 						};
 					}}
 				>
-					+ Add Adjustment
+					{$t('control.color.adjustment.add_button')}
 				</button>
 			</div>
 		</AccordionItem>

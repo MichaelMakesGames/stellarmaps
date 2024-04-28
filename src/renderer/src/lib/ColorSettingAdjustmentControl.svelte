@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { fly } from 'svelte/transition';
+	import { t } from '../intl';
 	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import {
 		COLOR_SETTING_ADJUSTMENT_TYPES,
 		type ColorSettingAdjustment,
-		type ColorSettingAdjustmentType,
 		type MapSettingConfigColor,
 	} from './mapSettings';
 
@@ -21,22 +21,13 @@
 	function onTypeChange(e: Event & { currentTarget: EventTarget & HTMLSelectElement }) {
 		dispatch('typeChange', e.currentTarget.value as ColorSettingAdjustment['type']);
 	}
-
-	const ADJUSTMENT_NAMES: Record<ColorSettingAdjustmentType, string> = {
-		LIGHTEN: 'Lighten',
-		DARKEN: 'Darken',
-		MIN_LIGHTNESS: 'Min Lightness',
-		MAX_LIGHTNESS: 'Max Lightness',
-		MIN_CONTRAST: 'Min Contrast',
-		OPACITY: 'Opacity',
-	};
 </script>
 
 <div class="flex space-x-2" transition:fly>
 	<select class="select w-1/2 p-1 text-sm" value={adjustment.type ?? ''} on:change={onTypeChange}>
-		<option value="">Select type...</option>
+		<option value="">{$t('control.color.adjustment.placeholder')}</option>
 		{#each COLOR_SETTING_ADJUSTMENT_TYPES.filter((t) => !config.allowedAdjustments || config.allowedAdjustments.includes(t)) as type}
-			<option value={type}>{ADJUSTMENT_NAMES[type]}</option>
+			<option value={type}>{$t(`option.color_adjustment.${type}`)}</option>
 		{/each}
 	</select>
 	<input

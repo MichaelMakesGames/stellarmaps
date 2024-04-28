@@ -6,6 +6,7 @@
 		getToastStore,
 		localStorageStore,
 	} from '@skeletonlabs/skeleton';
+	import { t } from '../intl';
 	import type { GameState } from './GameState';
 	import convertSvgToPng from './convertSvgToPng';
 	import type { MapData } from './map/data/processMapData';
@@ -134,7 +135,7 @@
 			await stellarMapsApi.fs.writeBinaryFile(savePath, new Uint8Array(buffer)).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
-					message: 'Export Successful',
+					message: $t('notification.export_success'),
 					timeout: 10000,
 					action: {
 						label: `
@@ -204,7 +205,7 @@
 			await stellarMapsApi.fs.writeFile(savePath, svgString).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
-					message: 'Export Successful',
+					message: $t('notification.export_success'),
 					timeout: 10000,
 					action: {
 						label: `
@@ -230,7 +231,7 @@
 			closeAndSaveSettings();
 		} catch (error) {
 			toastError({
-				title: 'Export Failed',
+				title: $t('notification.export_failed'),
 				defaultValue: null,
 				toastStore,
 			})(error);
@@ -249,13 +250,14 @@
 	}}
 	novalidate
 >
-	<header class="modal-header text-2xl font-bold">Export PNG</header>
+	<header class="modal-header text-2xl font-bold">{$t('export.header')}</header>
 	<article class="modal-body flex space-x-5">
 		<div class="inline-block w-0 flex-1">
 			<div class="mb-1 flex justify-between">
-				<p>Image Size</p>
+				<p>{$t('export.image_size')}</p>
 				<small class="flex">
-					Lock Aspect Ratio <SlideToggle
+					{$t('export.lock_aspect_ratio')}
+					<SlideToggle
 						size="sm"
 						name="lock-aspect-ratio"
 						class="ml-1"
@@ -296,7 +298,7 @@
 				/>
 				<div class="input-group-shim !justify-center !px-0">px</div>
 			</div>
-			<p class="mb-1 mt-3">Zoom</p>
+			<p class="mb-1 mt-3">{$t('export.zoom')}</p>
 			<RangeSlider
 				disabled={processing}
 				name="zoom"
@@ -306,7 +308,8 @@
 				bind:value={zoom}
 			/>
 			<p class="mb-1 mt-3">
-				Center <span class="ml-1 text-surface-300">(The galaxy is about 1000 units across.)</span>
+				{$t('export.center')}
+				<span class="ml-1 text-surface-300">{$t('export.center_hint')}</span>
 			</p>
 			<div class="input-group input-group-divider grid-cols-[auto_3rem_3rem_auto_3rem]">
 				<input
@@ -354,7 +357,8 @@
 		</div>
 		<aside class="inline-block w-[12rem] flex-initial">
 			<p>
-				Preview: <small>(Click to center)</small>
+				{$t('export.preview')}
+				<small>{$t('export.click_to_center')}</small>
 			</p>
 			<!-- svelte-ignore a11y-click-events-have-key-events a11y-interactive-supports-focus -->
 			<svg
@@ -433,7 +437,7 @@
 			}}
 			disabled={processing}
 		>
-			Reset
+			{$t('export.reset_button')}
 		</button>
 		<button
 			type="button"
@@ -441,7 +445,7 @@
 			on:click={modalStore.close}
 			disabled={processing}
 		>
-			Cancel
+			{$t('generic.cancel_button')}
 		</button>
 		<button
 			type="button"
@@ -449,10 +453,10 @@
 			disabled={processing}
 			on:click={() => onSubmit(exportSvg)}
 		>
-			{processing ? 'Processing...' : 'Export SVG'}
+			{processing ? $t('export.processing') : $t('export.export_svg_button')}
 		</button>
 		<button type="submit" class="variant-filled-primary btn" disabled={processing}>
-			{processing ? 'Processing...' : 'Export PNG'}
+			{processing ? $t('export.processing') : $t('export.export_png_button')}
 		</button>
 	</footer>
 </form>

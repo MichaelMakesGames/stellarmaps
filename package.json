@@ -1,6 +1,6 @@
 {
 	"name": "stellarmaps",
-	"version": "0.10.3",
+	"version": "0.11.0-dev",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -85,6 +85,7 @@
 		"electron": "^29.3.0",
 		"fast-glob": "^3.3.2",
 		"font-list": "^1.5.1",
+		"intl-messageformat": "^10.5.11",
 		"magickwand.js": "^1.0.2",
 		"pixi.js": "^8.1.0",
 		"platform-paths": "^1.2.2",
