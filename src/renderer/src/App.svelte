@@ -5,23 +5,28 @@
 		AppShell,
 		Modal,
 		Toast,
+		getModalStore,
 		initializeStores,
 		storePopup,
 	} from '@skeletonlabs/skeleton';
 	import './app.postcss';
 	import { t } from './intl';
+	import AppSettingsModal from './lib/AppSettingsModal.svelte';
 	import ExportModal from './lib/ExportModal.svelte';
 	import Sidebar from './lib/Sidebar.svelte';
 	import VersionInfo from './lib/VersionInfo.svelte';
 	import Discord from './lib/icons/Discord.svelte';
+	import HeroiconCog6ToothSolid from './lib/icons/HeroiconCog6ToothSolid.svelte';
 	import MapContainer from './lib/map/MapContainer.svelte';
 
 	initializeStores();
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });
+
+	const modalStore = getModalStore();
 </script>
 
 <Toast position="t" background="variant-filled-error" />
-<Modal components={{ export: { ref: ExportModal } }} />
+<Modal components={{ export: { ref: ExportModal }, settings: { ref: AppSettingsModal } }} />
 <AppShell slotPageContent="h-full" regionPage="h-full">
 	<svelte:fragment slot="header">
 		<AppBar>
@@ -33,6 +38,13 @@
 				<a class="anchor" href="https://discord.gg/72kaXW782b" target="_blank" rel="noopener">
 					<Discord />
 				</a>
+				<div class="mx-2 h-6 border-r border-r-surface-500"></div>
+				<button
+					type="button"
+					on:click={() => modalStore.trigger({ type: 'component', component: 'settings' })}
+				>
+					<HeroiconCog6ToothSolid />
+				</button>
 			</svelte:fragment>
 		</AppBar>
 	</svelte:fragment>

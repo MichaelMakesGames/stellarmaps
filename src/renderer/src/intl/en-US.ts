@@ -30,6 +30,7 @@ export default {
 		enabled: 'Enabled',
 		disabled: 'Disabled',
 		cancel_button: 'Cancel',
+		close_button: 'Close',
 		loading: 'Loading...',
 		confirmation: 'Are you sure?',
 	},
@@ -82,6 +83,11 @@ export default {
 		export_svg_button: 'Export SVG',
 		export_png_button: 'Export PNG',
 		processing: 'Processing...',
+	},
+	// messages in the app settings popup
+	app_settings: {
+		title: 'Settings',
+		description: 'All changes are automatically saved and applied.',
 	},
 	// labels for various types of setting controls
 	// (shared by multiple settings)
@@ -291,11 +297,12 @@ export default {
 		hyperlaneSensitiveBorders_tooltip: `<ul>
 			<li>When enabled, borders will follow hyperlanes.</li>
 			<li>When disabled, only solar systems affect borders.</li>
-			<li>Not supported if the following are enabled:</li>
-			<li><ul>
-				<li>Metro-style Hyperlanes</li>
-				<li>Align Solar Systems to Grid</li>
-			</ul></li>
+			<li>Not supported if the following are enabled:
+				<ul>
+					<li>Metro-style Hyperlanes</li>
+					<li>Align Solar Systems to Grid</li>
+				</ul>
+			</li>
 		</ul>`,
 		voronoiGridSize: 'Voronoi Grid Size',
 		voronoiGridSize_tooltip: `<ul>
@@ -328,5 +335,8 @@ export default {
 		starScapeStars: 'Stars',
 		starScapeStarsColor: 'Stars Color',
 		starScapeStarsCount: 'Star Count',
+		appLocale: 'StellarMaps Language',
+		appStellarisLanguage: 'Stellaris Language',
+		appTranslatorMode: 'Translator Mode',
 	},
 };

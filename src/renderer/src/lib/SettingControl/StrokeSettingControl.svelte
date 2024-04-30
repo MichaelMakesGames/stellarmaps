@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
 	import { fade } from 'svelte/transition';
-	import { t } from '../intl';
-	import type { MapSettingConfigStroke, StrokeSetting } from './mapSettings';
+	import { t } from '../../intl';
+	import type { SettingConfigStroke, StrokeSetting } from '../settings';
 
 	export let value: StrokeSetting;
-	export let config: MapSettingConfigStroke;
+	export let config: SettingConfigStroke<Record<string, any>, string>;
 </script>
 
 {#if !value.enabled}

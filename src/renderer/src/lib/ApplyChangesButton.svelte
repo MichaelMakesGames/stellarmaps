@@ -2,17 +2,20 @@
 	import { t } from '../intl';
 	import HeroiconPaintBrushMini from './icons/HeroiconPaintBrushMini.svelte';
 	import {
+		asUnknownSettingConfig,
 		editedMapSettings,
-		mapSettingConfig,
 		mapSettings,
+		mapSettingsConfig,
 		settingsAreDifferent,
 		validateSetting,
-	} from './mapSettings';
+	} from './settings';
 
 	$: shouldShow = settingsAreDifferent($editedMapSettings, $mapSettings);
-	$: valid = mapSettingConfig
+	$: valid = mapSettingsConfig
 		.flatMap((category) => category.settings)
-		.every((config) => validateSetting($editedMapSettings[config.id], config)[0]);
+		.every(
+			(config) => validateSetting($editedMapSettings[config.id], asUnknownSettingConfig(config))[0],
+		);
 </script>
 
 {#if shouldShow}

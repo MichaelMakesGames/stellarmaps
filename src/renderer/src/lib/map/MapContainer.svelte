@@ -18,7 +18,7 @@
 		stellarisDataPromiseStore,
 		stellarisPathStore,
 	} from '../loadStellarisData';
-	import { lastProcessedMapSettings, mapSettings } from '../mapSettings';
+	import { lastProcessedMapSettings, mapSettings } from '../settings';
 	import stellarMapsApi from '../stellarMapsApi';
 	import { debounce, timeItAsync, toastError } from '../utils';
 	import Map from './Map.svelte';

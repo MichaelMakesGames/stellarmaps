@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { t } from '../intl';
-	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
+	import { t } from '../../intl';
+	import HeroiconTrashMini from '../icons/HeroiconTrashMini.svelte';
 	import {
 		COLOR_SETTING_ADJUSTMENT_TYPES,
 		type ColorSettingAdjustment,
-		type MapSettingConfigColor,
-	} from './mapSettings';
+		type SettingConfigColor,
+	} from '../settings';
 
 	export let adjustment: ColorSettingAdjustment;
-	export let config: MapSettingConfigColor;
+	export let config: SettingConfigColor<unknown, unknown>;
 
 	const dispatch = createEventDispatcher<{
 		typeChange: ColorSettingAdjustment['type'];

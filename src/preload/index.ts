@@ -24,10 +24,20 @@ const api: StellarMapsAPI = {
 	path: {
 		join: (...paths: string[]) => Promise.resolve(path.join(...paths)),
 		pictureDir: () => platformPaths.pictures(),
+		appConfigDir: () =>
+			platformPaths.home().then((home) => `${home}/.config/games.michaelmakes.stellarmaps`),
 	},
 	fs: {
 		writeFile: (path, content) => fs.writeFile(path, content, { encoding: 'utf-8' }),
 		writeBinaryFile: (path, content) => fs.writeFile(path, new DataView(content)),
+		createDir: (path, options) =>
+			fs.mkdir(path, options.recursive ? options : undefined).then(() => {}),
+		exists: (path) =>
+			fs
+				.lstat(path)
+				.then(() => true)
+				.catch(() => false),
+		readTextFile: (path) => fs.readFile(path, { encoding: 'utf-8' }),
 	},
 	revealFile: (path) => Promise.resolve(shell.showItemInFolder(path)),
 };

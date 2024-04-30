@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
-	import { t } from '../intl';
-	import ColorSettingControl from './ColorSettingControl.svelte';
+	import { t } from '../../intl';
 	import {
 		ICON_POSITIONS,
 		iconOptions,
 		type IconPosition,
 		type IconSetting,
-		type MapSettingConfigIcon,
-	} from './mapSettings';
-	import { isDefined } from './utils';
+		type SettingConfigIcon,
+	} from '../settings';
+	import { isDefined } from '../utils';
+	import ColorSettingControl from './ColorSettingControl.svelte';
 
 	export let value: IconSetting;
-	export let config: MapSettingConfigIcon;
+	export let config: SettingConfigIcon<Record<string, any>, string>;
 	let color = value.color;
 	$: if (value.color !== color) {
 		value = { ...value, color };

@@ -1,5 +1,5 @@
 import type { GameState } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
+import type { MapSettings } from '../../settings';
 import { isDefined } from '../../utils';
 import type processSystemOwnership from './processSystemOwnership';
 import { getCountryColors } from './utils';

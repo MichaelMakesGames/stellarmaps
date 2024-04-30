@@ -1,5 +1,5 @@
 import type { GameState } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
+import type { MapSettings } from '../../settings';
 import { applyGalaxyBoundary, multiPolygonToPath, type PolygonalFeature } from './utils';
 
 export const processTerraIncognitaPathDeps = ['borderStroke'] satisfies (keyof MapSettings)[];

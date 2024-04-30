@@ -1,6 +1,6 @@
 import * as turf from '@turf/turf';
 import type { GameState, Sector } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
+import type { MapSettings } from '../../settings';
 import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
 import type processCircularGalaxyBorders from './processCircularGalaxyBorder';
 import type { BorderCircle } from './processCircularGalaxyBorder';

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mapSettings } from '../mapSettings';
+	import { mapSettings } from '../settings';
 	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
 	import {

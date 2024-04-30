@@ -1,5 +1,5 @@
 import type { GameState } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
+import type { MapSettings } from '../../settings';
 
 export const processTerraIncognitaDeps = [
 	'terraIncognitaPerspectiveCountry',

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { afterUpdate, createEventDispatcher } from 'svelte';
 	import debug from '../debug';
-	import { mapSettings } from '../mapSettings';
+	import { mapSettings } from '../settings';
 	import BypassLinks from './BypassLinks.svelte';
 	import CountryBorders from './CountryBorders.svelte';
 	import CountryLabels from './CountryLabels.svelte';

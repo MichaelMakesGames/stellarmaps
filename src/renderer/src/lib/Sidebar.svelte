@@ -12,23 +12,25 @@
 	import { t } from '../intl';
 	import ApplyChangesButton from './ApplyChangesButton.svelte';
 	import { gameStatePromise, gameStateSchema } from './GameState';
-	import MapSettingControl from './MapSettingControl.svelte';
+	import SettingControl from './SettingControl/index.svelte';
 	import debug from './debug';
 	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import { localizeText } from './map/data/locUtils';
 	import {
 		applyMapSettings,
+		asUnknownSettingConfig,
 		countryOptions,
 		editedMapSettings,
 		lastProcessedMapSettings,
-		mapSettingConfig,
 		mapSettings,
+		mapSettingsConfig,
 		presetMapSettings,
 		settingsAreDifferent,
-		validateAndResetSettings,
+		validateAndResetMapSettings,
 		type SavedMapSettings,
-	} from './mapSettings';
-	import stellarMapsApi, { type StellarisSaveMetadata } from './stellarMapsApi';
+	} from './settings';
+	import type { StellarisSaveMetadata } from './stellarMapsApi';
+	import stellarMapsApi from './stellarMapsApi';
 	import { saveToWindow, timeIt, timeItAsync, toastError, wait } from './utils';
 
 	const modalStore = getModalStore();
@@ -141,7 +143,7 @@
 		if (confirmed) {
 			loadedSettingsKey.set(`${type}|${savedSettings.name}`);
 			if (settingsAreDifferent(savedSettings.settings, $mapSettings)) {
-				const validated = validateAndResetSettings(savedSettings.settings);
+				const validated = validateAndResetMapSettings(savedSettings.settings);
 				editedMapSettings.set(validated);
 				mapSettings.set(validated);
 				lastProcessedMapSettings.set(validated);
@@ -322,7 +324,7 @@
 
 	<div class="flex-shrink flex-grow overflow-y-auto">
 		<Accordion spacing="space-y-2">
-			{#each mapSettingConfig as settingGroup (settingGroup.id)}
+			{#each mapSettingsConfig as settingGroup (settingGroup.id)}
 				<AccordionItem regionPanel="space-y-6">
 					<svelte:fragment slot="summary">
 						<h3 class="h4 font-bold">
@@ -331,7 +333,10 @@
 					</svelte:fragment>
 					<svelte:fragment slot="content">
 						{#each settingGroup.settings as config (config.id)}
-							<MapSettingControl {config} />
+							<SettingControl
+								config={asUnknownSettingConfig(config)}
+								settings={editedMapSettings}
+							/>
 						{/each}
 					</svelte:fragment>
 				</AccordionItem>

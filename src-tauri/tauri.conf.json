@@ -22,8 +22,11 @@
         "save": true
       },
       "fs": {
-        "scope": ["$PICTURE/*"],
-        "writeFile": true
+        "scope": ["$PICTURE/*", "$APPCONFIG", "$APPCONFIG/*"],
+        "exists": true,
+        "createDir": true,
+        "writeFile": true,
+        "readFile": true
       },
       "os": {
         "all": true

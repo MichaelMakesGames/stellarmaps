@@ -7,7 +7,7 @@ import 'pixi.js/graphics';
 import 'pixi.js/unsafe-eval';
 import * as R from 'rambda';
 import type { GameState } from '../../GameState';
-import type { ColorSetting, MapSettings } from '../../mapSettings';
+import type { ColorSetting, MapSettings } from '../../settings';
 import { isDefined } from '../../utils';
 import { resolveColor } from '../mapUtils';
 import shaderString from './noiseShader.glsl?raw';

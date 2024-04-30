@@ -2,7 +2,7 @@ import * as R from 'rambda';
 import { get } from 'svelte/store';
 import type { GameState } from '../../GameState';
 import debug from '../../debug';
-import type { MapSettings } from '../../mapSettings';
+import type { MapSettings } from '../../settings';
 import { timeIt, timeItAsync } from '../../utils';
 import processBorders, { processBordersDeps } from './processBorders';
 import processBypassLinks from './processBypassLinks';

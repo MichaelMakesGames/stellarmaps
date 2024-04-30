@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mapSettings } from '../mapSettings';
+	import { mapSettings } from '../settings';
 	import type { MapData } from './data/processMapData';
 	export let data: MapData;
 	$: terraIncognitaColor = `rgb(${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness})`;

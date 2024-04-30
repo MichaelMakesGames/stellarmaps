@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { mapSettings } from '../mapSettings';
+	import { mapSettings } from '../settings';
 	$: terraIncognitaLightStripeColor = `rgb(${Math.min(
 		255,
 		$mapSettings.terraIncognitaBrightness + 10,

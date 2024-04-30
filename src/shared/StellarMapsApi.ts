@@ -28,10 +28,14 @@ export interface StellarMapsAPI {
 	path: {
 		join(...paths: string[]): Promise<string>;
 		pictureDir(): Promise<string>;
+		appConfigDir(): Promise<string>;
 	};
 	fs: {
 		writeFile: (path: string, content: string) => Promise<void>;
 		writeBinaryFile: (path: string, content: ArrayBuffer) => Promise<void>;
+		readTextFile: (path: string) => Promise<string>;
+		createDir: (path: string, options: { recursive: boolean }) => Promise<void>;
+		exists: (path: string) => Promise<boolean>;
 	};
 	revealFile: (path: string) => Promise<void>;
 }

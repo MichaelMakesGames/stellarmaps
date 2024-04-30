@@ -1,11 +1,11 @@
 <script lang="ts">
 	import {
-		mapSettingConfig,
 		mapSettings,
+		mapSettingsConfig,
 		type IconMapSettings,
-		type MapSettingConfigIcon,
 		type MapSettings,
-	} from '../mapSettings';
+		type SettingConfigIcon,
+	} from '../settings';
 	import type { MapData } from './data/processMapData';
 	import { getFillColorAttributes } from './mapUtils';
 
@@ -29,9 +29,12 @@
 	};
 
 	function getSystemIcons(system: MapData['systems'][number], mapSettings: MapSettings) {
-		const iconSettingConfigs = mapSettingConfig
+		const iconSettingConfigs = mapSettingsConfig
 			.flatMap((category) => category.settings)
-			.filter((config): config is MapSettingConfigIcon => config.type === 'icon')
+			.filter(
+				(config): config is SettingConfigIcon<MapSettings, IconMapSettings> =>
+					config.type === 'icon',
+			)
 			.filter((config) => mapSettings[config.id].enabled)
 			.filter((config) => {
 				const systemProperty = metadata[config.id].systemProperty;

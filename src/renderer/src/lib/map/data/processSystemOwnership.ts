@@ -1,7 +1,7 @@
 import * as turf from '@turf/turf';
 
 import type { GameState } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
+import type { MapSettings } from '../../settings';
 import { getOrSetDefault } from '../../utils';
 import { getFrontierSectorPseudoId, getUnionLeaderId, pointToGeoJSON } from './utils';
 

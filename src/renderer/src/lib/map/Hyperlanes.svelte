@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isColorDynamic, mapSettings } from '../mapSettings';
+	import { isColorDynamic, mapSettings } from '../settings';
 	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
 	import { getStrokeAttributes, getStrokeColorAttributes } from './mapUtils';

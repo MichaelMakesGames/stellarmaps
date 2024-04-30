@@ -1,0 +1,508 @@
+import { type MapSettingConfigGroup } from './SettingConfig';
+import { countryOptions } from './options/countryOptions';
+import { fontOptions } from './options/fontOptions';
+import { glyphOptions } from './options/glyphOptions';
+import { unionOptions } from './options/unionOptions';
+import { isColorDynamic } from './utils';
+
+export const mapSettingsConfig: MapSettingConfigGroup[] = [
+	{
+		id: 'borders',
+		name: 'setting.group.borders',
+		settings: [
+			{
+				id: 'borderStroke',
+				type: 'stroke',
+				noDashed: true,
+				requiresReprocessing: (prev, next) =>
+					prev.width !== next.width || prev.smoothing !== next.smoothing,
+			},
+			{
+				id: 'borderColor',
+				type: 'color',
+				allowedDynamicColors: ['primary', 'secondary'],
+				hideIf: (settings) => !settings.borderStroke.enabled,
+			},
+			{
+				id: 'borderFillColor',
+				type: 'color',
+				hideIf: (settings) => !settings.borderStroke.enabled,
+			},
+			{
+				id: 'borderFillFade',
+				type: 'range',
+				hideIf: (settings) => !settings.borderStroke.enabled,
+				min: 0,
+				max: 1,
+				step: 0.05,
+			},
+			{
+				id: 'sectorBorderStroke',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+			},
+			{
+				id: 'sectorBorderColor',
+				type: 'color',
+				hideIf: (settings) => !settings.sectorBorderStroke.enabled,
+			},
+			{
+				id: 'unionBorderStroke',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+				hideIf: (settings) =>
+					!settings.unionMode ||
+					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
+			},
+		],
+	},
+	{
+		id: 'unions',
+		name: 'setting.group.unions',
+		settings: [
+			{
+				id: 'unionMode',
+				type: 'toggle',
+				requiresReprocessing: true,
+			},
+			{
+				id: 'unionSubjects',
+				requiresReprocessing: true,
+				type: 'select',
+				options: unionOptions,
+				hideIf: (settings) => !settings.unionMode,
+			},
+			{
+				id: 'unionFederations',
+				requiresReprocessing: true,
+				type: 'select',
+				options: unionOptions,
+				hideIf: (settings) => !settings.unionMode,
+			},
+			{
+				id: 'unionFederationsColor',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [
+					{ id: 'founder', name: 'option.union_federations_color.founder' },
+					{ id: 'leader', name: 'option.union_federations_color.leader' },
+				],
+				hideIf: (settings) => !settings.unionMode || settings.unionFederations === 'off',
+			},
+			{
+				id: 'unionLeaderSymbol',
+				type: 'select',
+				options: glyphOptions,
+				hideIf: (settings) => !settings.unionMode || !settings.countryEmblems,
+			},
+			{
+				id: 'unionLeaderSymbolSize',
+				type: 'range',
+				min: 0.05,
+				max: 1,
+				step: 0.05,
+				hideIf: (settings) =>
+					!settings.unionMode || !settings.countryEmblems || settings.unionLeaderSymbol === 'none',
+			},
+			{
+				id: 'unionLeaderUnderline',
+				type: 'toggle',
+				hideIf: (settings) => !settings.unionMode || !settings.countryNames,
+			},
+		],
+	},
+	{
+		id: 'countryLabels',
+		name: 'setting.group.countryLabels',
+		settings: [
+			{
+				id: 'countryNames',
+				requiresReprocessing: true,
+				type: 'toggle',
+			},
+			{
+				id: 'countryNamesType',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [
+					{
+						id: 'countryOnly',
+						name: 'option.country_names_type.country_only',
+					},
+					{
+						id: 'playerOnly',
+						name: 'option.country_names_type.player_only',
+					},
+					{
+						id: 'countryThenPlayer',
+						name: 'option.country_names_type.country_then_player',
+					},
+					{
+						id: 'playerThenCountry',
+						name: 'option.country_names_type.player_then_country',
+					},
+				],
+			},
+			{
+				id: 'countryNamesMinSize',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryNames,
+			},
+			{
+				id: 'countryNamesMaxSize',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryNames,
+			},
+			{
+				id: 'countryNamesSecondaryRelativeSize',
+				type: 'number',
+				min: 0,
+				step: 0.05,
+				optional: true,
+				hideIf: (settings) =>
+					!['countryThenPlayer', 'playerThenCountry'].includes(settings.countryNamesType),
+			},
+			{
+				id: 'countryNamesFont',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [{ id: 'Orbitron', literalName: 'Orbitron' }],
+				dynamicOptions: fontOptions,
+				hideIf: (settings) => !settings.countryNames,
+			},
+			{
+				id: 'countryEmblems',
+				requiresReprocessing: true,
+				type: 'toggle',
+			},
+			{
+				id: 'countryEmblemsMinSize',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryEmblems,
+			},
+			{
+				id: 'countryEmblemsMaxSize',
+				requiresReprocessing: true,
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				hideIf: (settings) => !settings.countryEmblems,
+			},
+			{
+				id: 'labelsAvoidHoles',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [
+					{ id: 'all', name: 'option.labels_avoid_holes.all' },
+					{ id: 'owned', name: 'option.labels_avoid_holes.owned' },
+					{ id: 'none', name: 'option.labels_avoid_holes.none' },
+				],
+				hideIf: (settings) => !settings.countryNames && !settings.countryEmblems,
+			},
+		],
+	},
+	{
+		id: 'systemIcons',
+		name: 'setting.group.systemIcons',
+		settings: [
+			{
+				id: 'countryCapitalIcon',
+				type: 'icon',
+			},
+			{
+				id: 'sectorCapitalIcon',
+				type: 'icon',
+			},
+			{
+				id: 'populatedSystemIcon',
+				type: 'icon',
+			},
+			{
+				id: 'unpopulatedSystemIcon',
+				type: 'icon',
+			},
+			{
+				id: 'wormholeIcon',
+				type: 'icon',
+			},
+			{
+				id: 'gatewayIcon',
+				type: 'icon',
+			},
+			{
+				id: 'lGateIcon',
+				type: 'icon',
+			},
+			{
+				id: 'shroudTunnelIcon',
+				type: 'icon',
+			},
+		],
+	},
+	{
+		id: 'hyperlanes',
+		name: 'setting.group.hyperlanes',
+		settings: [
+			{
+				id: 'hyperlaneStroke',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'hyperlaneColor',
+				type: 'color',
+				hideIf: (settings) => !settings.hyperlaneStroke.enabled,
+			},
+			{
+				id: 'unownedHyperlaneColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) =>
+					!settings.hyperlaneStroke.enabled ||
+					!isColorDynamic(settings.hyperlaneColor.color, settings),
+			},
+			{
+				id: 'hyperRelayStroke',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'hyperRelayColor',
+				type: 'color',
+				hideIf: (settings) => !settings.hyperRelayStroke.enabled,
+			},
+			{
+				id: 'unownedHyperRelayColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) =>
+					!settings.hyperRelayStroke.enabled ||
+					!isColorDynamic(settings.hyperRelayColor.color, settings),
+			},
+			{
+				id: 'hyperlaneMetroStyle',
+				type: 'toggle',
+				requiresReprocessing: true,
+				hideIf: (settings) =>
+					!settings.hyperlaneStroke.enabled && !settings.hyperRelayStroke.enabled,
+				tooltip: 'setting.hyperlaneMetroStyle_tooltip',
+			},
+		],
+	},
+	{
+		id: 'bypassLinks',
+		name: 'setting.group.bypassLinks',
+		settings: [
+			{
+				id: 'wormholeStroke',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'wormholeStrokeColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.wormholeStroke.enabled,
+			},
+			{
+				id: 'lGateStroke',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'lGateStrokeColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.lGateStroke.enabled,
+			},
+			{
+				id: 'shroudTunnelStroke',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'shroudTunnelStrokeColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.shroudTunnelStroke.enabled,
+			},
+		],
+	},
+	{
+		id: 'terraIncognita',
+		name: 'setting.group.terraIncognita',
+		settings: [
+			{
+				id: 'terraIncognita',
+				type: 'toggle',
+			},
+			{
+				id: 'terraIncognitaPerspectiveCountry',
+				requiresReprocessing: true,
+				type: 'select',
+				options: [{ id: 'player', name: 'option.terra_incognita_perspective_country.player' }],
+				dynamicOptions: countryOptions,
+				hideIf: (settings) => !settings.terraIncognita,
+			},
+			{
+				id: 'terraIncognitaStyle',
+				type: 'select',
+				options: [
+					{ id: 'flat', name: 'option.terra_incognita_style.flat' },
+					{ id: 'striped', name: 'option.terra_incognita_style.striped' },
+					{ id: 'cloudy', name: 'option.terra_incognita_style.cloudy' },
+				],
+				hideIf: (settings) => !settings.terraIncognita,
+			},
+			{
+				id: 'terraIncognitaBrightness',
+				type: 'range',
+				min: 0,
+				max: 255,
+				step: 5,
+				hideIf: (settings) => !settings.terraIncognita,
+			},
+		],
+	},
+	{
+		id: 'misc',
+		name: 'setting.group.misc',
+		settings: [
+			{
+				id: 'backgroundColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				allowedAdjustments: ['LIGHTEN', 'DARKEN', 'MIN_LIGHTNESS', 'MAX_LIGHTNESS'],
+			},
+			{
+				id: 'alignStarsToGrid',
+				type: 'toggle',
+				requiresReprocessing: true,
+				hideIf: (settings) => settings.hyperlaneMetroStyle,
+			},
+		],
+	},
+	{
+		id: 'advancedBorder',
+		name: 'setting.group.advancedBorder',
+		settings: [
+			{
+				id: 'circularGalaxyBorders',
+				requiresReprocessing: true,
+				type: 'toggle',
+				tooltip: 'setting.circularGalaxyBorders_tooltip',
+			},
+			{
+				id: 'hyperlaneSensitiveBorders',
+				requiresReprocessing: true,
+				type: 'toggle',
+				tooltip: 'setting.hyperlaneSensitiveBorders_tooltip',
+				hideIf: (settings) => settings.hyperlaneMetroStyle || settings.alignStarsToGrid,
+			},
+			{
+				id: 'voronoiGridSize',
+				requiresReprocessing: true,
+				type: 'number',
+				step: 1,
+				min: 1,
+				tooltip: 'setting.voronoiGridSize_tooltip',
+			},
+			{
+				id: 'claimVoidMaxSize',
+				requiresReprocessing: true,
+				type: 'number',
+				step: 1,
+				min: 0,
+				optional: true,
+				tooltip: 'setting.claimVoidMaxSize_tooltip',
+			},
+			{
+				id: 'claimVoidBorderThreshold',
+				requiresReprocessing: true,
+				type: 'range',
+				step: 0.05,
+				min: 0,
+				max: 1,
+				tooltip: 'setting.claimVoidBorderThreshold_tooltip',
+			},
+		],
+	},
+	{
+		id: 'starScape',
+		name: 'setting.group.starscape',
+		settings: [
+			{
+				id: 'starScapeDust',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeDustColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.starScapeDust,
+			},
+			{
+				id: 'starScapeNebula',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeNebulaColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.starScapeNebula,
+			},
+			{
+				id: 'starScapeNebulaAccentColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.starScapeNebula,
+			},
+			{
+				id: 'starScapeCore',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeCoreColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.starScapeCore,
+			},
+			{
+				id: 'starScapeCoreAccentColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.starScapeCore,
+			},
+			{
+				id: 'starScapeStars',
+				type: 'toggle',
+			},
+			{
+				id: 'starScapeStarsColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.starScapeStars,
+			},
+			{
+				id: 'starScapeStarsCount',
+				type: 'number',
+				min: 0,
+				step: 1,
+				hideIf: (settings) => !settings.starScapeStars,
+			},
+		],
+	},
+];

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import debug from '../debug';
-	import { lastProcessedMapSettings, mapSettings } from '../mapSettings';
+	import { lastProcessedMapSettings, mapSettings } from '../settings';
 	import type { MapData } from './data/processMapData';
 
 	export let data: MapData;

@@ -23,11 +23,11 @@ function flattenMessages(messages: UnflattenedMessages, prefix = ''): Record<str
 
 const locales = {
 	'en-US': flattenMessages(enUS) as Record<MessageID, string>,
-	placeholder: flattenMessages(enUS) as Partial<Record<MessageID, string>>,
+	ENGLISH: Object.fromEntries(
+		Object.entries(flattenMessages(enUS)).map(([k, v]) => [k, v.toUpperCase()]),
+	) as Partial<Record<MessageID, string>>,
 };
 type Locale = keyof typeof locales;
-
-console.warn(locales);
 
 function getBestLocale(): Locale {
 	const keys = Object.keys(locales) as [Locale, ...Locale[]];
@@ -41,7 +41,7 @@ function getBestLocale(): Locale {
 	);
 }
 
-const locale = writable<Locale>(getBestLocale());
+export const locale = writable<Locale>(getBestLocale());
 
 export const t = derived(locale, (localeKey) => {
 	const messages: Record<string, IntlMessageFormat> = {};
@@ -55,9 +55,6 @@ export const t = derived(locale, (localeKey) => {
 				locales[localeKey][messageId] ?? locales['en-US'][messageId],
 				localeKey,
 			);
-		if (values) {
-			console.warn(message.format(values));
-		}
 		return `${message.format(values)}`;
 	};
 });

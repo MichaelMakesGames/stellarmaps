@@ -1,7 +1,7 @@
 import * as turf from '@turf/turf';
 import polylabel from 'polylabel';
 import type { GameState } from '../../GameState';
-import type { MapSettings } from '../../mapSettings';
+import type { MapSettings } from '../../settings';
 import type processBorders from './processBorders';
 import type processNames from './processNames';
 import type processSystemOwnership from './processSystemOwnership';

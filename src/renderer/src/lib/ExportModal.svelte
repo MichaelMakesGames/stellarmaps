@@ -12,7 +12,7 @@
 	import type { MapData } from './map/data/processMapData';
 	import { getBackgroundColor, getFillColorAttributes, resolveColor } from './map/mapUtils';
 	import processStarScape from './map/starScape/renderStarScape';
-	import { mapSettings } from './mapSettings';
+	import { mapSettings } from './settings';
 	import stellarMapsApi from './stellarMapsApi';
 	import { toastError } from './utils';
 

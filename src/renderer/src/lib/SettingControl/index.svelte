@@ -2,31 +2,32 @@
 	import { RangeSlider, SlideToggle, popup } from '@skeletonlabs/skeleton';
 	import { onDestroy } from 'svelte';
 	import type { FormEventHandler } from 'svelte/elements';
-	import { get, type Readable } from 'svelte/store';
+	import { get, type Readable, type Writable } from 'svelte/store';
 	import { slide } from 'svelte/transition';
-	import { t } from '../intl';
+	import { t } from '../../intl';
+	import HeroiconInfoMini from '../icons/HeroiconInfoMini.svelte';
+	import {
+		asKnownSettingId,
+		emptyOptions,
+		validateSetting,
+		type SelectOption,
+		type UnknownSettingConfig,
+	} from '../settings';
+	import { isDefined } from '../utils';
 	import ColorSettingControl from './ColorSettingControl.svelte';
 	import IconSettingControl from './IconSettingControl.svelte';
 	import StrokeSettingControl from './StrokeSettingControl.svelte';
-	import HeroiconInfoMini from './icons/HeroiconInfoMini.svelte';
-	import {
-		editedMapSettings,
-		emptyOptions,
-		validateSetting,
-		type MapSettingConfig,
-		type SelectOption,
-	} from './mapSettings';
-	import { isDefined } from './utils';
 
-	export let config: MapSettingConfig;
+	export let settings: Writable<Record<string, any>>;
+	export let config: UnknownSettingConfig;
 
-	let value: any = get(editedMapSettings)[config.id];
-	let unsubscribe = editedMapSettings.subscribe((values) => {
+	let value: any = get(settings)[config.id];
+	let unsubscribe = settings.subscribe((values) => {
 		value = values[config.id];
 	});
 	$: {
-		if (value !== $editedMapSettings[config.id]) {
-			editedMapSettings.update((prev) => ({
+		if (value !== $settings[config.id]) {
+			settings.update((prev) => ({
 				...prev,
 				[config.id]: value,
 			}));
@@ -42,7 +43,7 @@
 		}
 	};
 
-	$: hidden = config.hideIf?.($editedMapSettings);
+	$: hidden = config.hideIf?.($settings as any);
 
 	const dynamicOptions: Readable<SelectOption[]> =
 		config.type === 'select' && config.dynamicOptions ? config.dynamicOptions : emptyOptions;
@@ -70,7 +71,7 @@
 {#if !hidden}
 	<label class="label" for={config.id} transition:slide>
 		<div class="flex items-center">
-			{$t(`setting.${config.id}`)}
+			{$t(`setting.${asKnownSettingId(config.id)}`)}
 			{#if config.tooltip}
 				<button
 					type="button"

@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
-	import { t } from '../intl';
-	import ColorSettingAdjustmentControl from './ColorSettingAdjustmentControl.svelte';
+	import { t } from '../../intl';
 	import {
 		colorDynamicOptions,
 		colorOptions,
 		type ColorSetting,
-		type MapSettingConfigColor,
 		type SelectOption,
-	} from './mapSettings';
-	import { isDefined } from './utils';
+		type SettingConfigColor,
+	} from '../settings';
+	import { isDefined } from '../utils';
+	import ColorSettingAdjustmentControl from './ColorSettingAdjustmentControl.svelte';
 
 	export let value: ColorSetting;
-	export let config: MapSettingConfigColor;
+	export let config: SettingConfigColor<unknown, unknown>;
 
 	$: options = [...colorOptions, ...$colorDynamicOptions];
 	$: groups = Array.from(
