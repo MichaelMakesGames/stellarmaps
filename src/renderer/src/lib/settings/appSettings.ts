@@ -2,6 +2,7 @@ import { localStorageStore } from '@skeletonlabs/skeleton';
 import { get } from 'svelte/store';
 import { locale } from '../../intl';
 import stellarMapsApi from '../stellarMapsApi';
+import { disableTranslatorMode, enableTranslatorMode } from '../translatorMode';
 
 export type StringAppSettings = 'appLocale' | 'appStellarisLanguage';
 export type BooleanAppSettings = 'appTranslatorMode';
@@ -42,6 +43,11 @@ function loadSettings() {
 				createAppConfigDirIfNeeded()
 					.then(getAppSettingsPath)
 					.then((path) => stellarMapsApi.fs.writeFile(path, JSON.stringify(settings)));
+				if (settings.appTranslatorMode) {
+					enableTranslatorMode();
+				} else {
+					disableTranslatorMode();
+				}
 			});
 		});
 }

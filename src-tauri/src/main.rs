@@ -25,6 +25,7 @@ mod parser;
 
 fn main() {
 	tauri::Builder::default()
+		.plugin(tauri_plugin_fs_watch::init())
 		.invoke_handler(tauri::generate_handler![
 			get_stellaris_colors_cmd,
 			get_stellaris_loc_cmd,

@@ -88,6 +88,11 @@ export default {
 	app_settings: {
 		title: 'Settings',
 		description: 'All changes are automatically saved and applied.',
+		select_translator_mode_file: 'Select Translation File',
+		translator_mode_no_file: 'No file selected',
+		translator_mode_file: 'Watching {filePath}',
+		translator_mode_untranslated_messages: 'Untranslated messages: {number, number}',
+		translator_mode_extra_messages: 'Invalid message IDs: {number, number}',
 	},
 	// labels for various types of setting controls
 	// (shared by multiple settings)
@@ -336,7 +341,17 @@ export default {
 		starScapeStarsColor: 'Stars Color',
 		starScapeStarsCount: 'Star Count',
 		appLocale: 'StellarMaps Language',
+		appLocale_tooltip: 'Join the Discord server (link the top bar) if you want to help translate!',
 		appStellarisLanguage: 'Stellaris Language',
 		appTranslatorMode: 'Translator Mode',
+		appTranslatorMode_tooltip: `
+		<strong>For StellarMaps translators:</strong>
+		<ul>
+			<li>Hold Alt to view message IDs.</li>
+			<li>Select a translation file to use for messages.</li>
+			<li>Reloads messages when the file is edited.</li>
+			<li>Shows warnings about missing and extra messages.</li>
+			<li>You need to reselect the file if you reload the application.</li>
+		</ul>`,
 	},
 };

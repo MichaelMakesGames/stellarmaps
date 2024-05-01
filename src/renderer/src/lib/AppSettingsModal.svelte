@@ -1,11 +1,18 @@
 <script>
-	import { t } from '../intl';
+	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+	import { t, translatorModeExtraMessageIDs, translatorModeUntranslatedMessageIDs } from '../intl';
 	import SettingControl from './SettingControl/index.svelte';
 	import { appSettings, appSettingsConfig, asUnknownSettingConfig } from './settings';
+	import { selectTranslatorModeFile, translatorModeFilePath } from './translatorMode';
+
+	const _props = $$props; // this suppresses warning about unknown prop 'parent'
+
+	const modalStore = getModalStore();
+	const toastStore = getToastStore();
 </script>
 
 <form
-	class="bg-surface-100-800-token modal block h-auto w-[32rem] space-y-4 overflow-y-auto p-4 shadow-xl rounded-container-token"
+	class="bg-surface-100-800-token modal block h-auto max-h-[90vh] w-[32rem] space-y-4 overflow-y-auto p-4 shadow-xl rounded-container-token"
 	role="dialog"
 	aria-modal="true"
 	novalidate
@@ -16,8 +23,52 @@
 		{#each appSettingsConfig as config}
 			<SettingControl config={asUnknownSettingConfig(config)} settings={appSettings} />
 		{/each}
+		{#if $appSettings.appTranslatorMode}
+			<button
+				class="variant-ghost-primary btn -my-3"
+				type="button"
+				on:click={() => selectTranslatorModeFile(toastStore)}
+			>
+				{$t('app_settings.select_translator_mode_file')}
+			</button>
+			{#if $translatorModeFilePath}
+				<small>
+					{$t('app_settings.translator_mode_file', { filePath: $translatorModeFilePath })}
+				</small>
+			{:else}
+				<small>{$t('app_settings.translator_mode_no_file')}</small>
+			{/if}
+			{#if $translatorModeFilePath && $translatorModeUntranslatedMessageIDs.length > 0}
+				<strong class="block text-warning-400">
+					{$t('app_settings.translator_mode_untranslated_messages', {
+						number: $translatorModeUntranslatedMessageIDs.length,
+					})}
+				</strong>
+				<ul class="list-disc ps-4">
+					{#each $translatorModeUntranslatedMessageIDs.slice(0, 5) as messageId}<li>
+							{messageId}
+						</li>{/each}
+					{#if $translatorModeUntranslatedMessageIDs.length > 5}<li>...</li>{/if}
+				</ul>
+			{/if}
+			{#if $translatorModeExtraMessageIDs.length > 0}
+				<strong class="block text-warning-400">
+					{$t('app_settings.translator_mode_extra_messages', {
+						number: $translatorModeExtraMessageIDs.length,
+					})}
+				</strong>
+				<ul class="list-disc ps-4">
+					{#each $translatorModeExtraMessageIDs.slice(0, 5) as messageId}<li>
+							{messageId}
+						</li>{/each}
+					{#if $translatorModeExtraMessageIDs.length > 5}<li>...</li>{/if}
+				</ul>
+			{/if}
+		{/if}
 	</div>
 	<footer class="modal-footer flex justify-end space-x-2">
-		<button class="variant-ghost-surface btn" type="button">{$t('generic.close_button')}</button>
+		<button class="variant-ghost-surface btn" type="button" on:click={() => modalStore.close()}>
+			{$t('generic.close_button')}
+		</button>
 	</footer>
 </form>

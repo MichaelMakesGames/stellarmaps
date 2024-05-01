@@ -4,6 +4,7 @@ export const appSettingsConfig: AppSettingConfig[] = [
 	{
 		id: 'appLocale',
 		type: 'select',
+		tooltip: 'setting.appLocale_tooltip',
 		options: [
 			{ id: 'en-US', literalName: 'English' },
 			{ id: 'ENGLISH', literalName: 'ENGLISH' },
@@ -28,5 +29,6 @@ export const appSettingsConfig: AppSettingConfig[] = [
 	{
 		id: 'appTranslatorMode',
 		type: 'toggle',
+		tooltip: 'setting.appTranslatorMode_tooltip',
 	},
 ];

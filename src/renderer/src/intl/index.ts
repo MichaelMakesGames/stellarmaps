@@ -26,6 +26,10 @@ const locales = {
 	ENGLISH: Object.fromEntries(
 		Object.entries(flattenMessages(enUS)).map(([k, v]) => [k, v.toUpperCase()]),
 	) as Partial<Record<MessageID, string>>,
+	MessageID: Object.fromEntries(Object.keys(flattenMessages(enUS)).map((k) => [k, k])) as Record<
+		MessageID,
+		string
+	>,
 };
 type Locale = keyof typeof locales;
 
@@ -43,18 +47,34 @@ function getBestLocale(): Locale {
 
 export const locale = writable<Locale>(getBestLocale());
 
-export const t = derived(locale, (localeKey) => {
-	const messages: Record<string, IntlMessageFormat> = {};
-	return function t(
-		messageId: MessageID,
-		values?: Record<string, PrimitiveType | FormatXMLElementFn<string>>,
-	) {
-		const message =
-			messages[messageId] ??
-			new IntlMessageFormat(
-				locales[localeKey][messageId] ?? locales['en-US'][messageId],
-				localeKey,
-			);
-		return `${message.format(values)}`;
-	};
-});
+export const translatorModeMessages = writable<Record<string, string>>({});
+export const translatorModeExtraMessageIDs = derived(translatorModeMessages, (messages) =>
+	Object.keys(messages).filter((key) => !(key in locales['en-US'])),
+);
+export const translatorModeUntranslatedMessageIDs = derived(translatorModeMessages, (messages) =>
+	Object.keys(locales['en-US']).filter(
+		(key) => !(key in messages) || messages[key] === locales['en-US'][key as MessageID],
+	),
+);
+
+export const t = derived(
+	[locale, translatorModeMessages],
+	([localeKey, translatorModeMessages]) => {
+		const messages: Record<string, IntlMessageFormat> = {};
+		return function t(
+			messageId: MessageID,
+			values?: Record<string, PrimitiveType | FormatXMLElementFn<string>>,
+		) {
+			if (localeKey === 'MessageID') return messageId;
+			const message =
+				messages[messageId] ??
+				new IntlMessageFormat(
+					translatorModeMessages[messageId] ??
+						locales[localeKey][messageId] ??
+						locales['en-US'][messageId],
+					localeKey,
+				);
+			return `${message.format(values)}`;
+		};
+	},
+);
