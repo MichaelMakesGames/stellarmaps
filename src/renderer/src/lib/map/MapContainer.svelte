@@ -18,7 +18,7 @@
 		stellarisDataPromiseStore,
 		stellarisPathStore,
 	} from '../loadStellarisData';
-	import { lastProcessedMapSettings, mapSettings } from '../settings';
+	import { appStellarisLanguage, lastProcessedMapSettings, mapSettings } from '../settings';
 	import stellarMapsApi from '../stellarMapsApi';
 	import { debounce, timeItAsync, toastError } from '../utils';
 	import Map from './Map.svelte';
@@ -30,8 +30,9 @@
 	const modalStore = getModalStore();
 
 	$: mapDataPromise =
-		$gameStatePromise?.then((gs) => processMapData(gs, $lastProcessedMapSettings)) ??
-		new Promise<Awaited<ReturnType<typeof processMapData>>>(() => {});
+		$gameStatePromise?.then((gs) =>
+			processMapData(gs, $lastProcessedMapSettings, $appStellarisLanguage),
+		) ?? new Promise<Awaited<ReturnType<typeof processMapData>>>(() => {});
 
 	loadStellarisData();
 	const toastStore = getToastStore();

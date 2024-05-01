@@ -2,7 +2,7 @@ import * as R from 'rambda';
 import { get } from 'svelte/store';
 import type { GameState } from '../../GameState';
 import debug from '../../debug';
-import type { MapSettings } from '../../settings';
+import { type MapSettings } from '../../settings';
 import { timeIt, timeItAsync } from '../../utils';
 import processBorders, { processBordersDeps } from './processBorders';
 import processBypassLinks from './processBypassLinks';
@@ -24,7 +24,11 @@ import processTerraIncognitaPath, {
 import processVoronoi, { processVoronoiDeps } from './processVoronoi';
 import { createHyperlanePaths } from './utils';
 
-export default async function processMapData(gameState: GameState, rawSettings: MapSettings) {
+export default async function processMapData(
+	gameState: GameState,
+	rawSettings: MapSettings,
+	language: string,
+) {
 	console.time('TOTAL PROCESSING TIME');
 	const settings = { ...rawSettings };
 	if (settings.hyperlaneMetroStyle) settings.alignStarsToGrid = true;
@@ -36,7 +40,7 @@ export default async function processMapData(gameState: GameState, rawSettings: 
 		cached(processEmblems),
 		Object.values(gameState.country),
 	);
-	const countryNamesPromise = timeItAsync('names', cached(processNames), gameState);
+	const countryNamesPromise = timeItAsync('names', cached(processNames), gameState, language);
 
 	const getSystemCoordinates = timeIt(
 		'system coordinates',

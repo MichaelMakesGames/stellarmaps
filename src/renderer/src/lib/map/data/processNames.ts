@@ -3,7 +3,8 @@ import type { Country, GameState } from '../../GameState';
 import { stellarisDataPromiseStore } from '../../loadStellarisData';
 import { localizeTextSync } from './locUtils';
 
-export default async function processNames(gameState: GameState) {
+// _language is just here to control caching
+export default async function processNames(gameState: GameState, _language: string) {
 	const countryNames = await localizeCountryNames(gameState.country);
 	return countryNames;
 }

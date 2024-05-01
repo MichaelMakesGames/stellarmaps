@@ -52,4 +52,7 @@ There is an Electron version available for local development. Some changes to th
 This exists mostly for debugging in Chromium. The release builds all use Tauri. Currently, the Electron version lacks the following features:
 
 - loading data (localization, emblems, colors) from Stellaris mods
+- loading non-English Stellaris localization
+- translator mode
+- (temporarily) country emblems
 - production builds

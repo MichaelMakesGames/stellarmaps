@@ -59,8 +59,8 @@ async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-async fn get_stellaris_loc_cmd(path: String) -> Result<HashMap<String, String>, String> {
-	return get_stellaris_loc(path).map_err(|err| err.to_string());
+async fn get_stellaris_loc_cmd(path: String, language: String) -> Result<HashMap<String, String>, String> {
+	return get_stellaris_loc(path, language).map_err(|err| err.to_string());
 }
 
 #[tauri::command]
@@ -359,7 +359,7 @@ fn get_stellaris_data_paths(
 		.collect();
 }
 
-fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
+fn get_stellaris_loc(path: String, language: String) -> anyhow::Result<HashMap<String, String>> {
 	let loc_file_paths = get_stellaris_data_paths(
 		Path::new(&path).to_path_buf(),
 		Path::new("localisation").to_path_buf(),
@@ -384,7 +384,7 @@ fn get_stellaris_loc(path: String) -> anyhow::Result<HashMap<String, String>> {
 			line_number += 1;
 			let _ = buf_reader.read_line(&mut first_line)?;
 		}
-		if first_line.contains("l_english") {
+		if first_line.contains(language.as_str()) {
 			let re = Regex::new(r#"(?m)^\s*([\w\.\-]+)\s*:\d*\s*"(.*)".*$"#).unwrap();
 			let mut raw_content = String::new();
 			let _ = buf_reader.read_to_string(&mut raw_content)?;

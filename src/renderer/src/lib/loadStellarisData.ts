@@ -4,6 +4,7 @@ import { hsv } from 'd3-hsv';
 import { get, writable } from 'svelte/store';
 import { jsonify, tokenize } from '../../../shared/parseSave';
 import { ADDITIONAL_COLORS } from './colors';
+import { appSettings } from './settings';
 import stellarMapsApi from './stellarMapsApi';
 import { timeItAsync } from './utils';
 
@@ -14,6 +15,14 @@ export const stellarisDataPromiseStore = writable(
 	}),
 );
 
+// reload data if appStellarisLanguage setting changed
+let loadedStellarisLanguage = get(appSettings).appStellarisLanguage;
+appSettings.subscribe((value) => {
+	if (value.appStellarisLanguage !== loadedStellarisLanguage) {
+		loadStellarisData();
+	}
+});
+
 export function loadStellarisData() {
 	const stellarisDataPromise = loadStellarisDataUnwrapped();
 	stellarisDataPromiseStore.set(stellarisDataPromise);
@@ -23,12 +32,14 @@ export function loadStellarisData() {
 async function loadStellarisDataUnwrapped() {
 	const path = get(stellarisPathStore) || (await stellarMapsApi.loadStellarisInstallDir());
 	stellarisPathStore.set(path);
-	const [colors, loc] = await Promise.all([loadColors(path), loadLoc(path)]);
+	const language = get(appSettings).appStellarisLanguage;
+	loadedStellarisLanguage = language;
+	const [colors, loc] = await Promise.all([loadColors(path), loadLoc(path, language)]);
 	return { colors, loc };
 }
 
-function loadLoc(path: string) {
-	return timeItAsync('loadLoc', stellarMapsApi.loadLoc, path);
+function loadLoc(path: string, language: string) {
+	return timeItAsync('loadLoc', stellarMapsApi.loadLoc, path, language);
 }
 
 async function loadColors(path: string): Promise<Record<string, string>> {

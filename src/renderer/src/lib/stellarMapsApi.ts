@@ -27,8 +27,8 @@ if (stellarMapsApi == null) {
 		loadColors(path) {
 			return invoke('get_stellaris_colors_cmd', { path });
 		},
-		loadLoc(path) {
-			return invoke('get_stellaris_loc_cmd', { path });
+		loadLoc(path, language) {
+			return invoke('get_stellaris_loc_cmd', { path, language });
 		},
 		loadStellarisInstallDir() {
 			return invoke('get_stellaris_install_dir_cmd');
