@@ -87,7 +87,6 @@
 		"fast-glob": "^3.3.2",
 		"font-list": "^1.5.1",
 		"intl-messageformat": "^10.5.11",
-		"magickwand.js": "^1.0.2",
 		"pixi.js": "^8.1.0",
 		"platform-paths": "^1.2.2",
 		"polylabel": "^1.1.0",
