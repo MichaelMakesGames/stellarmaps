@@ -378,14 +378,16 @@
 			<HeroiconArrowsPointingOut />
 		</button>
 	{/if}
-	<button
-		type="button"
-		class="variant-filled btn absolute right-3 top-3"
-		transition:fade
-		on:click={openExportModal}
-	>
-		{$t('export.button')}
-	</button>
+	{#if dataOrNull}
+		<button
+			type="button"
+			class="variant-filled btn absolute right-3 top-3"
+			transition:fade
+			on:click={openExportModal}
+		>
+			{$t('export.button')}
+		</button>
+	{/if}
 	{#if tooltip != null && !zooming && !resizing}
 		<div class="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
 			<MapTooltip {...tooltip} gameState={gameStateOrNull} />
