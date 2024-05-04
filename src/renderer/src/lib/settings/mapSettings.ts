@@ -10,7 +10,8 @@ export type NumberMapSettings =
 	| 'unionLeaderSymbolSize'
 	| 'terraIncognitaBrightness'
 	| 'borderFillFade'
-	| 'claimVoidBorderThreshold';
+	| 'claimVoidBorderThreshold'
+	| 'systemNamesFontSize';
 
 export type NumberOptionalMapSettings =
 	| 'countryEmblemsMaxSize'
@@ -30,7 +31,9 @@ export type StringMapSettings =
 	| 'unionSubjects'
 	| 'unionLeaderSymbol'
 	| 'terraIncognitaPerspectiveCountry'
-	| 'terraIncognitaStyle';
+	| 'terraIncognitaStyle'
+	| 'systemNames'
+	| 'systemNamesFont';
 
 export type BooleanMapSettings =
 	| 'hyperlaneSensitiveBorders'
@@ -152,6 +155,9 @@ export const defaultMapSettings: MapSettings = {
 	countryEmblemsMinSize: null,
 	countryEmblemsMaxSize: 75,
 	labelsAvoidHoles: 'owned',
+	systemNames: 'none',
+	systemNamesFont: 'Orbitron',
+	systemNamesFontSize: 3,
 	sectorBorderStroke: {
 		enabled: true,
 		width: 1,

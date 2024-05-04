@@ -40,7 +40,7 @@ export default async function processMapData(
 		cached(processEmblems),
 		Object.values(gameState.country),
 	);
-	const countryNamesPromise = timeItAsync('names', cached(processNames), gameState, language);
+	const namesPromise = timeItAsync('names', cached(processNames), gameState, language);
 
 	const getSystemCoordinates = timeIt(
 		'system coordinates',
@@ -145,7 +145,7 @@ export default async function processMapData(
 		galaxyBorderCirclesGeoJSON,
 		getSystemCoordinates,
 	);
-	const countryNames = await countryNamesPromise;
+	const { countryNames, systemNames } = await namesPromise;
 	const labels = timeIt(
 		'labels',
 		cached(processLabels),
@@ -167,6 +167,7 @@ export default async function processMapData(
 		knownCountries,
 		knownSystems,
 		getSystemCoordinates,
+		systemNames,
 	);
 	const bypassLinks = timeIt(
 		'bypassLinks',

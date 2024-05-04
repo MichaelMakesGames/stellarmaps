@@ -18,6 +18,7 @@ export default function processSystems(
 	knownCountries: Set<number>,
 	knownSystems: Set<number>,
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
+	systemNames: Record<number, string>,
 ) {
 	const systems = Object.values(gameState.galactic_object).map((system) => {
 		const countryId = systemIdToCountry[system.id];
@@ -61,6 +62,7 @@ export default function processSystems(
 			hasShroudTunnel,
 			x,
 			y,
+			name: systemNames[system.id] ?? 'Unknown',
 		};
 	});
 	return systems;

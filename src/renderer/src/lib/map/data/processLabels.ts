@@ -3,7 +3,6 @@ import polylabel from 'polylabel';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import type processBorders from './processBorders';
-import type processNames from './processNames';
 import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
 import {
@@ -37,7 +36,7 @@ export default function processLabels(
 	countryToGeojson: Record<number, PolygonalFeature>,
 	unionLeaderToUnionMembers: Record<number, Set<number>>,
 	borders: ReturnType<typeof processBorders>,
-	countryNames: Awaited<ReturnType<typeof processNames>>,
+	countryNames: Record<number, string>,
 	knownCountries: ReturnType<typeof processTerraIncognita>['knownCountries'],
 	ownedSystemPoints: ReturnType<typeof processSystemOwnership>['ownedSystemPoints'],
 ) {

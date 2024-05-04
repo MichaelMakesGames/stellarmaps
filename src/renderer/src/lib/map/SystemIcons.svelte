@@ -100,6 +100,31 @@
 			});
 		return { center, left, right, top, bottom, system };
 	}
+
+	function getIconsBottom(systemIcons: ReturnType<typeof getSystemIcons>): number {
+		return Math.max(
+			systemIcons.center
+				? systemIcons.center.y + systemIcons.center.size / 2
+				: systemIcons.system.y,
+			...systemIcons.left.map((i) => i.y + i.size / 2),
+			...systemIcons.right.map((i) => i.y + i.size / 2),
+			...systemIcons.top.map((i) => i.y + i.size / 2),
+			...systemIcons.bottom.map((i) => i.y + i.size / 2),
+		);
+	}
+
+	function shouldShowLabel(system: MapData['systems'][number]) {
+		if ($mapSettings.systemNames === 'none') return false;
+		if ($mapSettings.systemNames === 'all') return true;
+		if ($mapSettings.systemNames === 'countryCapitals' && system.isCountryCapital) return true;
+		if (
+			$mapSettings.systemNames === 'sectorCapitals' &&
+			(system.isCountryCapital || system.isSectorCapital)
+		)
+			return true;
+		if ($mapSettings.systemNames === 'colonized' && system.isColonized) return true;
+		return false;
+	}
 </script>
 
 {#each data.systems
@@ -120,4 +145,18 @@
 			})}
 		/>
 	{/each}
+	{#if shouldShowLabel(systemIcons.system)}
+		<text
+			x={systemIcons.system.x}
+			y={getIconsBottom(systemIcons) + $mapSettings.systemNamesFontSize / 4}
+			text-anchor="middle"
+			dominant-baseline="hanging"
+			font-size={$mapSettings.systemNamesFontSize}
+			fill="white"
+			font-family={$mapSettings.systemNamesFont}
+			style:text-shadow="0px 0px 3px black"
+		>
+			{systemIcons.system.name}
+		</text>
+	{/if}
 {/each}

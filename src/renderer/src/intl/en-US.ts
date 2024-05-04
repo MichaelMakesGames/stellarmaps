@@ -223,6 +223,13 @@ export default {
 			striped: 'Striped',
 			cloudy: 'Cloudy',
 		},
+		system_names: {
+			none: 'None',
+			country_capitals: 'Country Capitals',
+			sector_capitals: 'Country and Sector Capitals',
+			colonized: 'Colonized Systems',
+			all: 'All Systems',
+		},
 	},
 	// labels and tooltips for various settings
 	setting: {
@@ -230,6 +237,7 @@ export default {
 			borders: 'Borders',
 			unions: 'Union Mode',
 			countryLabels: 'Country Labels',
+			systemLabels: 'System Labels',
 			systemIcons: 'System Icons',
 			hyperlanes: 'Hyperlanes',
 			bypassLinks: 'Bypass Links',
@@ -262,6 +270,9 @@ export default {
 		countryEmblemsMinSize: 'Emblem Min Size',
 		countryEmblemsMaxSize: 'Emblem Max Size',
 		labelsAvoidHoles: 'Avoid Holes in Border',
+		systemNames: 'System Names',
+		systemNamesFont: 'Font',
+		systemNamesFontSize: 'Font Size',
 		countryCapitalIcon: 'Country Capital',
 		sectorCapitalIcon: 'Sector Capital',
 		populatedSystemIcon: 'Populated System',

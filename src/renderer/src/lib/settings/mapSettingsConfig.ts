@@ -215,6 +215,35 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 		],
 	},
 	{
+		id: 'systemLabels',
+		name: 'setting.group.systemLabels',
+		settings: [
+			{
+				id: 'systemNames',
+				type: 'select',
+				options: [
+					{ id: 'none', name: 'option.system_names.none' },
+					{ id: 'countryCapitals', name: 'option.system_names.country_capitals' },
+					{ id: 'sectorCapitals', name: 'option.system_names.sector_capitals' },
+					{ id: 'colonized', name: 'option.system_names.colonized' },
+					{ id: 'all', name: 'option.system_names.all' },
+				],
+			},
+			{
+				id: 'systemNamesFont',
+				type: 'select',
+				options: [{ id: 'Orbitron', literalName: 'Orbitron' }],
+				dynamicOptions: fontOptions,
+			},
+			{
+				id: 'systemNamesFontSize',
+				type: 'number',
+				min: 0,
+				step: 0.5,
+			},
+		],
+	},
+	{
 		id: 'systemIcons',
 		name: 'setting.group.systemIcons',
 		settings: [
