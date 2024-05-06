@@ -23,7 +23,7 @@ export default function processTerraIncognita(
 	);
 	const wormholeIds = new Set(
 		Object.values(gameState.bypasses)
-			.filter((bypass) => bypass.type === 'wormhole')
+			.filter((bypass) => bypass.type === 'wormhole' || bypass.type === 'strange_wormhole')
 			.map((bypass) => bypass.id),
 	);
 	const knownWormholes = terraIncognitaPerspectiveCountry

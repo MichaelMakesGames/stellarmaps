@@ -41,7 +41,7 @@ export default function processSystems(
 		const bypassTypes = new Set(
 			system.bypasses.map((bypassId) => gameState.bypasses[bypassId]?.type).filter(isDefined),
 		);
-		const hasWormhole = bypassTypes.has('wormhole');
+		const hasWormhole = bypassTypes.has('wormhole') || bypassTypes.has('strange_wormhole');
 		const hasGateway = bypassTypes.has('gateway');
 		const hasLGate = bypassTypes.has('lgate');
 		const hasShroudTunnel = bypassTypes.has('shroud_tunnel');
