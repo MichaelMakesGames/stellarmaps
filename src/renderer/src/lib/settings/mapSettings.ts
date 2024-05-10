@@ -57,6 +57,7 @@ export type ColorMapSettings =
 	| 'hyperlaneColor'
 	| 'hyperRelayColor'
 	| 'sectorBorderColor'
+	| 'unionBorderColor'
 	| 'unownedHyperlaneColor'
 	| 'unownedHyperRelayColor'
 	| 'wormholeStrokeColor'
@@ -257,6 +258,10 @@ export const defaultMapSettings: MapSettings = {
 		glow: false,
 		dashed: false,
 		dashArray: '3 3',
+	},
+	unionBorderColor: {
+		color: 'border',
+		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
 	},
 	terraIncognita: true,
 	terraIncognitaPerspectiveCountry: 'player',

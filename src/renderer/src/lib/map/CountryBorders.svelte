@@ -18,6 +18,10 @@
 			return $mapSettings.sectorBorderStroke.enabled;
 		}
 	}
+
+	function sortSectorBorders(a: { isUnionBorder: boolean }, b: { isUnionBorder: boolean }) {
+		return (a.isUnionBorder ? 1 : -1) - (b.isUnionBorder ? 1 : -1);
+	}
 </script>
 
 {#if $mapSettings.borderStroke.enabled}
@@ -56,7 +60,7 @@
 				})}
 			/>
 		{/if}
-		{#each border.sectorBorders.filter(filterSectorBorders) as sectorBorder}
+		{#each border.sectorBorders.filter(filterSectorBorders).sort(sortSectorBorders) as sectorBorder}
 			<Glow
 				enabled={sectorBorder.isUnionBorder && $mapSettings.unionBorderStroke.enabled
 					? $mapSettings.unionBorderStroke.glow
@@ -76,7 +80,12 @@
 						mapSettings: $mapSettings,
 						colors,
 						countryColors: border,
-						colorStack: [$mapSettings.sectorBorderColor, $mapSettings.borderFillColor],
+						colorStack: [
+							sectorBorder.isUnionBorder && $mapSettings.unionBorderStroke.enabled
+								? $mapSettings.unionBorderColor
+								: $mapSettings.sectorBorderColor,
+							$mapSettings.borderFillColor,
+						],
 					})}
 					fill="none"
 				/>

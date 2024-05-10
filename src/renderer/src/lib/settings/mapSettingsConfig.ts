@@ -54,6 +54,14 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 					!settings.unionMode ||
 					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
 			},
+			{
+				id: 'unionBorderColor',
+				type: 'color',
+				hideIf: (settings) =>
+					!settings.unionBorderStroke.enabled ||
+					!settings.unionMode ||
+					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
+			},
 		],
 	},
 	{

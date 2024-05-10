@@ -253,6 +253,7 @@ export default {
 		sectorBorderStroke: 'Sector Borders',
 		sectorBorderColor: 'Sector Border Color',
 		unionBorderStroke: 'Union Borders',
+		unionBorderColor: 'Union Border Color',
 		unionMode: 'Union Mode',
 		unionSubjects: 'Subjects',
 		unionFederations: 'Federations',
