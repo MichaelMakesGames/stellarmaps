@@ -25,6 +25,7 @@ ddsfile = "0.5.2"
 logos = "0.14.0"
 tauri = { version = "1.6", features = [ "fs-read-file", "fs-exists", "fs-create-dir", "dialog-open", "dialog-save", "fs-write-file", "os-all", "path-all", "shell-open"] }
 tauri-plugin-fs-watch = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+rayon = "1.10.0"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.

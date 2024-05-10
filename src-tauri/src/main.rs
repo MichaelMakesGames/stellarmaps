@@ -6,6 +6,7 @@ use base64::prelude::*;
 use ddsfile::Dds;
 use font_kit::source::SystemSource;
 use image_dds;
+use rayon::prelude::*;
 use regex::Regex;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -59,7 +60,10 @@ async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-async fn get_stellaris_loc_cmd(path: String, language: String) -> Result<HashMap<String, String>, String> {
+async fn get_stellaris_loc_cmd(
+	path: String,
+	language: String,
+) -> Result<HashMap<String, String>, String> {
 	return get_stellaris_loc(path, language).map_err(|err| err.to_string());
 }
 
@@ -247,11 +251,11 @@ fn get_stellaris_save(path: String, filter: Value) -> anyhow::Result<Value> {
 	let mut bytes = vec![];
 	archive.by_name("gamestate")?.read_to_end(&mut bytes)?;
 	let game_state_string = String::from_utf8_lossy(&bytes);
-	println!("read in: {}", now.elapsed().as_millis());
+	println!("read save in: {}", now.elapsed().as_millis());
 
 	let now = Instant::now();
 	let parsed = parser::parse(&game_state_string, &filter)?;
-	println!("parsed in: {}", now.elapsed().as_millis());
+	println!("parsed save in: {}", now.elapsed().as_millis());
 
 	return Ok(parsed);
 }
@@ -360,6 +364,9 @@ fn get_stellaris_data_paths(
 }
 
 fn get_stellaris_loc(path: String, language: String) -> anyhow::Result<HashMap<String, String>> {
+	use std::time::Instant;
+	let now = Instant::now();
+
 	let loc_file_paths = get_stellaris_data_paths(
 		Path::new(&path).to_path_buf(),
 		Path::new("localisation").to_path_buf(),
@@ -370,29 +377,40 @@ fn get_stellaris_loc(path: String, language: String) -> anyhow::Result<HashMap<S
 		return Err(anyhow::anyhow!("No localisation files found"));
 	}
 	let mut locs: HashMap<String, String> = HashMap::new();
-	for path in loc_file_paths {
-		let mut buf_reader = io::BufReader::new(fs::File::open(path)?);
-		let mut first_line = String::new();
-		let _ = buf_reader.read_line(&mut first_line)?;
-		// skip BOM
-		if first_line.as_bytes().starts_with(&[0xEF, 0xBB, 0xBF]) {
-			first_line = first_line[3..].to_owned();
-		}
-		// skip comments (max 20 lines)
-		let mut line_number: u8 = 0;
-		while first_line.trim().starts_with('#') && line_number < 20 {
-			line_number += 1;
+	let locs_by_file: Vec<anyhow::Result<HashMap<String, String>>> = loc_file_paths
+		.par_iter()
+		.map(|path| {
+			let mut buf_reader = io::BufReader::new(fs::File::open(path)?);
+			let mut first_line = String::new();
 			let _ = buf_reader.read_line(&mut first_line)?;
-		}
-		if first_line.contains(language.as_str()) {
-			let re = Regex::new(r#"(?m)^\s*([\w\.\-]+)\s*:\d*\s*"(.*)".*$"#).unwrap();
-			let mut raw_content = String::new();
-			let _ = buf_reader.read_to_string(&mut raw_content)?;
-			for (_, [key, value]) in re.captures_iter(&raw_content).map(|c| c.extract()) {
-				locs.insert(key.to_string(), value.to_string());
+			// skip BOM
+			if first_line.as_bytes().starts_with(&[0xEF, 0xBB, 0xBF]) {
+				first_line = first_line[3..].to_owned();
 			}
-		}
+			// skip comments (max 20 lines)
+			let mut line_number: u8 = 0;
+			while first_line.trim().starts_with('#') && line_number < 20 {
+				line_number += 1;
+				let _ = buf_reader.read_line(&mut first_line)?;
+			}
+			let mut file_locs: HashMap<String, String> = HashMap::new();
+			if first_line.contains(language.as_str()) {
+				let re = Regex::new(r#"(?m)^\s*([\w\.\-]+)\s*:\d*\s*"(.*)".*$"#).unwrap();
+				let mut raw_content = String::new();
+				let _ = buf_reader.read_to_string(&mut raw_content)?;
+				for (_, [key, value]) in re.captures_iter(&raw_content).map(|c| c.extract()) {
+					file_locs.insert(key.to_string(), value.to_string());
+				}
+			}
+			return Ok(file_locs);
+		})
+		.collect();
+
+	for file_locs in locs_by_file {
+		locs.extend(file_locs?.drain())
 	}
+
+	println!("read loc in: {}", now.elapsed().as_millis());
 	return Ok(locs);
 }
 
