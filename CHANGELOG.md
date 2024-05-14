@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.11.0](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.0...stellarmaps-v0.11.0) (2024-05-14)
+
+### Features
+
+- **map:** add system labels ([918cb83](https://github.com/MichaelMakesGames/stellarmaps/commit/918cb83ccb3b508edf9261b6549953e6260c8f71))
+- **map:** add union border color settings, separate from sector border color ([3447f22](https://github.com/MichaelMakesGames/stellarmaps/commit/3447f22ead3aeb59b8f155131f3863e3852c7cfb))
+- **map:** separate union settings for hegemony and non-hegemony federations ([51556b8](https://github.com/MichaelMakesGames/stellarmaps/commit/51556b81e44c005f859a06746e8a4e9dba5e340b))
+- **map:** implemented Stellaris language setting, changing which loc files are loaded ([46830c2](https://github.com/MichaelMakesGames/stellarmaps/commit/46830c20781ec27fb9f345335c53e87112e35037))
+- **ui:** add app settings screen and refactor map settings ([0973558](https://github.com/MichaelMakesGames/stellarmaps/commit/09735585d3f0df62747b45f9732ed5afb0385693))
+- **ui:** add button to manually select save ([909ac87](https://github.com/MichaelMakesGames/stellarmaps/commit/909ac871194d56fe258bdad3cad9c06de57df371))
+- **ui:** add link to GitHub ([fad5fb6](https://github.com/MichaelMakesGames/stellarmaps/commit/fad5fb685ea7f4a510861d14eac5c145a101ca0e))
+- **ui:** add tooltips for dash pattern, border fill fade, and name/emblem min/max size ([59647b8](https://github.com/MichaelMakesGames/stellarmaps/commit/59647b898da08d387a0c2e93b7f7b5b017080bd5))
+- **ui:** implement translator mode, with reports and dynamic message loading for translators ([836f47a](https://github.com/MichaelMakesGames/stellarmaps/commit/836f47afdac276000aee9262e9171b98be5a122c))
+- **ui:** make the app translatable ([a7d1782](https://github.com/MichaelMakesGames/stellarmaps/commit/a7d17821fc6016771297aed1b8bbe51053049725))
+
+### Bug Fixes
+
+- **export:** handle errors finding default export path ([dd8973e](https://github.com/MichaelMakesGames/stellarmaps/commit/dd8973ef72fd9080cee8e94d3124ac53df4487ea))
+- **map:** fix wormhole icons and paths for a certain Astral Planes system ([a2e69e6](https://github.com/MichaelMakesGames/stellarmaps/commit/a2e69e653f756d822f59bb24540ff0e3dc2a481c))
+- **parser:** fix localization files that start with comments are not loaded ([23276ee](https://github.com/MichaelMakesGames/stellarmaps/commit/23276eed3b16c7b3c35f9ff5ce052d4d622b79da))
+- **parser:** fix validation error if player name contains only numbers ([a701400](https://github.com/MichaelMakesGames/stellarmaps/commit/a701400f3e994b3a42181a36e65ac5d30359064f))
+- **parser:** handle invalid utf-8 in gamestate ([60672cb](https://github.com/MichaelMakesGames/stellarmaps/commit/60672cb32246fb4968489a9ba06223fb10fa85d7))
+- **parser:** increase maximum nested object depth when skipping a value ([a86fd36](https://github.com/MichaelMakesGames/stellarmaps/commit/a86fd36868453ba2a35c8fd8d5af2b98bedb7061)), closes [#7](https://github.com/MichaelMakesGames/stellarmaps/issues/7)
+- **parser:** provide default for value UNKNOWN if name is missing ([24d90bf](https://github.com/MichaelMakesGames/stellarmaps/commit/24d90bf6fed8b87040cc67b27e2065b44c278c71))
+- **ui:** fix error messages displayed beneath export modal ([6e93812](https://github.com/MichaelMakesGames/stellarmaps/commit/6e9381256ebca04002e1a751bc3e8d51cecbab1b))
+- **ui:** fix export button displayed even when there's no map to export yet ([0df12da](https://github.com/MichaelMakesGames/stellarmaps/commit/0df12da5647534a1eddeaab172cf315f7e9ac635))
+
 ## [0.10.3](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.2...stellarmaps-v0.10.3) (2024-04-16)
 
 ### Bug Fixes
