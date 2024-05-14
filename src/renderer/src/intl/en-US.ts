@@ -121,7 +121,9 @@ export default {
 				smoothed: 'Smoothed',
 				glow: 'Glow',
 				dashed: 'Dashed',
-				dash_pattern: 'Dash Pattern',
+				dash_pattern: 'Pattern',
+				dash_pattern_tooltip:
+					'A space-separated list determining the length of dashes and gaps. For example, "3 1" is a 3-length dash followed by a 1-length gap. You can use longer lists for complex patterns.',
 			},
 		},
 	},
@@ -250,6 +252,11 @@ export default {
 		borderColor: 'Country Border Color',
 		borderFillColor: 'Country Fill Color',
 		borderFillFade: 'Country Fill Fade',
+		borderFillFade_tooltip: `<ul>
+			<li>Adds a fade-out effect at near the border.</li>
+			<li>Starts at 100% opacity at the border.</li>
+			<li>Works best if Country Fill Color has low opacity.</li>
+		</ul>`,
 		sectorBorderStroke: 'Sector Borders',
 		sectorBorderColor: 'Sector Border Color',
 		unionBorderStroke: 'Union Borders',
@@ -265,12 +272,18 @@ export default {
 		countryNames: 'Names',
 		countryNamesType: 'Name Type',
 		countryNamesMinSize: 'Name Min Size',
+		countryNamesMinSize_tooltip: 'If this size does not fit, the name is not drawn.',
 		countryNamesMaxSize: 'Name Max Size',
+		countryNamesMaxSize_tooltip:
+			'The name will not be drawn bigger than this, even if there is room.',
 		countryNamesSecondaryRelativeSize: 'Secondary Name Relative Size',
 		countryNamesFont: 'Font',
 		countryEmblems: 'Emblems',
 		countryEmblemsMinSize: 'Emblem Min Size',
+		countryEmblemsMinSize_tooltip: 'If this size does not fit, the emblem is not drawn.',
 		countryEmblemsMaxSize: 'Emblem Max Size',
+		countryEmblemsMaxSize_tooltip:
+			'The emblem will not be drawn bigger than this, even if there is room.',
 		labelsAvoidHoles: 'Avoid Holes in Border',
 		systemNames: 'System Names',
 		systemNamesFont: 'Font',

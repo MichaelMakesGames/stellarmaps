@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+	import { Accordion, AccordionItem, popup } from '@skeletonlabs/skeleton';
 	import { fade } from 'svelte/transition';
 	import { t } from '../../intl';
+	import HeroiconInfoMini from '../icons/HeroiconInfoMini.svelte';
 	import type { SettingConfigStroke, StrokeSetting } from '../settings';
 
 	export let value: StrokeSetting;
@@ -96,6 +97,24 @@
 								<label class="text-surface-300" for="{config.id}-dashArray" transition:fade>
 									{$t('control.stroke.more_styles.dash_pattern')}
 								</label>
+								<button
+									type="button"
+									class="text-secondary-500-400-token ms-1 [&>*]:pointer-events-none"
+									use:popup={{
+										event: 'hover',
+										target: `${config.id}-dash-pattern-tooltip`,
+										placement: 'top',
+									}}
+								>
+									<HeroiconInfoMini />
+								</button>
+								<div
+									class="card variant-filled-secondary z-10 max-w-96 p-2 text-sm"
+									data-popup="{config.id}-dash-pattern-tooltip"
+								>
+									{$t('control.stroke.more_styles.dash_pattern_tooltip')}
+									<div class="variant-filled-secondary arrow" />
+								</div>
 								<input
 									id="{config.id}-dashArray"
 									type="text"

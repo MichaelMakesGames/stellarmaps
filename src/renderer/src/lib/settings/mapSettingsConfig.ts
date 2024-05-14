@@ -35,6 +35,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				min: 0,
 				max: 1,
 				step: 0.05,
+				tooltip: 'setting.borderFillFade_tooltip',
 			},
 			{
 				id: 'sectorBorderStroke',
@@ -163,6 +164,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 						name: 'option.country_names_type.player_then_country',
 					},
 				],
+				hideIf: (settings) => !settings.countryNames,
 			},
 			{
 				id: 'countryNamesMinSize',
@@ -172,6 +174,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				step: 1,
 				optional: true,
 				hideIf: (settings) => !settings.countryNames,
+				tooltip: 'setting.countryNamesMinSize_tooltip',
 			},
 			{
 				id: 'countryNamesMaxSize',
@@ -181,6 +184,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				step: 1,
 				optional: true,
 				hideIf: (settings) => !settings.countryNames,
+				tooltip: 'setting.countryNamesMaxSize_tooltip',
 			},
 			{
 				id: 'countryNamesSecondaryRelativeSize',
@@ -212,6 +216,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				step: 1,
 				optional: true,
 				hideIf: (settings) => !settings.countryEmblems,
+				tooltip: 'setting.countryEmblemsMinSize_tooltip',
 			},
 			{
 				id: 'countryEmblemsMaxSize',
@@ -221,6 +226,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				step: 1,
 				optional: true,
 				hideIf: (settings) => !settings.countryEmblems,
+				tooltip: 'setting.countryEmblemsMaxSize_tooltip',
 			},
 			{
 				id: 'labelsAvoidHoles',
