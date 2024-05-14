@@ -200,6 +200,11 @@ const federationSchema = z.object({
 	leader: z.number(),
 	members: preprocessedArray(z.number()),
 	name: localizedTextSchema,
+	federation_progress: z
+		.object({
+			federation_type: z.string().default('default_federation'),
+		})
+		.default({}),
 });
 
 /**

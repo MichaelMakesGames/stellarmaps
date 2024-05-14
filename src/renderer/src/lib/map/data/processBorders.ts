@@ -29,6 +29,7 @@ import {
 export const processBordersDeps = [
 	'unionMode',
 	'unionFederations',
+	'unionHegemonies',
 	'unionSubjects',
 	'unionFederationsColor',
 	'hyperlaneMetroStyle',

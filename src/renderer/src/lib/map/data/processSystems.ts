@@ -7,6 +7,7 @@ import { getCountryColors } from './utils';
 export const processSystemsDeps = [
 	'unionMode',
 	'unionFederations',
+	'unionHegemonies',
 	'unionSubjects',
 	'unionFederationsColor',
 ] satisfies (keyof MapSettings)[];

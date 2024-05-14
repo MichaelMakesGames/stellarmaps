@@ -8,6 +8,7 @@ import { getFrontierSectorPseudoId, getUnionLeaderId, pointToGeoJSON } from './u
 export const processSystemOwnershipDeps = [
 	'unionMode',
 	'unionFederations',
+	'unionHegemonies',
 	'unionSubjects',
 	'unionFederationsColor',
 ] satisfies (keyof MapSettings)[];

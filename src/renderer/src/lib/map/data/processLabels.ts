@@ -17,6 +17,7 @@ import {
 export const processLabelsDeps = [
 	'unionMode',
 	'unionFederations',
+	'unionHegemonies',
 	'unionSubjects',
 	'borderStroke',
 	'labelsAvoidHoles',

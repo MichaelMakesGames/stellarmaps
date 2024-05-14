@@ -26,6 +26,7 @@ export type StringMapSettings =
 	| 'labelsAvoidHoles'
 	| 'countryNamesType'
 	| 'countryNamesFont'
+	| 'unionHegemonies'
 	| 'unionFederations'
 	| 'unionFederationsColor'
 	| 'unionSubjects'
@@ -245,6 +246,7 @@ export const defaultMapSettings: MapSettings = {
 		color: { color: 'white', colorAdjustments: [] },
 	},
 	unionMode: false,
+	unionHegemonies: 'joinedBorders',
 	unionFederations: 'joinedBorders',
 	unionFederationsColor: 'founder',
 	unionSubjects: 'joinedBorders',

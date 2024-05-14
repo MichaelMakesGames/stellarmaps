@@ -28,7 +28,7 @@ export function getUnionLeaderId(
 	gameState: GameState,
 	settings: Pick<
 		MapSettings,
-		'unionMode' | 'unionFederations' | 'unionSubjects' | 'unionFederationsColor'
+		'unionMode' | 'unionFederations' | 'unionHegemonies' | 'unionSubjects' | 'unionFederationsColor'
 	>,
 	values: ('joinedBorders' | 'separateBorders' | 'off')[],
 ): number {
@@ -38,6 +38,10 @@ export function getUnionLeaderId(
 	const overlordId = country.overlord;
 	const overlord = overlordId != null ? gameState.country[overlordId] : null;
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
+	const isHegemonyFederation = federation
+		? federation.federation_progress.federation_type === 'hegemony_federation'
+		: false;
+	const isNonHegemonyFederation = federation ? !isHegemonyFederation : false;
 	const overlordFederation =
 		overlord?.federation != null ? gameState.federation[overlord.federation] : null;
 	if (!settings.unionMode) {
@@ -50,7 +54,11 @@ export function getUnionLeaderId(
 		return settings.unionFederationsColor === 'leader'
 			? overlordFederation.leader
 			: overlordFederation.members[0] ?? countryId;
-	} else if (isIncludedValue(settings.unionFederations) && federation) {
+	} else if (
+		federation &&
+		((isIncludedValue(settings.unionFederations) && isNonHegemonyFederation) ||
+			(isIncludedValue(settings.unionHegemonies) && isHegemonyFederation))
+	) {
 		return settings.unionFederationsColor === 'leader'
 			? federation.leader
 			: federation.members[0] ?? countryId;
@@ -64,20 +72,21 @@ export function getUnionLeaderId(
 export function isUnionLeader(
 	countryId: number,
 	gameState: GameState,
-	settings: Pick<MapSettings, 'unionMode' | 'unionFederations' | 'unionSubjects'>,
+	settings: Pick<
+		MapSettings,
+		'unionMode' | 'unionFederations' | 'unionHegemonies' | 'unionSubjects'
+	>,
 ) {
 	const country = gameState.country[countryId];
 	if (country == null) return false;
 	const federation = country.federation != null ? gameState.federation[country.federation] : null;
+	const federationIsDisplayedAsUnion =
+		federation?.federation_progress.federation_type === 'hegemony_federation'
+			? settings.unionHegemonies !== 'off'
+			: settings.unionFederations !== 'off';
 	if (!settings.unionMode) {
 		return false;
-	} else if (settings.unionFederations !== 'off' && settings.unionSubjects !== 'off') {
-		if (federation) {
-			return federation.leader === countryId;
-		} else {
-			return Boolean(country.subjects.length);
-		}
-	} else if (settings.unionFederations !== 'off' && federation) {
+	} else if (federation && federationIsDisplayedAsUnion) {
 		return federation.leader === countryId;
 	} else if (settings.unionSubjects !== 'off') {
 		return Boolean(country.subjects.length);
@@ -145,7 +154,7 @@ export function getCountryColors(
 	gameState: GameState,
 	settings: Pick<
 		MapSettings,
-		'unionMode' | 'unionFederations' | 'unionSubjects' | 'unionFederationsColor'
+		'unionMode' | 'unionFederations' | 'unionHegemonies' | 'unionSubjects' | 'unionFederationsColor'
 	>,
 ) {
 	return gameState.country[

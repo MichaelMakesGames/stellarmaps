@@ -52,7 +52,9 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
 				hideIf: (settings) =>
 					!settings.unionMode ||
-					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
+					![settings.unionFederations, settings.unionHegemonies, settings.unionSubjects].includes(
+						'joinedBorders',
+					),
 			},
 			{
 				id: 'unionBorderColor',
@@ -60,7 +62,9 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				hideIf: (settings) =>
 					!settings.unionBorderStroke.enabled ||
 					!settings.unionMode ||
-					(settings.unionFederations === 'off' && settings.unionSubjects === 'off'),
+					![settings.unionFederations, settings.unionHegemonies, settings.unionSubjects].includes(
+						'joinedBorders',
+					),
 			},
 		],
 	},
@@ -81,6 +85,13 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				hideIf: (settings) => !settings.unionMode,
 			},
 			{
+				id: 'unionHegemonies',
+				requiresReprocessing: true,
+				type: 'select',
+				options: unionOptions,
+				hideIf: (settings) => !settings.unionMode,
+			},
+			{
 				id: 'unionFederations',
 				requiresReprocessing: true,
 				type: 'select',
@@ -95,7 +106,9 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 					{ id: 'founder', name: 'option.union_federations_color.founder' },
 					{ id: 'leader', name: 'option.union_federations_color.leader' },
 				],
-				hideIf: (settings) => !settings.unionMode || settings.unionFederations === 'off',
+				hideIf: (settings) =>
+					!settings.unionMode ||
+					(settings.unionFederations === 'off' && settings.unionHegemonies === 'off'),
 			},
 			{
 				id: 'unionLeaderSymbol',
