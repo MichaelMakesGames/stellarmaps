@@ -25,6 +25,7 @@ export const appSettingsConfig: AppSettingConfig[] = [
 			{ id: 'l_japanese', literalName: '日本語' },
 			{ id: 'l_korean', literalName: '한국어' },
 		],
+		tooltip: 'setting.appStellarisLanguage_tooltip',
 	},
 	{
 		id: 'appTranslatorMode',

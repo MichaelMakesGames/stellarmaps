@@ -367,8 +367,11 @@ export default {
 		starScapeStarsColor: 'Stars Color',
 		starScapeStarsCount: 'Star Count',
 		appLocale: 'StellarMaps Language',
-		appLocale_tooltip: 'Join the Discord server (link the top bar) if you want to help translate!',
+		appLocale_tooltip:
+			'Join the Discord server (link in the top bar) if you want to help translate!',
 		appStellarisLanguage: 'Stellaris Language',
+		appStellarisLanguage_tooltip:
+			'Language used for text from Stellaris files (eg country, system, and planet names).',
 		appTranslatorMode: 'Translator Mode',
 		appTranslatorMode_tooltip: `
 		<strong>For StellarMaps translators:</strong>
