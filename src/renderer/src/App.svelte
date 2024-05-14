@@ -16,6 +16,7 @@
 	import Sidebar from './lib/Sidebar.svelte';
 	import VersionInfo from './lib/VersionInfo.svelte';
 	import Discord from './lib/icons/Discord.svelte';
+	import GitHub from './lib/icons/GitHub.svelte';
 	import HeroiconCog6ToothSolid from './lib/icons/HeroiconCog6ToothSolid.svelte';
 	import MapContainer from './lib/map/MapContainer.svelte';
 
@@ -35,6 +36,14 @@
 				<VersionInfo />
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
+				<a
+					class="anchor"
+					href="https://github.com/MichaelMakesGames/stellarmaps"
+					target="_blank"
+					rel="noopener"
+				>
+					<GitHub />
+				</a>
 				<a class="anchor" href="https://discord.gg/72kaXW782b" target="_blank" rel="noopener">
 					<Discord />
 				</a>

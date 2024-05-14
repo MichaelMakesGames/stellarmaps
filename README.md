@@ -39,6 +39,8 @@ Map icons are made by me. Basic shapes are released to the public domain, but ot
 
 The Discord icon is from https://discord.com/branding.
 
+The GitHub icon is from https://github.com/logos.
+
 Other interface icons from [Heroicons](https://heroicons.com), licensed under the [MIT license](https://github.com/tailwindlabs/heroicons/blob/master/LICENSE).
 
 # Local Development
