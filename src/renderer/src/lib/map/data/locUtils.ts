@@ -41,7 +41,7 @@ export function localizeTextSync(
 		}
 	}
 	let value = loc[text.key];
-	if (value == null) return text.key;
+	if (value == null) return removeColorCodes(text.key);
 	if (text.variables) {
 		text.variables.forEach((variable) => {
 			const localizedVariable = localizeTextSync(variable.value, loc);
@@ -51,5 +51,9 @@ export function localizeTextSync(
 				.replace(`<${variable.key}>`, localizedVariable);
 		});
 	}
-	return value;
+	return removeColorCodes(value);
+}
+
+function removeColorCodes(text: string): string {
+	return text.replace(/[\u0011§]./g, ''); // eslint-disable-line no-control-regex
 }
