@@ -93,7 +93,12 @@ export function jsonify(tokens: string[]): Record<string, any> {
 					const array = current[ARRAY_KEY];
 					current = stack.pop() ?? {};
 					const arrayKey = Object.keys(current).find((key) => current[key][ARRAY_KEY] === array);
-					if (arrayKey != null) current[arrayKey] = array;
+					if (arrayKey != null)
+						current[arrayKey] = array.map((item: any) =>
+							Object.keys(item).length === 1 && Object.keys(item)[0] === ARRAY_KEY
+								? item[ARRAY_KEY]
+								: item,
+						);
 				} else {
 					current = stack.pop() ?? {};
 				}
