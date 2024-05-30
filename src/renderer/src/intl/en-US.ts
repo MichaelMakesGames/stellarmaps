@@ -217,7 +217,7 @@ export default {
 			owned: 'Owned',
 			none: 'None',
 		},
-		terra_incognita_perspective_country: {
+		country: {
 			player: 'Player',
 		},
 		terra_incognita_style: {
@@ -231,6 +231,10 @@ export default {
 			sector_capitals: 'Country and Sector Capitals',
 			colonized: 'Colonized Systems',
 			all: 'All Systems',
+		},
+		map_mode: {
+			default: 'Empires',
+			wars: 'Wars',
 		},
 	},
 	// labels and tooltips for various settings
@@ -248,6 +252,8 @@ export default {
 			advancedBorder: 'Advanced Border Settings',
 			starscape: 'Starscape',
 		},
+		mapMode: 'Map Mode',
+		mapModePointOfView: 'Point of View',
 		borderStroke: 'Country Borders',
 		borderColor: 'Country Border Color',
 		borderFillColor: 'Country Fill Color',

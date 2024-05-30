@@ -2,6 +2,7 @@ import * as turf from '@turf/turf';
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
+import { getCountryMapModeInfo } from './mapModes';
 import type processCircularGalaxyBorders from './processCircularGalaxyBorder';
 import type { BorderCircle } from './processCircularGalaxyBorder';
 import type processHyperRelays from './processHyperRelays';
@@ -13,7 +14,6 @@ import {
 	applyGalaxyBoundary,
 	createHyperlanePaths,
 	getAllPositionArrays,
-	getCountryColors,
 	getFrontierSectorPseudoId,
 	getPolygons,
 	getSharedDistancePercent,
@@ -36,6 +36,8 @@ export const processBordersDeps = [
 	'borderStroke',
 	'unionBorderStroke',
 	'sectorBorderStroke',
+	'mapMode',
+	'mapModePointOfView',
 ] satisfies (keyof MapSettings)[];
 
 export default function processBorders(
@@ -60,9 +62,7 @@ export default function processBorders(
 	const borders = Object.entries(unionLeaderToGeojson)
 		.map(parseNumberEntry)
 		.map(([countryId, outerBorderGeoJSON]) => {
-			const colors = getCountryColors(countryId, gameState, settings);
-			const primaryColor = colors?.[0] ?? 'black';
-			const secondaryColor = colors?.[1] ?? 'black';
+			const mapModeInfo = getCountryMapModeInfo(countryId, gameState, settings);
 
 			const countrySectors = Object.values(gameState.sectors).filter(
 				(sector) =>
@@ -287,8 +287,7 @@ export default function processBorders(
 
 			return {
 				countryId,
-				primaryColor,
-				secondaryColor,
+				...mapModeInfo,
 				outerPath: '', // we need to wait for these, because fragments might need to be assigned
 				innerPath: '', // we need to wait for these, because fragments might need to be assigned
 				borderPath: '', // we need to wait for these, because fragments might need to be assigned

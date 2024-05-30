@@ -149,19 +149,6 @@ export function getPolygons(
 	});
 }
 
-export function getCountryColors(
-	countryId: number,
-	gameState: GameState,
-	settings: Pick<
-		MapSettings,
-		'unionMode' | 'unionFederations' | 'unionHegemonies' | 'unionSubjects' | 'unionFederationsColor'
-	>,
-) {
-	return gameState.country[
-		getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
-	]?.flag?.colors;
-}
-
 export function positionToString(p: turf.Position): string {
 	return `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
 }

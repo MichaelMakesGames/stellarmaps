@@ -7,6 +7,28 @@ import { isColorDynamic } from './utils';
 
 export const mapSettingsConfig: MapSettingConfigGroup[] = [
 	{
+		id: 'mapMode',
+		name: 'setting.mapMode',
+		settings: [
+			{
+				id: 'mapMode',
+				type: 'select',
+				options: [
+					{ id: 'default', name: 'option.map_mode.default' },
+					{ id: 'wars', name: 'option.map_mode.wars' },
+				],
+				requiresReprocessing: true,
+			},
+			{
+				id: 'mapModePointOfView',
+				type: 'select',
+				options: [{ id: 'player', name: 'option.country.player' }],
+				dynamicOptions: countryOptions,
+				requiresReprocessing: true,
+			},
+		],
+	},
+	{
 		id: 'borders',
 		name: 'setting.group.borders',
 		settings: [
@@ -409,7 +431,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'terraIncognitaPerspectiveCountry',
 				requiresReprocessing: true,
 				type: 'select',
-				options: [{ id: 'player', name: 'option.terra_incognita_perspective_country.player' }],
+				options: [{ id: 'player', name: 'option.country.player' }],
 				dynamicOptions: countryOptions,
 				hideIf: (settings) => !settings.terraIncognita,
 			},

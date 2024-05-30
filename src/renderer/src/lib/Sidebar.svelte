@@ -104,14 +104,17 @@
 		editedMapSettings.update((prev) => ({
 			...prev,
 			terraIncognitaPerspectiveCountry: 'player',
+			mapModePointOfView: 'player',
 		}));
 		mapSettings.update((prev) => ({
 			...prev,
 			terraIncognitaPerspectiveCountry: 'player',
+			mapModePointOfView: 'player',
 		}));
 		lastProcessedMapSettings.update((prev) => ({
 			...prev,
 			terraIncognitaPerspectiveCountry: 'player',
+			mapModePointOfView: 'player',
 		}));
 
 		promise.catch(

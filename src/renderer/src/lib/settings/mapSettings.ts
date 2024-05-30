@@ -23,18 +23,20 @@ export type NumberOptionalMapSettings =
 	| 'starScapeStarsCount';
 
 export type StringMapSettings =
-	| 'labelsAvoidHoles'
-	| 'countryNamesType'
 	| 'countryNamesFont'
-	| 'unionHegemonies'
-	| 'unionFederations'
-	| 'unionFederationsColor'
-	| 'unionSubjects'
-	| 'unionLeaderSymbol'
+	| 'countryNamesType'
+	| 'labelsAvoidHoles'
+	| 'mapMode'
+	| 'mapModePointOfView'
+	| 'systemNames'
+	| 'systemNamesFont'
 	| 'terraIncognitaPerspectiveCountry'
 	| 'terraIncognitaStyle'
-	| 'systemNames'
-	| 'systemNamesFont';
+	| 'unionFederations'
+	| 'unionFederationsColor'
+	| 'unionHegemonies'
+	| 'unionLeaderSymbol'
+	| 'unionSubjects';
 
 export type BooleanMapSettings =
 	| 'hyperlaneSensitiveBorders'
@@ -100,6 +102,8 @@ export type MapSettings = Record<NumberMapSettings, number> &
 	Record<IconMapSettings, IconSetting>;
 
 export const defaultMapSettings: MapSettings = {
+	mapMode: 'default',
+	mapModePointOfView: 'player',
 	backgroundColor: { color: 'very_black', colorAdjustments: [] },
 	borderFillColor: {
 		color: 'secondary',

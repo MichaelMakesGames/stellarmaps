@@ -101,6 +101,21 @@ const relationSchema = z.object({
 	owner: z.number(),
 	country: z.number(),
 	communications: z.boolean().optional(),
+	contact: z.boolean().optional(),
+	embassy: z.boolean().optional(),
+	borders: z.boolean().optional(),
+	hostile: z.boolean().optional(),
+	defensive_pact: z.boolean().optional(),
+	non_aggression_pact: z.boolean().optional(),
+	research_agreement: z.boolean().optional(),
+	commercial_pact: z.boolean().optional(),
+	is_rival: z.boolean().optional(),
+	closed_borders: z.boolean().optional(),
+	migration_access: z.boolean().optional(),
+	trust: z.number().optional(),
+	truce: z.number().optional(),
+	wars: preprocessedArray(z.number()),
+	relation_current: z.number().default(0),
 });
 
 /**
@@ -126,6 +141,7 @@ const countrySchema = z.object({
 	subjects: preprocessedArray(z.number()),
 	overlord: z.number().optional(),
 	federation: z.number().optional(),
+	associated_federation: z.number().optional(),
 	usable_bypasses: preprocessedArray(z.number()),
 	fleets_manager: z
 		.object({
@@ -151,6 +167,23 @@ const countrySchema = z.object({
 			...obj,
 			relation: (obj.relation == null ? [] : [obj.relation]).concat(obj.$multiKeys?.relation ?? []),
 		})),
+	ai: z
+		.object({
+			attitude: z
+				.array(
+					z.object({
+						country: z.number(),
+						attitude: z.string(),
+					}),
+				)
+				.default([]),
+		})
+		.default({}),
+	intel_manager: z
+		.object({
+			intel: preprocessedArray(z.tuple([z.number(), z.object({ intel: z.number() })])),
+		})
+		.default({ intel: [] }),
 });
 
 /**
@@ -199,6 +232,7 @@ export type Sector = WithId<z.infer<typeof sectorSchema>>;
 const federationSchema = z.object({
 	leader: z.number(),
 	members: preprocessedArray(z.number()),
+	associates: preprocessedArray(z.number()),
 	name: localizedTextSchema,
 	federation_progress: z
 		.object({
@@ -211,6 +245,32 @@ const federationSchema = z.object({
  * @public
  */
 export type Federation = WithId<z.infer<typeof federationSchema>>;
+
+const warSchema = z.object({
+	name: localizedTextSchema,
+	attackers: z.array(z.object({ country: z.number() })),
+	defenders: z.array(z.object({ country: z.number() })),
+});
+
+/**
+ * @public
+ */
+export type War = WithId<z.infer<typeof warSchema>>;
+
+const agreementSchema = z.object({
+	owner: z.number(), // overlord
+	target: z.number(), // subject
+	active_status: z.string(),
+	term_data: z.object({
+		joins_overlord_wars: z.string().optional(),
+		calls_overlord_to_war: z.string().optional(),
+	}),
+});
+
+/**
+ * @public
+ */
+export type Agreement = WithId<z.infer<typeof agreementSchema>>;
 
 const nebulaSchema = z
 	.object({
@@ -250,6 +310,8 @@ export const gameStateSchema = z
 		megastructures: stellarisDb(megastructureSchema),
 		sectors: stellarisDb(sectorSchema),
 		federation: stellarisDb(federationSchema),
+		war: stellarisDb(warSchema),
+		agreements: z.object({ agreements: stellarisDb(agreementSchema) }).default({}),
 		player: preprocessedArray(z.object({ name: z.coerce.string(), country: z.number() })),
 		galaxy: z.object({ shape: z.string(), core_radius: z.number() }),
 		planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
@@ -290,6 +352,8 @@ function convertSchemaToGameStateFilter(schema: z.ZodType): boolean | Record<str
 			return true;
 		}
 		return false;
+	} else if (schema instanceof z.ZodTuple) {
+		return true;
 	} else if (schema instanceof z.ZodObject) {
 		return Object.fromEntries(
 			Object.entries(schema.shape).map(([key, value]) => [

@@ -1,8 +1,8 @@
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { isDefined } from '../../utils';
+import { defaultCountryMapModeInfo, getCountryMapModeInfo } from './mapModes';
 import type processSystemOwnership from './processSystemOwnership';
-import { getCountryColors } from './utils';
 
 export const processSystemsDeps = [
 	'unionMode',
@@ -10,6 +10,8 @@ export const processSystemsDeps = [
 	'unionHegemonies',
 	'unionSubjects',
 	'unionFederationsColor',
+	'mapMode',
+	'mapModePointOfView',
 ] satisfies (keyof MapSettings)[];
 
 export default function processSystems(
@@ -24,9 +26,10 @@ export default function processSystems(
 	const systems = Object.values(gameState.galactic_object).map((system) => {
 		const countryId = systemIdToCountry[system.id];
 		const country = countryId != null ? gameState.country[countryId] : null;
-		const colors = countryId != null ? getCountryColors(countryId, gameState, settings) : null;
-		const primaryColor = colors?.[0] ?? 'black';
-		const secondaryColor = colors?.[1] ?? 'black';
+		const mapModeInfo =
+			countryId != null
+				? getCountryMapModeInfo(countryId, gameState, settings)
+				: defaultCountryMapModeInfo;
 
 		const isOwned = country != null;
 		const isColonized = isOwned && Boolean(system.colonies.length);
@@ -49,8 +52,7 @@ export default function processSystems(
 
 		return {
 			id: system.id,
-			primaryColor,
-			secondaryColor,
+			...mapModeInfo,
 			isColonized,
 			isSectorCapital,
 			isCountryCapital,
