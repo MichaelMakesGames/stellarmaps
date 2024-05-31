@@ -330,6 +330,8 @@ export default {
 			<li>When enabled, the overall border of the galaxy will be circular in shape, and there will be no "holes" between systems.</li>
 			<li>If the galaxy is a "Starburst", a special spiral shape will be used instead of a circle.</li>
 		</ul>`,
+		borderGap: 'Border Gap',
+		borderGap_tooltip: 'Adds blank space between country borders',
 		hyperlaneSensitiveBorders: 'Hyperlane Sensitive Borders',
 		hyperlaneSensitiveBorders_tooltip: `<ul>
 			<li>When enabled, borders will follow hyperlanes.</li>

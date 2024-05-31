@@ -484,6 +484,15 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				tooltip: 'setting.circularGalaxyBorders_tooltip',
 			},
 			{
+				id: 'borderGap',
+				requiresReprocessing: true,
+				type: 'number',
+				step: 0.5,
+				min: 0,
+				optional: true,
+				tooltip: 'setting.borderGap_tooltip',
+			},
+			{
 				id: 'hyperlaneSensitiveBorders',
 				requiresReprocessing: true,
 				type: 'toggle',

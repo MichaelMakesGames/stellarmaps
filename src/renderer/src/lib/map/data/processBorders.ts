@@ -38,6 +38,7 @@ export const processBordersDeps = [
 	'sectorBorderStroke',
 	'mapMode',
 	'mapModePointOfView',
+	'borderGap',
 ] satisfies (keyof MapSettings)[];
 
 export default function processBorders(
@@ -345,11 +346,19 @@ export default function processBorders(
 		if (settings.borderStroke.smoothing && boundedOuterBorderGeoJSON != null) {
 			smoothedOuterBorderGeoJSON = smoothGeojson(boundedOuterBorderGeoJSON, 2);
 		}
+		smoothedOuterBorderGeoJSON =
+			smoothedOuterBorderGeoJSON == null
+				? null
+				: (turf.buffer(smoothedOuterBorderGeoJSON, -(settings.borderGap ?? 0) / 2 / SCALE, {
+						units: 'degrees',
+						steps: settings.borderStroke.smoothing ? 8 : 1,
+					}) as ReturnType<typeof turf.buffer> | null);
 		const smoothedInnerBorderGeoJSON =
 			smoothedOuterBorderGeoJSON == null
 				? null
 				: (turf.buffer(smoothedOuterBorderGeoJSON, -settings.borderStroke.width / SCALE, {
 						units: 'degrees',
+						steps: settings.borderStroke.smoothing ? 8 : 1,
 					}) as ReturnType<typeof turf.buffer> | null);
 		border.outerPath =
 			smoothedOuterBorderGeoJSON == null

@@ -14,6 +14,7 @@ export type NumberMapSettings =
 	| 'systemNamesFontSize';
 
 export type NumberOptionalMapSettings =
+	| 'borderGap'
 	| 'countryEmblemsMaxSize'
 	| 'countryEmblemsMinSize'
 	| 'countryNamesMaxSize'
@@ -313,6 +314,7 @@ export const defaultMapSettings: MapSettings = {
 		colorAdjustments: [],
 	},
 	voronoiGridSize: 30,
+	borderGap: null,
 	hyperlaneSensitiveBorders: true,
 	claimVoidBorderThreshold: 0.6,
 	claimVoidMaxSize: 1000,
