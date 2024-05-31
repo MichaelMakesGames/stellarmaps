@@ -33,6 +33,7 @@ export default async function processMapData(
 	const settings = { ...rawSettings };
 	if (settings.hyperlaneMetroStyle) settings.alignStarsToGrid = true;
 	if (settings.alignStarsToGrid) settings.hyperlaneSensitiveBorders = false;
+	if (settings.mapMode !== 'default') settings.unionMode = false;
 
 	// get these started right away; await just before needed
 	const emblemsPromise = timeItAsync(
@@ -192,6 +193,7 @@ export default async function processMapData(
 		terraIncognitaPath,
 		galaxyBorderCircles,
 		findClosestSystem,
+		systemIdToCountry,
 	};
 }
 

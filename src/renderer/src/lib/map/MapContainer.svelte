@@ -18,7 +18,12 @@
 		stellarisDataPromiseStore,
 		stellarisPathStore,
 	} from '../loadStellarisData';
-	import { appStellarisLanguage, lastProcessedMapSettings, mapSettings } from '../settings';
+	import {
+		appStellarisLanguage,
+		editedMapSettings,
+		lastProcessedMapSettings,
+		mapSettings,
+	} from '../settings';
 	import stellarMapsApi from '../stellarMapsApi';
 	import { debounce, timeItAsync, toastError } from '../utils';
 	import Map from './Map.svelte';
@@ -305,6 +310,8 @@
 		x: number;
 		y: number;
 		system: GalacticObject;
+		countryId: number | null;
+		hidden: boolean;
 	} | null = null;
 	function onMouseMoveInner(e: MouseEvent) {
 		if (dataOrNull != null && !resizing && !zooming) {
@@ -323,6 +330,7 @@
 			];
 			const system = dataOrNull.findClosestSystem(-svgPoint[0], svgPoint[1]);
 			if (system) {
+				const countryId = dataOrNull.systemIdToCountry[system.id] ?? null;
 				const settings = get(mapSettings);
 				const processedSystem = dataOrNull?.systems.find((s) => s.id === system.id);
 				if (processedSystem == null) {
@@ -340,16 +348,15 @@
 
 					if (settings.terraIncognita && !processedSystem.systemIsKnown) {
 						tooltip = null;
-					} else if (
-						Math.hypot(tooltipPoint[0] - e.offsetX, tooltipPoint[1] - e.offsetY) >
-						TOOLTIP_MAX_DISTANCE
-					) {
-						tooltip = null;
 					} else {
 						tooltip = {
 							x: tooltipPoint[0],
 							y: tooltipPoint[1],
 							system: system,
+							hidden:
+								Math.hypot(tooltipPoint[0] - e.offsetX, tooltipPoint[1] - e.offsetY) >
+								TOOLTIP_MAX_DISTANCE,
+							countryId,
 						};
 					}
 				}
@@ -365,6 +372,18 @@
 			tooltip = null;
 		}
 		onMouseMoveInnerDebounced(e);
+	}
+
+	function onMapClick() {
+		const countryId = tooltip?.countryId;
+		if (countryId != null) {
+			editedMapSettings.update((value) => ({ ...value, mapModePointOfView: countryId.toString() }));
+			mapSettings.update((value) => ({ ...value, mapModePointOfView: countryId.toString() }));
+			lastProcessedMapSettings.update((value) => ({
+				...value,
+				mapModePointOfView: countryId.toString(),
+			}));
+		}
 	}
 </script>
 
@@ -389,9 +408,9 @@
 			{$t('export.button')}
 		</button>
 	{/if}
-	{#if tooltip != null && !zooming && !resizing}
+	{#if tooltip != null && !tooltip.hidden && !zooming && !resizing}
 		<div class="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
-			<MapTooltip {...tooltip} gameState={gameStateOrNull} />
+			<MapTooltip x={tooltip.x} y={tooltip.y} system={tooltip.system} gameState={gameStateOrNull} />
 		</div>
 	{/if}
 	{#if !$gameStatePromise}
@@ -437,6 +456,8 @@
 			on:mouseout={() => {
 				tooltip = null;
 			}}
+			on:click={onMapClick}
+			class:cursor-pointer={tooltip?.countryId != null}
 			class="h-full w-full"
 		>
 			<g transform={transform?.toString()}>
