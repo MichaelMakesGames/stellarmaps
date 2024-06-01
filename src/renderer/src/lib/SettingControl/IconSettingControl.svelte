@@ -43,7 +43,7 @@
 					}}
 				>
 					{#each groups as group}
-						<optgroup label={group}>
+						<optgroup label={$t(group)}>
 							{#each iconOptions.filter((opt) => opt.group === group) as option (option.id)}
 								<option value={option.id}>{option.literalName ?? $t(option.name)}</option>
 							{/each}

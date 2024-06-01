@@ -1,6 +1,8 @@
 import IntlMessageFormat, { type FormatXMLElementFn, type PrimitiveType } from 'intl-messageformat';
 import { derived, writable } from 'svelte/store';
 import enUS from './en-US';
+import jaJP from './ja-JP';
+import zhTW from './zh-TW';
 
 type Paths<T> = T extends object
 	? {
@@ -23,15 +25,18 @@ function flattenMessages(messages: UnflattenedMessages, prefix = ''): Record<str
 
 const locales = {
 	'en-US': flattenMessages(enUS) as Record<MessageID, string>,
-	ENGLISH: Object.fromEntries(
-		Object.entries(flattenMessages(enUS)).map(([k, v]) => [k, v.toUpperCase()]),
-	) as Partial<Record<MessageID, string>>,
+	'ja-JP': flattenMessages(jaJP) as Partial<Record<MessageID, string>>,
+	'zh-TW': flattenMessages(zhTW) as Partial<Record<MessageID, string>>,
 	MessageID: Object.fromEntries(Object.keys(flattenMessages(enUS)).map((k) => [k, k])) as Record<
 		MessageID,
 		string
 	>,
 };
 type Locale = keyof typeof locales;
+
+export function isValidLocale(locale: string) {
+	return Object.keys(locales).includes(locale) && locale !== 'MessageID';
+}
 
 function getBestLocale(): Locale {
 	const keys = Object.keys(locales) as [Locale, ...Locale[]];

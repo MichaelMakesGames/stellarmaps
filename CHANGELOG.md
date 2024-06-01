@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.11.1](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.11.0...stellarmaps-v0.11.1) (2024-06-01)
+
+### Features
+
+- **ui:** add Japanese translation from karokaro and Traditional Chinese translation from HYA ([2a9ebed](https://github.com/MichaelMakesGames/stellarmaps/commit/2a9ebed2cc28f70f2e52ed9c09a641d3f2fb8c5a))
+
+### Bug Fixes
+
+- **ui:** fix icon group names not localized ([018f130](https://github.com/MichaelMakesGames/stellarmaps/commit/018f130ce87ff9a18d190784bc82b2bd0af28f32))
+- **ui:** remove test ENGLISH locale and automatically reset invalid locale settings ([3a8ae2e](https://github.com/MichaelMakesGames/stellarmaps/commit/3a8ae2eb447cd715df2691d8ede38191369a64e9))
+
 ## [0.11.0](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.10.0...stellarmaps-v0.11.0) (2024-05-14)
 
 ### Features
