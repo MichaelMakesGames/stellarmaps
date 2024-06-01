@@ -8,6 +8,8 @@ export const appSettingsConfig: AppSettingConfig[] = [
 		options: [
 			{ id: 'en-US', literalName: 'English' },
 			{ id: 'ENGLISH', literalName: 'ENGLISH' },
+			{ id: 'ja-JP', literalName: '日本語' },
+			{ id: 'zh-TW', literalName: '中文（正體字）' },
 		],
 	},
 	{

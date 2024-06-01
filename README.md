@@ -33,6 +33,11 @@ Stylized and customizable Stellaris maps
 
 # Credits
 
+Special thanks to the translators:
+
+- HYA for Traditional Chinese
+- karokaro for Japanese
+
 The app icon is [Orbital](https://game-icons.net/1x1/lorc/orbital.html) by Lorc, licensed under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0/).
 
 Map icons are made by me. Basic shapes are released to the public domain, but others (Wormhole, Gateway, L-Gate, etc) are based on icons from the game Stellaris, and should not be used other than for tools or mods for the game.
