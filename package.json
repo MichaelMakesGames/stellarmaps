@@ -1,6 +1,6 @@
 {
 	"name": "stellarmaps",
-	"version": "0.11.0",
+	"version": "0.11.1",
 	"private": true,
 	"type": "module",
 	"scripts": {
@@ -17,7 +17,7 @@
 		"knip": "knip",
 		"update-git-hooks": "simple-git-hooks",
 		"commitlint": "commitlint --edit",
-		"generate-changelog": "commit-and-tag-version --skip.bump --skip.commit --skip.tag -t stellarmaps-v"
+		"generate-changelog": "commit-and-tag-version --skip.bump --skip.commit --skip.tag -t stellarmaps-v && prettier --write ./CHANGELOG.md"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "npm run knip && npm run typecheck && npm run format:check && npm run lint",
