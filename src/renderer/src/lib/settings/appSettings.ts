@@ -1,6 +1,6 @@
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { derived, get } from 'svelte/store';
-import { locale } from '../../intl';
+import { isValidLocale, locale } from '../../intl';
 import stellarMapsApi from '../stellarMapsApi';
 import { disableTranslatorMode, enableTranslatorMode } from '../translatorMode';
 
@@ -40,8 +40,15 @@ function loadSettings() {
 		.then((settings) => appSettings.set(settings))
 		.then(() => {
 			appSettings.subscribe((settings) => {
-				// update locale
-				locale.set(settings.appLocale as Parameters<(typeof locale)['set']>[0]);
+				// update locale if valid
+				if (isValidLocale(settings.appLocale)) {
+					locale.set(settings.appLocale as Parameters<(typeof locale)['set']>[0]);
+				} else {
+					// change settings if it somehow has an invalid locale
+					appSettings.update((value) => ({ ...value, appLocale: get(locale) }));
+					return;
+				}
+
 				// write to file
 				createAppConfigDirIfNeeded()
 					.then(getAppSettingsPath)
