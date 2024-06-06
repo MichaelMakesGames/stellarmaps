@@ -251,6 +251,7 @@ export default {
 			misc: 'Miscellaneous',
 			advancedBorder: 'Advanced Border Settings',
 			starscape: 'Starscape',
+			legend: 'Legend',
 		},
 		mapMode: 'Map Mode',
 		mapModePointOfView: 'Point of View',
@@ -374,6 +375,11 @@ export default {
 		starScapeStars: 'Stars',
 		starScapeStarsColor: 'Stars Color',
 		starScapeStarsCount: 'Star Count',
+		legend: 'Legend',
+		legendFontSize: 'Font Size',
+		legendBorderStroke: 'Border',
+		legendBorderColor: 'Border Color',
+		legendBackgroundColor: 'Background Color',
 		appLocale: 'StellarMaps Language',
 		appLocale_tooltip:
 			'Join the Discord server (link in the top bar) if you want to help translate!',
@@ -390,5 +396,16 @@ export default {
 			<li>Shows warnings about missing and extra messages.</li>
 			<li>You need to reselect the file if you reload the application.</li>
 		</ul>`,
+	},
+	map_mode: {
+		common: {
+			selected_country: 'Selected Country',
+		},
+		wars: {
+			hostile: 'Hostile',
+			ally: 'Ally in Active War',
+			at_war: 'At War (Uninvolved)',
+			at_peace: 'At Peace',
+		},
 	},
 };

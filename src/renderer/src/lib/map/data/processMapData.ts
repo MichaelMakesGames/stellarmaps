@@ -12,6 +12,7 @@ import processCircularGalaxyBorders, {
 import { processEmblems } from './processEmblems';
 import processHyperRelays from './processHyperRelays';
 import processLabels, { processLabelsDeps } from './processLabels';
+import processLegend, { processLegendDeps } from './processLegend';
 import processNames from './processNames';
 import processPolygons, { processPolygonsDeps } from './processPolygons';
 import processSystemCoordinates, { processSystemCoordinatesDeps } from './processSystemCoordinates';
@@ -178,6 +179,13 @@ export default async function processMapData(
 		knownWormholes,
 		getSystemCoordinates,
 	);
+	const legend = timeIt(
+		'legend',
+		cached(processLegend),
+		gameState,
+		pickSettings(settings, processLegendDeps),
+		borders,
+	);
 	const emblems = await emblemsPromise;
 
 	console.timeEnd('TOTAL PROCESSING TIME');
@@ -194,6 +202,7 @@ export default async function processMapData(
 		galaxyBorderCircles,
 		findClosestSystem,
 		systemIdToCountry,
+		legend,
 	};
 }
 

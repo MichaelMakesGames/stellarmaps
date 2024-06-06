@@ -8,6 +8,7 @@ import type processTerraIncognita from './processTerraIncognita';
 import {
 	SCALE,
 	getPolygons,
+	getTextAspectRatio,
 	inverseX,
 	isUnionLeader,
 	pointFromGeoJSON,
@@ -187,14 +188,6 @@ export default function processLabels(
 		};
 	});
 	return labels;
-}
-
-const measureTextContext = document
-	.createElement('canvas')
-	.getContext('2d') as CanvasRenderingContext2D;
-function getTextAspectRatio(text: string, fontFamily: string) {
-	measureTextContext.font = `10px '${fontFamily}'`;
-	return 10 / measureTextContext.measureText(text).width;
 }
 
 function findLargestContainedRect({

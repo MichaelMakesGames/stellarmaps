@@ -592,4 +592,38 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 			},
 		],
 	},
+	{
+		id: 'legend',
+		name: 'setting.group.legend',
+		settings: [
+			{
+				id: 'legend',
+				type: 'toggle',
+			},
+			{
+				id: 'legendFontSize',
+				type: 'number',
+				min: 1,
+				step: 1,
+				requiresReprocessing: true,
+			},
+			{
+				id: 'legendBorderStroke',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'legendBorderColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				allowedAdjustments: ['DARKEN', 'LIGHTEN', 'MAX_LIGHTNESS', 'MIN_LIGHTNESS', 'OPACITY'],
+			},
+			{
+				id: 'legendBackgroundColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				allowedAdjustments: ['DARKEN', 'LIGHTEN', 'MAX_LIGHTNESS', 'MIN_LIGHTNESS', 'OPACITY'],
+			},
+		],
+	},
 ];

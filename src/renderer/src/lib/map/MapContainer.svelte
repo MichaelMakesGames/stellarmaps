@@ -26,6 +26,7 @@
 	} from '../settings';
 	import stellarMapsApi from '../stellarMapsApi';
 	import { debounce, timeItAsync, toastError } from '../utils';
+	import Legend from './Legend.svelte';
 	import Map from './Map.svelte';
 	import MapTooltip from './MapTooltip.svelte';
 	import processMapData from './data/processMapData';
@@ -388,6 +389,11 @@
 </script>
 
 <div class="relative h-full w-full" style:background={bg} bind:this={container}>
+	{#if dataOrNull && colorsOrNull}
+		<div class="absolute left-0 top-16">
+			<Legend data={dataOrNull} colors={colorsOrNull}></Legend>
+		</div>
+	{/if}
 	{#if transform != null}
 		<button
 			type="button"

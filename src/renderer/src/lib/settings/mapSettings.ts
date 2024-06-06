@@ -6,12 +6,13 @@ import { type StrokeSetting } from './StrokeSetting';
 import { settingsAreDifferent, validateAndResetMapSettings } from './utils';
 
 export type NumberMapSettings =
-	| 'voronoiGridSize'
-	| 'unionLeaderSymbolSize'
-	| 'terraIncognitaBrightness'
 	| 'borderFillFade'
 	| 'claimVoidBorderThreshold'
-	| 'systemNamesFontSize';
+	| 'legendFontSize'
+	| 'systemNamesFontSize'
+	| 'terraIncognitaBrightness'
+	| 'unionLeaderSymbolSize'
+	| 'voronoiGridSize';
 
 export type NumberOptionalMapSettings =
 	| 'borderGap'
@@ -46,6 +47,7 @@ export type BooleanMapSettings =
 	| 'countryEmblems'
 	| 'countryNames'
 	| 'hyperlaneMetroStyle'
+	| 'legend'
 	| 'terraIncognita'
 	| 'unionLeaderUnderline'
 	| 'unionMode'
@@ -65,6 +67,8 @@ export type ColorMapSettings =
 	| 'unownedHyperlaneColor'
 	| 'unownedHyperRelayColor'
 	| 'wormholeStrokeColor'
+	| 'legendBackgroundColor'
+	| 'legendBorderColor'
 	| 'lGateStrokeColor'
 	| 'shroudTunnelStrokeColor'
 	| 'starScapeDustColor'
@@ -76,13 +80,14 @@ export type ColorMapSettings =
 
 export type StrokeMapSettings =
 	| 'borderStroke'
-	| 'unionBorderStroke'
-	| 'sectorBorderStroke'
 	| 'hyperlaneStroke'
 	| 'hyperRelayStroke'
-	| 'wormholeStroke'
+	| 'legendBorderStroke'
 	| 'lGateStroke'
-	| 'shroudTunnelStroke';
+	| 'sectorBorderStroke'
+	| 'shroudTunnelStroke'
+	| 'unionBorderStroke'
+	| 'wormholeStroke';
 
 export type IconMapSettings =
 	| 'countryCapitalIcon'
@@ -353,6 +358,24 @@ export const defaultMapSettings: MapSettings = {
 		],
 	},
 	starScapeStarsCount: 5000,
+	legend: true,
+	legendFontSize: 16,
+	legendBorderStroke: {
+		width: 1,
+		dashed: false,
+		smoothing: false,
+		glow: false,
+		enabled: true,
+		dashArray: '3 3',
+	},
+	legendBorderColor: {
+		color: 'grey',
+		colorAdjustments: [],
+	},
+	legendBackgroundColor: {
+		color: 'black',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.75 }],
+	},
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

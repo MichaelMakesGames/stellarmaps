@@ -1,10 +1,73 @@
+import type { MessageID } from '../../../intl';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { getUnionLeaderId } from './utils';
 
+interface MapMode {
+	country: MapModeBorder[];
+}
+
+interface MapModeBorder {
+	label: MessageID;
+	showInLegend: 'always' | 'never' | 'exists';
+	primaryColor: string;
+	secondaryColor?: string;
+	matches: (gameState: GameState, countryId: number, povCountryId?: number) => boolean;
+}
+
+export const mapModes: Record<string, MapMode> = {
+	wars: {
+		country: [
+			{
+				label: 'map_mode.common.selected_country',
+				showInLegend: 'always',
+				primaryColor: 'dark_teal',
+				matches: (_gameState, countryId, povCountryId) => countryId === povCountryId,
+			},
+			{
+				label: 'map_mode.wars.ally',
+				showInLegend: 'always',
+				primaryColor: 'sky_blue',
+				matches: (gameState, countryId, povCountryId) =>
+					Object.values(gameState.war).some(
+						(war) =>
+							(war.attackers.some((c) => c.country === countryId) &&
+								war.attackers.some((c) => c.country === povCountryId)) ||
+							(war.defenders.some((c) => c.country === countryId) &&
+								war.defenders.some((c) => c.country === povCountryId)),
+					),
+			},
+			{
+				label: 'map_mode.wars.hostile',
+				showInLegend: 'always',
+				primaryColor: 'red',
+				matches: areCountriesHostile,
+			},
+			{
+				label: 'map_mode.wars.at_war',
+				showInLegend: 'always',
+				primaryColor: 'orange',
+				matches: (gameState, countryId) =>
+					Object.values(gameState.war).some(
+						(war) =>
+							war.attackers.some((c) => c.country === countryId) ||
+							war.defenders.some((c) => c.country === countryId),
+					),
+			},
+			{
+				label: 'map_mode.wars.at_peace',
+				showInLegend: 'always',
+				primaryColor: 'white',
+				matches: () => true,
+			},
+		],
+	},
+};
+
 interface CountryMapModeInfo {
 	primaryColor: string;
 	secondaryColor: string;
+	mapModeIndex?: number;
 	// TODO tooltip
 }
 
@@ -31,60 +94,26 @@ export function getCountryMapModeInfo(
 		settings.mapModePointOfView === 'player'
 			? gameState.player.filter((p) => gameState.country[p.country])[0]?.country
 			: parseInt(settings.mapModePointOfView);
-	switch (settings.mapMode) {
-		case 'default': {
-			const colors =
-				gameState.country[
-					getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
-				]?.flag?.colors;
-			// TODO tooltips including country name, federation status, subject status
-			return { primaryColor: colors?.[0] ?? 'black', secondaryColor: colors?.[1] ?? 'black' };
-		}
-		case 'wars': {
-			if (countryId === povCountryId) {
-				return {
-					primaryColor: 'dark_teal',
-					secondaryColor: 'dark_teal',
-				};
-			} else if (areCountriesHostile(gameState, countryId, povCountryId)) {
-				return {
-					primaryColor: 'red',
-					secondaryColor: 'red',
-				};
-			} else if (
-				Object.values(gameState.war).some(
-					(war) =>
-						(war.attackers.some((c) => c.country === countryId) &&
-							war.attackers.some((c) => c.country === povCountryId)) ||
-						(war.defenders.some((c) => c.country === countryId) &&
-							war.defenders.some((c) => c.country === povCountryId)),
-				)
-			) {
-				return {
-					primaryColor: 'sky_blue',
-					secondaryColor: 'sky_blue',
-				};
-			} else if (
-				Object.values(gameState.war).some(
-					(war) =>
-						war.attackers.some((c) => c.country === countryId) ||
-						war.defenders.some((c) => c.country === countryId),
-				)
-			) {
-				return {
-					primaryColor: 'orange',
-					secondaryColor: 'orange',
-				};
-			} else {
-				return {
-					primaryColor: 'white',
-					secondaryColor: 'white',
-				};
-			}
-		}
-		default: {
+	const mapMode = mapModes[settings.mapMode];
+	if (mapMode) {
+		const match = mapMode.country.find(({ matches }) =>
+			matches(gameState, countryId, povCountryId),
+		);
+		if (match) {
+			return {
+				primaryColor: match.primaryColor,
+				secondaryColor: match.secondaryColor ?? match.primaryColor,
+			};
+		} else {
 			return defaultCountryMapModeInfo;
 		}
+	} else {
+		const colors =
+			gameState.country[
+				getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
+			]?.flag?.colors;
+		// TODO tooltips including country name, federation status, subject status
+		return { primaryColor: colors?.[0] ?? 'black', secondaryColor: colors?.[1] ?? 'black' };
 	}
 }
 

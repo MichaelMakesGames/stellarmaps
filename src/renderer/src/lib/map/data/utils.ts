@@ -343,3 +343,10 @@ export function getSharedDistancePercent(
 	});
 	return sharedDistance / totalDistance;
 }
+const measureTextContext = document
+	.createElement('canvas')
+	.getContext('2d') as CanvasRenderingContext2D;
+export function getTextAspectRatio(text: string, fontFamily: string) {
+	measureTextContext.font = `10px '${fontFamily}'`;
+	return 10 / measureTextContext.measureText(text).width;
+}
