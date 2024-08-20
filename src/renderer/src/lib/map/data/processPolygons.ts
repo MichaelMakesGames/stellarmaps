@@ -38,6 +38,8 @@ export default function processPolygons(
 	unionLeaderToSectors: Record<number, Set<number>>,
 	sectorToCountry: Record<number, number>,
 	knownSystems: Set<number>,
+	fullOccupiedOccupierToSystemIds: Record<string, Set<number>>,
+	partialOccupiedOccupierToSystemIds: Record<string, Set<number>>,
 ) {
 	const claimVoidEnabled = settings.claimVoidMaxSize != null && settings.claimVoidMaxSize > 0;
 	const systemIdToPolygon: Record<number, PolygonalFeature> = {};
@@ -64,6 +66,14 @@ export default function processPolygons(
 	const countryToGeojson = mergeSystemMappingPolygons(topology, countryToSystemIds);
 	const unionLeaderToGeojson = mergeSystemMappingPolygons(topology, unionLeaderToSystemIds);
 	const sectorToGeojson = mergeSystemMappingPolygons(topology, sectorToSystemIds);
+	const fullOccupiedOccupierToGeojson = mergeSystemMappingPolygons(
+		topology,
+		fullOccupiedOccupierToSystemIds,
+	);
+	const partialOccupiedOccupierToGeojson = mergeSystemMappingPolygons(
+		topology,
+		partialOccupiedOccupierToSystemIds,
+	);
 	const unknownSystemIds = Object.values(gameState.galactic_object)
 		.map((s) => s.id)
 		.filter((id) => !knownSystems.has(id));
@@ -75,6 +85,12 @@ export default function processPolygons(
 	);
 	Object.entries(unionLeaderToGeojson).forEach(([unionLeader, geojson]) =>
 		closeRings(geojson, { unionLeader }),
+	);
+	Object.entries(fullOccupiedOccupierToGeojson).forEach(([fullOccupiedOccupier, geojson]) =>
+		closeRings(geojson, { fullOccupiedOccupier }),
+	);
+	Object.entries(partialOccupiedOccupierToGeojson).forEach(([partialOccupiedOccupier, geojson]) =>
+		closeRings(geojson, { partialOccupiedOccupier }),
 	);
 	if (terraIncognitaGeojson != null) closeRings(terraIncognitaGeojson, { terraIncognita: true });
 
@@ -144,18 +160,23 @@ export default function processPolygons(
 		unionLeaderToGeojson,
 		sectorToGeojson,
 		terraIncognitaGeojson,
+		fullOccupiedOccupierToGeojson,
+		partialOccupiedOccupierToGeojson,
 	};
 }
 
-function mergeSystemMappingPolygons(
+function mergeSystemMappingPolygons<K extends string | number>(
 	topology: Topology<Objects>,
-	systemIdMapping: Record<number, Set<number>>,
+	systemIdMapping: Record<K, Set<number>>,
 ) {
 	return Object.fromEntries(
 		Object.entries(systemIdMapping)
-			.map(([key, systemIds]) => [key, mergeSystemPolygons(topology, Array.from(systemIds))])
+			.map(([key, systemIds]) => [
+				key,
+				mergeSystemPolygons(topology, Array.from(systemIds as Set<number>)),
+			])
 			.filter(([_key, geojson]) => geojson != null),
-	) as Record<number, PolygonalFeature>;
+	) as Record<K, PolygonalFeature>;
 }
 
 function mergeSystemPolygons(

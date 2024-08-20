@@ -4,16 +4,21 @@ import type { SVGAttributes } from 'svelte/elements';
 import { ADDITIONAL_COLORS } from '../colors';
 import type { ColorSetting, ColorSettingAdjustment, MapSettings, StrokeSetting } from '../settings';
 
+interface CountryColors {
+	primaryColor: string;
+	secondaryColor: string;
+}
+
 export function resolveColor({
 	mapSettings,
 	colors,
-	countryColors,
+	countryColors: countryColorsOption,
 	colorStack,
 	resolveToOpaqueColor,
 }: {
 	mapSettings: MapSettings;
 	colors: Record<string, string>;
-	countryColors?: null | { primaryColor: string; secondaryColor: string };
+	countryColors?: null | CountryColors | (CountryColors | null | undefined)[];
 	colorStack: ColorSetting[];
 	resolveToOpaqueColor?: boolean;
 }): string {
@@ -26,17 +31,26 @@ export function resolveColor({
 		colorStack.length > 1 ? colorStack.slice(1) : [mapSettings.backgroundColor];
 	const isBackgroundColor = colorStack[0] === mapSettings.backgroundColor;
 
+	let countryColors: CountryColors = { primaryColor: 'black', secondaryColor: 'black' };
+	if (Array.isArray(countryColorsOption) && countryColorsOption[0]) {
+		countryColors = countryColorsOption[0];
+	} else if (countryColorsOption && !Array.isArray(countryColorsOption)) {
+		countryColors = countryColorsOption;
+	}
+
 	if (colorString === 'border') {
 		colorString = resolveColor({
 			mapSettings,
 			colors,
-			countryColors,
+			countryColors: Array.isArray(countryColorsOption)
+				? [countryColorsOption[0], ...countryColorsOption]
+				: countryColorsOption,
 			colorStack: [mapSettings.borderColor, ...backgroundSettingStack],
 			resolveToOpaqueColor,
 		});
 	} else {
-		if (colorString === 'primary') colorString = countryColors?.primaryColor ?? 'black';
-		if (colorString === 'secondary') colorString = countryColors?.secondaryColor ?? 'black';
+		if (colorString === 'primary') colorString = countryColors.primaryColor;
+		if (colorString === 'secondary') colorString = countryColors.secondaryColor;
 		colorString = colors[colorString] ?? colors['black'] ?? 'rgb(0, 0, 0)';
 	}
 
@@ -63,7 +77,9 @@ export function resolveColor({
 				resolveColor({
 					mapSettings,
 					colors,
-					countryColors,
+					countryColors: Array.isArray(countryColorsOption)
+						? countryColorsOption.slice(1)
+						: countryColorsOption,
 					colorStack: backgroundSettingStack,
 					resolveToOpaqueColor: true,
 				}),
@@ -83,7 +99,9 @@ export function resolveColor({
 					resolveColor({
 						mapSettings,
 						colors,
-						countryColors,
+						countryColors: Array.isArray(countryColorsOption)
+							? countryColorsOption.slice(1)
+							: countryColorsOption,
 						colorStack: backgroundSettingStack,
 						resolveToOpaqueColor: true,
 					}),

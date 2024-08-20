@@ -105,5 +105,17 @@
 				{filter}
 			/>
 		</Glow>
+
+		{#if $mapSettings.occupation}
+			{#each data.occupationBorders.filter((b) => b.occupied === border.countryId) as occupationBorder}
+				<path
+					d={occupationBorder.path}
+					fill="url(#pattern-${occupationBorder.partial
+						? 'partial'
+						: 'full'}-occupation-{occupationBorder.occupier}-on-{occupationBorder.occupied}"
+					clip-path={`url(#border-${border.countryId}-inner-clip-path)`}
+				/>
+			{/each}
+		{/if}
 	{/each}
 {/if}

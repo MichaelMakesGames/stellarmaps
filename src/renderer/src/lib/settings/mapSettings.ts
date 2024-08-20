@@ -48,6 +48,7 @@ export type BooleanMapSettings =
 	| 'countryNames'
 	| 'hyperlaneMetroStyle'
 	| 'legend'
+	| 'occupation'
 	| 'terraIncognita'
 	| 'unionLeaderUnderline'
 	| 'unionMode'
@@ -62,21 +63,22 @@ export type ColorMapSettings =
 	| 'borderFillColor'
 	| 'hyperlaneColor'
 	| 'hyperRelayColor'
-	| 'sectorBorderColor'
-	| 'unionBorderColor'
-	| 'unownedHyperlaneColor'
-	| 'unownedHyperRelayColor'
-	| 'wormholeStrokeColor'
 	| 'legendBackgroundColor'
 	| 'legendBorderColor'
 	| 'lGateStrokeColor'
+	| 'occupationColor'
+	| 'sectorBorderColor'
 	| 'shroudTunnelStrokeColor'
-	| 'starScapeDustColor'
-	| 'starScapeNebulaColor'
-	| 'starScapeNebulaAccentColor'
-	| 'starScapeCoreColor'
 	| 'starScapeCoreAccentColor'
-	| 'starScapeStarsColor';
+	| 'starScapeCoreColor'
+	| 'starScapeDustColor'
+	| 'starScapeNebulaAccentColor'
+	| 'starScapeNebulaColor'
+	| 'starScapeStarsColor'
+	| 'unionBorderColor'
+	| 'unownedHyperlaneColor'
+	| 'unownedHyperRelayColor'
+	| 'wormholeStrokeColor';
 
 export type StrokeMapSettings =
 	| 'borderStroke'
@@ -375,6 +377,11 @@ export const defaultMapSettings: MapSettings = {
 	legendBackgroundColor: {
 		color: 'black',
 		colorAdjustments: [{ type: 'OPACITY', value: 0.75 }],
+	},
+	occupation: false,
+	occupationColor: {
+		color: 'border',
+		colorAdjustments: [],
 	},
 };
 

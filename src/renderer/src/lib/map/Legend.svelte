@@ -6,6 +6,7 @@
 		getStrokeAttributes,
 		getStrokeColorAttributes,
 	} from './mapUtils';
+	import OccupationPatternDefs from './OccupationPatternDefs.svelte';
 
 	export let data: null | MapData;
 	export let colors: null | Record<string, string>;
@@ -28,6 +29,11 @@
 
 {#if data?.legend.items.length && $mapSettings.legend}
 	<svg viewBox="0 0 {width} {height}" width="{width}px" height="{height}px">
+		<defs>
+			{#if colors}
+				<OccupationPatternDefs {colors} {data} />
+			{/if}
+		</defs>
 		<rect
 			x={borderWidth / 2}
 			y={borderWidth / 2}
@@ -71,11 +77,29 @@
 						})}
 					/>
 				{/if}
+				{#if item.symbol.type === 'pattern'}
+					<rect width={symbolSize} height={symbolSize} fill="url(#{item.symbol.pattern})" />
+				{/if}
+				{#if item.symbol.type === 'hr'}
+					<line
+						x1="0"
+						x2={width - borderWidth - padding * 2}
+						y1={symbolSize / 2}
+						y2={symbolSize / 2}
+						{...getStrokeAttributes($mapSettings.legendBorderStroke)}
+						stroke-width="1"
+						{...getStrokeColorAttributes({
+							mapSettings: $mapSettings,
+							colorStack: [$mapSettings.legendBorderColor],
+							colors: colors ?? {},
+						})}
+					/>
+				{/if}
 				<text
 					fill="#FFFFFF"
 					x={symbolSize + symbolLabelGap}
 					y={symbolSize / 2}
-					dominant-baseline="middle"
+					dominant-baseline="central"
 					font-size={$mapSettings.legendFontSize}
 				>
 					{item.label}

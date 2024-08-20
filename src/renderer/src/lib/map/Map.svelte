@@ -7,6 +7,7 @@
 	import CountryLabels from './CountryLabels.svelte';
 	import Hyperlanes from './Hyperlanes.svelte';
 	import Icons from './Icons.svelte';
+	import OccupationPatternDefs from './OccupationPatternDefs.svelte';
 	import SystemIcons from './SystemIcons.svelte';
 	import TerraIncognita from './TerraIncognita.svelte';
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
@@ -41,6 +42,7 @@
 					<use href="#border-{border.countryId}-outer" />
 				</clipPath>
 				<TerraIncognitaDefs />
+				<OccupationPatternDefs colors={colors ?? {}} {data} />
 				<filter
 					id="glow"
 					filterUnits="objectBoundingBox"

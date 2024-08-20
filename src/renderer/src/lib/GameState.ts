@@ -41,24 +41,38 @@ const localizedTextSchemaNoDefault: z.ZodType<LocalizedText> = z.object({
 });
 const localizedTextSchema = localizedTextSchemaNoDefault.default({ key: 'UNKNOWN' });
 
-const galacticObjectSchema = z.object({
-	name: localizedTextSchema,
-	coordinate: z.object({
-		x: z.number(),
-		y: z.number(),
-	}),
-	starbases: preprocessedArray(z.number()),
-	hyperlane: preprocessedArray(z.object({ to: z.number(), length: z.number() })),
-	megastructures: preprocessedArray(z.number()),
-	colonies: preprocessedArray(z.number()),
-	bypasses: preprocessedArray(z.number()),
-	flags: z
-		.record(
-			z.string(),
-			z.union([z.number().optional(), z.object({ flag_date: z.number(), flag_days: z.number() })]),
-		)
-		.optional(),
-});
+const galacticObjectSchema = z
+	.object({
+		name: localizedTextSchema,
+		coordinate: z.object({
+			x: z.number(),
+			y: z.number(),
+		}),
+		starbases: preprocessedArray(z.number()),
+		hyperlane: preprocessedArray(z.object({ to: z.number(), length: z.number() })),
+		megastructures: preprocessedArray(z.number()),
+		colonies: preprocessedArray(z.number()),
+		bypasses: preprocessedArray(z.number()),
+		flags: z
+			.record(
+				z.string(),
+				z.union([
+					z.number().optional(),
+					z.object({ flag_date: z.number(), flag_days: z.number() }),
+				]),
+			)
+			.optional(),
+		planet: z.number().optional(),
+		$multiKeys: z
+			.object({
+				planet: preprocessedArray(z.number()).optional(),
+			})
+			.optional(),
+	})
+	.transform((obj) => ({
+		...obj,
+		planet: (obj.planet == null ? [] : [obj.planet]).concat(obj.$multiKeys?.planet ?? []),
+	}));
 
 /**
  * @public

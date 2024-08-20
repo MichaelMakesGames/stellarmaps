@@ -242,6 +242,7 @@ export default {
 		group: {
 			borders: 'Borders',
 			unions: 'Union Mode',
+			occupation: 'Occupation',
 			countryLabels: 'Country Labels',
 			systemLabels: 'System Labels',
 			systemIcons: 'System Icons',
@@ -276,6 +277,8 @@ export default {
 		unionLeaderSymbol: 'Union Leader Symbol',
 		unionLeaderSymbolSize: 'Union Leader Symbol Size',
 		unionLeaderUnderline: 'Underline Union Leader Name',
+		occupation: 'Occupation',
+		occupationColor: 'Occupation Color',
 		countryNames: 'Names',
 		countryNamesType: 'Name Type',
 		countryNamesMinSize: 'Name Min Size',
@@ -407,5 +410,9 @@ export default {
 			at_war: 'At War (Uninvolved)',
 			at_peace: 'At Peace',
 		},
+	},
+	legend: {
+		fully_occupied: 'Fully Occupied',
+		partially_occupied: 'Partially Occupied',
 	},
 };

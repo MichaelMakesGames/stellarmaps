@@ -156,6 +156,22 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 		],
 	},
 	{
+		id: 'occupation',
+		name: 'setting.group.occupation',
+		settings: [
+			{
+				id: 'occupation',
+				type: 'toggle',
+				requiresReprocessing: true,
+			},
+			{
+				id: 'occupationColor',
+				type: 'color',
+				hideIf: (settings) => !settings.occupation,
+			},
+		],
+	},
+	{
 		id: 'countryLabels',
 		name: 'setting.group.countryLabels',
 		settings: [

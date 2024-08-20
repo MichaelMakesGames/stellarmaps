@@ -33,6 +33,8 @@ export default function processSystemOwnership(
 	const ownedSystemPoints: turf.Point[] = [];
 	const systemIdToCountry: Record<string, number> = {};
 	const systemIdToUnionLeader: Record<string, number> = {};
+	const fullOccupiedOccupierToSystemIds: Record<string, Set<number>> = {};
+	const partialOccupiedOccupierToSystemIds: Record<string, Set<number>> = {};
 	for (const system of Object.values(gameState.galactic_object)) {
 		const starbase =
 			system.starbases[0] != null ? gameState.starbase_mgr.starbases[system.starbases[0]] : null;
@@ -55,6 +57,29 @@ export default function processSystemOwnership(
 			getOrSetDefault(unionLeaderToSectors, joinedUnionLeaderId, new Set()).add(sectorId);
 			systemIdToCountry[system.id] = ownerId;
 			systemIdToUnionLeader[system.id] = joinedUnionLeaderId;
+
+			const mainStar = system.planet[0] == null ? null : gameState.planets.planet[system.planet[0]];
+			const occupier = mainStar?.controller !== ownerId ? mainStar?.controller : null;
+			if (occupier != null) {
+				if (
+					system.colonies.every((colonyId) => {
+						const planet = gameState.planets.planet[colonyId];
+						if (!planet) return true; // bad data, don't care
+						if (planet.owner !== ownerId) return true; // different owner (eg pre-FTL), don't care
+						return planet.controller != null && planet.controller !== ownerId; // occupied
+					})
+				) {
+					getOrSetDefault(fullOccupiedOccupierToSystemIds, `${ownerId}-${occupier}`, new Set()).add(
+						system.id,
+					);
+				} else {
+					getOrSetDefault(
+						partialOccupiedOccupierToSystemIds,
+						`${ownerId}-${occupier}`,
+						new Set(),
+					).add(system.id);
+				}
+			}
 		}
 	}
 
@@ -68,5 +93,7 @@ export default function processSystemOwnership(
 		ownedSystemPoints,
 		systemIdToCountry,
 		systemIdToUnionLeader,
+		fullOccupiedOccupierToSystemIds,
+		partialOccupiedOccupierToSystemIds,
 	};
 }

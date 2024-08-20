@@ -14,6 +14,7 @@ import processHyperRelays from './processHyperRelays';
 import processLabels, { processLabelsDeps } from './processLabels';
 import processLegend, { processLegendDeps } from './processLegend';
 import processNames from './processNames';
+import processOccupationBorders, { processOccupationBordersDeps } from './processOccupationBorders';
 import processPolygons, { processPolygonsDeps } from './processPolygons';
 import processSystemCoordinates, { processSystemCoordinatesDeps } from './processSystemCoordinates';
 import processSystemOwnership, { processSystemOwnershipDeps } from './processSystemOwnership';
@@ -76,6 +77,8 @@ export default async function processMapData(
 		systemIdToUnionLeader,
 		sectorToCountry,
 		unionLeaderToSectors,
+		fullOccupiedOccupierToSystemIds,
+		partialOccupiedOccupierToSystemIds,
 	} = timeIt(
 		'system ownership',
 		cached(processSystemOwnership),
@@ -93,7 +96,14 @@ export default async function processMapData(
 		galaxyBorderCircles,
 	);
 
-	const { sectorToGeojson, countryToGeojson, unionLeaderToGeojson, terraIncognitaGeojson } = timeIt(
+	const {
+		sectorToGeojson,
+		countryToGeojson,
+		unionLeaderToGeojson,
+		terraIncognitaGeojson,
+		fullOccupiedOccupierToGeojson,
+		partialOccupiedOccupierToGeojson,
+	} = timeIt(
 		'polygons',
 		cached(processPolygons),
 		gameState,
@@ -106,6 +116,8 @@ export default async function processMapData(
 		unionLeaderToSectors,
 		sectorToCountry,
 		knownSystems,
+		fullOccupiedOccupierToSystemIds,
+		partialOccupiedOccupierToSystemIds,
 	);
 
 	const { terraIncognitaPath } = timeIt(
@@ -146,6 +158,14 @@ export default async function processMapData(
 		galaxyBorderCircles,
 		galaxyBorderCirclesGeoJSON,
 		getSystemCoordinates,
+	);
+	const occupationBorders = timeIt(
+		'borders',
+		cached(processOccupationBorders),
+		gameState,
+		pickSettings(settings, processOccupationBordersDeps),
+		fullOccupiedOccupierToGeojson,
+		partialOccupiedOccupierToGeojson,
 	);
 	const { countryNames, systemNames } = await namesPromise;
 	const labels = timeIt(
@@ -192,6 +212,7 @@ export default async function processMapData(
 
 	return {
 		borders,
+		occupationBorders,
 		unownedHyperlanesPath,
 		unownedRelayHyperlanesPath,
 		emblems,
