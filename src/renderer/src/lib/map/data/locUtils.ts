@@ -28,12 +28,15 @@ export function localizeTextSync(
 			const var0 = text.variables?.[0];
 			if (!var0 || !var0.value?.variables) throw new Error();
 			const adj = loc[var0.value.key] ?? var0.value.key;
-			if (adj.includes('$1$')) {
+			if (adj.match(/\$\w+\$/)) {
 				return localizeTextSync(var0.value, loc);
 			} else {
 				return (loc['adj_format'] ?? 'adj $1$')
 					.replace('adj', adj)
-					.replace('$1$', localizeTextSync(var0.value.variables[0]?.value, loc));
+					.replace(
+						'$1$',
+						localizeTextSync(var0.value.variables.find((v) => v.key === '1')?.value, loc),
+					);
 			}
 		} catch {
 			console.warn('localization failed', text);
