@@ -25,7 +25,7 @@ export interface LocalizedText {
 	key: string;
 	variables?: {
 		key: string;
-		value: LocalizedText;
+		value?: LocalizedText;
 	}[];
 }
 const localizedTextSchemaNoDefault: z.ZodType<LocalizedText> = z.object({
@@ -34,7 +34,7 @@ const localizedTextSchemaNoDefault: z.ZodType<LocalizedText> = z.object({
 		.array(
 			z.object({
 				key: z.coerce.string(),
-				value: z.lazy(() => localizedTextSchemaNoDefault),
+				value: z.lazy(() => localizedTextSchemaNoDefault.optional()),
 			}),
 		)
 		.optional(),

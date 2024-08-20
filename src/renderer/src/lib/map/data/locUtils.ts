@@ -26,7 +26,7 @@ export function localizeTextSync(
 	} else if (text.key === '%ADJ%') {
 		try {
 			const var0 = text.variables?.[0];
-			if (!var0 || !var0.value.variables) throw new Error();
+			if (!var0 || !var0.value?.variables) throw new Error();
 			const adj = loc[var0.value.key] ?? var0.value.key;
 			if (adj.includes('$1$')) {
 				return localizeTextSync(var0.value, loc);
