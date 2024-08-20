@@ -210,7 +210,7 @@ export default function processCircularGalaxyBorders(
 					isMainCluster,
 				});
 			}
-			if (minR > CIRCLE_OUTER_PADDING) {
+			if (minR > CIRCLE_INNER_PADDING * 2) {
 				clusterCircles.push({
 					cx,
 					cy,

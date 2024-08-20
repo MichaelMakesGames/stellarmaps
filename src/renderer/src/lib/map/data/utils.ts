@@ -298,7 +298,7 @@ export function makeBorderCircleGeojson(
 		circle.r / SCALE,
 		{
 			units: 'degrees',
-			steps: Math.ceil(circle.r),
+			steps: Math.max(8, Math.ceil(circle.r)),
 		},
 	);
 
