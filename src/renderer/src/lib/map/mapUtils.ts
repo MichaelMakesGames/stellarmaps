@@ -86,10 +86,35 @@ export function resolveColor({
 				}),
 			);
 			if (Math.abs(color.l - bgColor.l) < adjustment.value * 100) {
-				if (bgColor.l < 50) {
-					color.l = Math.min(100, bgColor.l + adjustment.value * 100);
+				const lightenedL = bgColor.l + adjustment.value * 100;
+				const lightenSuccess = lightenedL <= 100;
+
+				const darkenedL = bgColor.l - adjustment.value * 100;
+				const darkenSuccess = darkenedL >= 0;
+
+				const lightenedIsCloserToOriginal =
+					Math.abs(lightenedL - color.l) < Math.abs(darkenedL - color.l);
+				const darkenedIsCloserToOriginal =
+					Math.abs(lightenedL - color.l) < Math.abs(darkenedL - color.l);
+
+				if (lightenSuccess && darkenSuccess) {
+					if (lightenedIsCloserToOriginal) {
+						color.l = lightenedL;
+					} else if (darkenedIsCloserToOriginal) {
+						color.l = darkenedL;
+					} else if (color.l < bgColor.l) {
+						color.l = darkenedL;
+					} else if (color.l > bgColor.l) {
+						color.l = lightenedL;
+					} else {
+						color.l = bgColor.l >= 50 ? darkenedL : lightenedL;
+					}
+				} else if (lightenSuccess) {
+					color.l = lightenedL;
+				} else if (darkenSuccess) {
+					color.l = darkenedL;
 				} else {
-					color.l = Math.max(0, bgColor.l - adjustment.value * 100);
+					color.l = bgColor.l >= 50 ? 0 : 100;
 				}
 			}
 			colorString = color.formatRgb();

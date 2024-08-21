@@ -382,7 +382,7 @@ export const defaultMapSettings: MapSettings = {
 	occupation: false,
 	occupationColor: {
 		color: 'border',
-		colorAdjustments: [],
+		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
 	},
 };
 
