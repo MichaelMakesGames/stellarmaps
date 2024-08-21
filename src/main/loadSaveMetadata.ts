@@ -2,6 +2,7 @@ import * as zipjs from '@zip.js/zip.js';
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
+
 import { getSteamUserDataDirs, getStellarisUserDataDir, getSubDirs } from './fsUtils';
 
 export default async function loadSaveMetadata() {

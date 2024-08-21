@@ -1,8 +1,8 @@
-import { type MapSettingConfigGroup } from './SettingConfig';
 import { countryOptions } from './options/countryOptions';
 import { fontOptions } from './options/fontOptions';
 import { glyphOptions } from './options/glyphOptions';
 import { unionOptions } from './options/unionOptions';
+import { type MapSettingConfigGroup } from './SettingConfig';
 import { isColorDynamic } from './utils';
 
 export const mapSettingsConfig: MapSettingConfigGroup[] = [

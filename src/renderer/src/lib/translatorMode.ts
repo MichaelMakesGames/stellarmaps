@@ -4,7 +4,8 @@ import type { UnlistenFn } from '@tauri-apps/api/event';
 import { readTextFile } from '@tauri-apps/api/fs';
 import type { ObjectExpression } from 'acorn';
 import { writable } from 'svelte/store';
-import { watch, type DebouncedEvent } from 'tauri-plugin-fs-watch-api';
+import { type DebouncedEvent, watch } from 'tauri-plugin-fs-watch-api';
+
 import { locale, translatorModeMessages } from '../intl';
 import { debounce, toastError } from './utils';
 

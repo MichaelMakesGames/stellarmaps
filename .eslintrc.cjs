@@ -7,7 +7,7 @@ module.exports = {
 		'prettier',
 	],
 	parser: '@typescript-eslint/parser',
-	plugins: ['@typescript-eslint'],
+	plugins: ['@typescript-eslint', 'simple-import-sort'],
 	parserOptions: {
 		sourceType: 'module',
 		ecmaVersion: 2020,
@@ -35,5 +35,7 @@ module.exports = {
 		'@typescript-eslint/prefer-nullish-coalescing': 'error',
 		'@typescript-eslint/strict-boolean-expressions': ['error', { allowNullableBoolean: true }],
 		'@typescript-eslint/no-unnecessary-condition': 'error',
+		'simple-import-sort/imports': 'error',
+		'simple-import-sort/exports': 'error',
 	},
 };

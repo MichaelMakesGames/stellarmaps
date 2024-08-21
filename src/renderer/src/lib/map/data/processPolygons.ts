@@ -4,19 +4,20 @@ import * as topojsonClient from 'topojson-client';
 import * as topojsonServer from 'topojson-server';
 import * as topojsonSimplify from 'topojson-simplify';
 import type { MultiPolygon, Objects, Polygon, Topology } from 'topojson-specification';
+
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
 import {
-	SCALE,
 	closeRings,
 	getAllPositionArrays,
 	getPolygons,
 	getSharedDistancePercent,
 	pointToGeoJSON,
-	positionToString,
 	type PolygonalFeature,
 	type PolygonalGeometry,
+	positionToString,
+	SCALE,
 } from './utils';
 
 type TopojsonPolygonal = MultiPolygon | Polygon;

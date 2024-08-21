@@ -1,5 +1,6 @@
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { derived, get } from 'svelte/store';
+
 import { isValidLocale, locale } from '../../intl';
 import stellarMapsApi from '../stellarMapsApi';
 import { disableTranslatorMode, enableTranslatorMode } from '../translatorMode';

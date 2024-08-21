@@ -1,4 +1,4 @@
-import type { ToastSettings, getToastStore } from '@skeletonlabs/skeleton';
+import type { getToastStore, ToastSettings } from '@skeletonlabs/skeleton';
 
 export function toastError<T>(options: {
 	title: string;

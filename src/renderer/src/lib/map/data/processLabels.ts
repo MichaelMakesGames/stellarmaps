@@ -1,18 +1,19 @@
 import * as turf from '@turf/turf';
 import polylabel from 'polylabel';
+
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import type processBorders from './processBorders';
 import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
 import {
-	SCALE,
 	getPolygons,
 	getTextAspectRatio,
 	inverseX,
 	isUnionLeader,
 	pointFromGeoJSON,
 	type PolygonalFeature,
+	SCALE,
 } from './utils';
 
 export const processLabelsDeps = [

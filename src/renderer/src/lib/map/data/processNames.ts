@@ -1,4 +1,5 @@
 import { get } from 'svelte/store';
+
 import type { GameState, LocalizedText } from '../../GameState';
 import { stellarisDataPromiseStore } from '../../loadStellarisData';
 import { localizeTextSync } from './locUtils';

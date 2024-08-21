@@ -1,4 +1,5 @@
 import { derived } from 'svelte/store';
+
 import { ADDITIONAL_COLORS } from '../../colors';
 import { stellarisDataPromiseStore } from '../../loadStellarisData';
 import type { SelectOption } from '../SelectOption';

@@ -1,5 +1,6 @@
 import { localStorageStore } from '@skeletonlabs/skeleton';
 import { get } from 'svelte/store';
+
 import { type ColorSetting } from './ColorSetting';
 import { type IconSetting } from './IconSetting';
 import { type StrokeSetting } from './StrokeSetting';

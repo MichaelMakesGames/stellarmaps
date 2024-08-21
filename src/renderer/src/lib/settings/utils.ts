@@ -1,13 +1,13 @@
-import { defaultMapSettings, type MapSettings } from './mapSettings';
-import { mapSettingsConfig } from './mapSettingsConfig';
-import type { UnknownSettingConfig } from './SettingConfig';
-
 import type { PrimitiveType } from 'intl-messageformat';
 import * as R from 'rambda';
+
 import type { MessageID } from '../../intl';
 import type { AppSettings } from './appSettings';
 import { colorSettingSchema } from './ColorSetting';
 import { iconSettingSchema } from './IconSetting';
+import { defaultMapSettings, type MapSettings } from './mapSettings';
+import { mapSettingsConfig } from './mapSettingsConfig';
+import type { UnknownSettingConfig } from './SettingConfig';
 import type { AppSettingConfig, MapSettingConfig } from './SettingConfig';
 import { strokeSettingSchema } from './StrokeSetting';
 

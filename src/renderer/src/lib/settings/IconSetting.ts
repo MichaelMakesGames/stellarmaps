@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { colorSettingSchema } from './ColorSetting';
 
 export const iconSettingSchema = z.object({

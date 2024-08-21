@@ -1,6 +1,7 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils';
-import { BrowserWindow, app, dialog, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import { join } from 'path';
+
 import icon from '../../resources/icon.png?asset';
 import { StellarMapsAPI } from '../shared/StellarMapsApi';
 import { loadColors } from './loadColors';

@@ -1,3 +1,9 @@
+import type { Readable } from 'svelte/store';
+
+import type { MessageID } from '../../intl';
+import type { AppSettings, BooleanAppSettings, StringAppSettings } from './appSettings';
+import type { ColorSetting, ColorSettingAdjustmentType } from './ColorSetting';
+import type { IconSetting } from './IconSetting';
 import type {
 	BooleanMapSettings,
 	ColorMapSettings,
@@ -8,14 +14,8 @@ import type {
 	StringMapSettings,
 	StrokeMapSettings,
 } from './mapSettings';
-
-import type { Readable } from 'svelte/store';
-import type { MessageID } from '../../intl';
-import type { ColorSetting, ColorSettingAdjustmentType } from './ColorSetting';
-import type { IconSetting } from './IconSetting';
 import type { SelectOption } from './SelectOption';
 import type { StrokeSetting } from './StrokeSetting';
-import type { AppSettings, BooleanAppSettings, StringAppSettings } from './appSettings';
 
 type RequiresReprocessingFunc<T> = (prev: T, next: T) => boolean;
 interface SettingConfigBase<Settings, ID> {

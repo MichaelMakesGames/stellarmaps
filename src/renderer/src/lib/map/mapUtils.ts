@@ -1,6 +1,7 @@
 import { lab } from 'd3-color';
 import { interpolateRgb } from 'd3-interpolate';
 import type { SVGAttributes } from 'svelte/elements';
+
 import { ADDITIONAL_COLORS } from '../colors';
 import type { ColorSetting, ColorSettingAdjustment, MapSettings, StrokeSetting } from '../settings';
 

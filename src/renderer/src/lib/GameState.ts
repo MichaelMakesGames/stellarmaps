@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import { z } from 'zod';
+
 import { isEmptyObject, saveToWindow } from './utils';
 
 type WithId<T> = T & { id: number };

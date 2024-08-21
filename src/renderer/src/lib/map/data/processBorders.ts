@@ -1,4 +1,5 @@
 import * as turf from '@turf/turf';
+
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
@@ -10,7 +11,6 @@ import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
 import { getSmoothedPosition, smoothGeojson } from './smoothing';
 import {
-	SCALE,
 	applyGalaxyBoundary,
 	createHyperlanePaths,
 	getAllPositionArrays,
@@ -21,9 +21,10 @@ import {
 	makeBorderCircleGeojson,
 	multiPolygonToPath,
 	pointToGeoJSON,
-	positionToString,
-	segmentToPath,
 	type PolygonalFeature,
+	positionToString,
+	SCALE,
+	segmentToPath,
 } from './utils';
 
 export const processBordersDeps = [

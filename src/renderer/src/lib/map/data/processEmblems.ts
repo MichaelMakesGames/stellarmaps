@@ -1,4 +1,5 @@
 import { get } from 'svelte/store';
+
 import type { Country } from '../../GameState';
 import { stellarisPathStore } from '../../loadStellarisData';
 import stellarMapsApi from '../../stellarMapsApi';

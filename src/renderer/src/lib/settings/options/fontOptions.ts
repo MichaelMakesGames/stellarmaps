@@ -1,4 +1,5 @@
 import { readable } from 'svelte/store';
+
 import stellarMapsApi from '../../stellarMapsApi';
 import type { SelectOption } from '../SelectOption';
 

@@ -1,5 +1,6 @@
 import IntlMessageFormat, { type FormatXMLElementFn, type PrimitiveType } from 'intl-messageformat';
 import { derived, writable } from 'svelte/store';
+
 import enUS from './en-US';
 import jaJP from './ja-JP';
 import zhTW from './zh-TW';

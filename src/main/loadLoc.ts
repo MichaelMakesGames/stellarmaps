@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+
 import { getStellarisDataPaths } from './fsUtils';
 
 const locRegExp = /^\s*([\w.-]+)\s*:\d*\s*"(.*)".*$/gm;

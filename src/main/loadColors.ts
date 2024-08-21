@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+
 import { getStellarisDataPaths } from './fsUtils';
 
 export async function loadColors(installPath: string) {

@@ -1,5 +1,5 @@
-import { type SavedMapSettings } from './SavedMapSettings';
 import { defaultMapSettings } from './mapSettings';
+import { type SavedMapSettings } from './SavedMapSettings';
 
 export const presetMapSettings: SavedMapSettings[] = [
 	{

@@ -3,6 +3,7 @@ import { contextBridge, shell } from 'electron';
 import fs from 'fs/promises';
 import path from 'path';
 import { platformPaths } from 'platform-paths';
+
 import { StellarMapsAPI } from '../shared/StellarMapsApi';
 
 const api: StellarMapsAPI = {

@@ -1,4 +1,5 @@
 import { get } from 'svelte/store';
+
 import { t } from '../../../intl';
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';

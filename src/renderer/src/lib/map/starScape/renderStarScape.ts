@@ -1,11 +1,13 @@
-import alea from 'alea';
-import { rgb } from 'd3-color';
-import * as PIXI from 'pixi.js';
 import 'pixi.js/app';
 import 'pixi.js/filters';
 import 'pixi.js/graphics';
 import 'pixi.js/unsafe-eval';
+
+import alea from 'alea';
+import { rgb } from 'd3-color';
+import * as PIXI from 'pixi.js';
 import * as R from 'rambda';
+
 import type { GameState } from '../../GameState';
 import type { ColorSetting, MapSettings } from '../../settings';
 import { isDefined } from '../../utils';

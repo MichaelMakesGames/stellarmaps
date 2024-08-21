@@ -1,4 +1,5 @@
 import { Delaunay } from 'd3-delaunay';
+
 import type { GalacticObject, GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { getOrSetDefault } from '../../utils';
