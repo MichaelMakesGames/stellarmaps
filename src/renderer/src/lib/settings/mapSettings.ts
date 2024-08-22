@@ -42,21 +42,22 @@ export type StringMapSettings =
 	| 'unionSubjects';
 
 export type BooleanMapSettings =
-	| 'hyperlaneSensitiveBorders'
 	| 'alignStarsToGrid'
 	| 'circularGalaxyBorders'
 	| 'countryEmblems'
 	| 'countryNames'
 	| 'hyperlaneMetroStyle'
+	| 'hyperlaneSensitiveBorders'
 	| 'legend'
 	| 'occupation'
-	| 'terraIncognita'
-	| 'unionLeaderUnderline'
-	| 'unionMode'
+	| 'sectorTypeBorderStyles'
+	| 'starScapeCore'
 	| 'starScapeDust'
 	| 'starScapeNebula'
-	| 'starScapeCore'
-	| 'starScapeStars';
+	| 'starScapeStars'
+	| 'terraIncognita'
+	| 'unionLeaderUnderline'
+	| 'unionMode';
 
 export type ColorMapSettings =
 	| 'backgroundColor'
@@ -69,6 +70,8 @@ export type ColorMapSettings =
 	| 'lGateStrokeColor'
 	| 'occupationColor'
 	| 'sectorBorderColor'
+	| 'sectorCoreBorderColor'
+	| 'sectorFrontierBorderColor'
 	| 'shroudTunnelStrokeColor'
 	| 'starScapeCoreAccentColor'
 	| 'starScapeCoreColor'
@@ -88,6 +91,8 @@ export type StrokeMapSettings =
 	| 'legendBorderStroke'
 	| 'lGateStroke'
 	| 'sectorBorderStroke'
+	| 'sectorCoreBorderStroke'
+	| 'sectorFrontierBorderStroke'
 	| 'shroudTunnelStroke'
 	| 'unionBorderStroke'
 	| 'wormholeStroke';
@@ -182,6 +187,31 @@ export const defaultMapSettings: MapSettings = {
 		dashArray: '3 3',
 	},
 	sectorBorderColor: {
+		color: 'border',
+		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
+	},
+	sectorTypeBorderStyles: false,
+	sectorCoreBorderStroke: {
+		enabled: true,
+		width: 1,
+		smoothing: true,
+		glow: false,
+		dashed: false,
+		dashArray: '3 3',
+	},
+	sectorCoreBorderColor: {
+		color: 'border',
+		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
+	},
+	sectorFrontierBorderStroke: {
+		enabled: true,
+		width: 1,
+		smoothing: true,
+		glow: false,
+		dashed: true,
+		dashArray: '1 3',
+	},
+	sectorFrontierBorderColor: {
 		color: 'border',
 		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
 	},

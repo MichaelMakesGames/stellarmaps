@@ -70,6 +70,36 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				hideIf: (settings) => !settings.sectorBorderStroke.enabled,
 			},
 			{
+				id: 'sectorTypeBorderStyles',
+				type: 'toggle',
+				tooltip: 'setting.sectorTypeBorderStyles_tooltip',
+				requiresReprocessing: true,
+			},
+			{
+				id: 'sectorCoreBorderStroke',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+				hideIf: (settings) => !settings.sectorTypeBorderStyles,
+			},
+			{
+				id: 'sectorCoreBorderColor',
+				type: 'color',
+				hideIf: (settings) =>
+					!settings.sectorTypeBorderStyles || !settings.sectorBorderStroke.enabled,
+			},
+			{
+				id: 'sectorFrontierBorderStroke',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+				hideIf: (settings) => !settings.sectorTypeBorderStyles,
+			},
+			{
+				id: 'sectorFrontierBorderColor',
+				type: 'color',
+				hideIf: (settings) =>
+					!settings.sectorTypeBorderStyles || !settings.sectorBorderStroke.enabled,
+			},
+			{
 				id: 'unionBorderStroke',
 				type: 'stroke',
 				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,

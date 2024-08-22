@@ -2,7 +2,7 @@ import * as turf from '@turf/turf';
 
 import type { GameState, Sector } from '../../GameState';
 import type { MapSettings } from '../../settings';
-import { getOrDefault, isDefined, parseNumberEntry } from '../../utils';
+import { getOrDefault, getOrSetDefault, isDefined, parseNumberEntry } from '../../utils';
 import { getCountryMapModeInfo } from './mapModes';
 import type processCircularGalaxyBorders from './processCircularGalaxyBorder';
 import type { BorderCircle } from './processCircularGalaxyBorder';
@@ -27,6 +27,16 @@ import {
 	segmentToPath,
 } from './utils';
 
+export interface SectorBorderPath {
+	path: string;
+	type: 'standard' | 'union' | 'core' | 'frontier';
+}
+
+interface SectorBorderSegment {
+	sectors: Set<Sector>;
+	positions: turf.Position[];
+}
+
 export const processBordersDeps = [
 	'unionMode',
 	'unionFederations',
@@ -36,7 +46,10 @@ export const processBordersDeps = [
 	'hyperlaneMetroStyle',
 	'borderStroke',
 	'unionBorderStroke',
+	'sectorTypeBorderStyles',
 	'sectorBorderStroke',
+	'sectorCoreBorderStroke',
+	'sectorFrontierBorderStroke',
 	'mapMode',
 	'mapModePointOfView',
 	'borderGap',
@@ -87,22 +100,20 @@ export default function processBorders(
 				.map((sector) => sectorToGeojson[sector.id])
 				.filter(isDefined);
 
-			const unionMemberOuterPolygons = Array.from(
-				unionLeaderToUnionMembers[countryId]?.values() ?? [],
-			)
-				.map((unionMemberId) => countryToGeojson[unionMemberId])
-				.filter(isDefined);
-
-			const unionMemberBorderLines: Set<string> = new Set();
-			getAllPositionArrays(turf.featureCollection(unionMemberOuterPolygons)).forEach(
-				(positionArray) =>
+			const lineStringToSectors: Record<string, Set<Sector>> = {};
+			countrySectors.forEach((sector, i) => {
+				const polygon = sectorOuterPolygons[i];
+				if (!polygon) return;
+				getAllPositionArrays(polygon).forEach((positionArray) =>
 					positionArray.forEach((p, i) => {
 						const nextPosition = positionArray[(i + 1) % positionArray.length] as turf.Position;
-						unionMemberBorderLines.add(
-							[positionToString(p), positionToString(nextPosition)].sort().join(','),
-						);
+						const borderLine = [positionToString(p), positionToString(nextPosition)]
+							.sort()
+							.join(',');
+						getOrSetDefault(lineStringToSectors, borderLine, new Set()).add(sector);
 					}),
-			);
+				);
+			});
 
 			const allBorderPoints: Set<string> = new Set(
 				turf.coordAll(outerBorderGeoJSON).map((coord) => positionToString(coord)),
@@ -124,9 +135,9 @@ export default function processBorders(
 					)
 					.flat(),
 			);
-			const sectorSegments: turf.Position[][] = [];
+			const sectorSegments: SectorBorderSegment[] = [];
 			sectorOuterPolygons.flatMap(getAllPositionArrays).forEach((sectorRing, sectorIndex) => {
-				let currentSegment: turf.Position[] = [];
+				let currentSegment: SectorBorderSegment = { sectors: new Set(), positions: [] };
 				const firstSegment = currentSegment;
 				sectorRing.forEach((pos, posIndex, posArray) => {
 					const posString = positionToString(pos);
@@ -145,16 +156,18 @@ export default function processBorders(
 
 					const nextLineString = [posString, nextPosString].sort().join(',');
 
-					if (currentSegment.length) {
-						currentSegment.push(pos);
-						if (currentSegment.length >= 2) {
-							addedSectorLines.add(
-								currentSegment
-									.slice(currentSegment.length - 2, currentSegment.length)
-									.map(positionToString)
-									.sort()
-									.join(','),
-							);
+					if (currentSegment.positions.length) {
+						currentSegment.positions.push(pos);
+						if (currentSegment.positions.length >= 2) {
+							const newLineString = currentSegment.positions
+								.slice(currentSegment.positions.length - 2, currentSegment.positions.length)
+								.map(positionToString)
+								.sort()
+								.join(',');
+							for (const sector of lineStringToSectors[newLineString] ?? []) {
+								currentSegment.sectors.add(sector);
+							}
+							addedSectorLines.add(newLineString);
 						}
 						// close up segment if
 						// shared by 2+ other sectors
@@ -164,58 +177,58 @@ export default function processBorders(
 							(!posIsLast && addedSectorLines.has(nextLineString))
 						) {
 							sectorSegments.push(currentSegment);
-							currentSegment = [];
+							currentSegment = { sectors: new Set(), positions: [] };
 						}
 					}
 
-					if (!currentSegment.length) {
+					if (!currentSegment.positions.length) {
 						// no current segment
 						// start a new segment, unless next segment already added
 						if (!addedSectorLines.has(nextLineString)) {
-							currentSegment.push(pos);
+							currentSegment.positions.push(pos);
 						}
 					}
 
 					// we've come full circle
 					if (
-						currentSegment.length &&
+						currentSegment.positions.length &&
 						posIsLast &&
-						firstSegment[0] != null &&
-						positionToString(firstSegment[0]) === posString &&
+						firstSegment.positions[0] != null &&
+						positionToString(firstSegment.positions[0]) === posString &&
 						firstSegment !== currentSegment
 					) {
 						// last segment joins up with first segment
-						currentSegment.pop(); // drop the duplicate point
-						firstSegment.unshift(...currentSegment); // insert into start of firstSegment
-						currentSegment = []; // clear currentSegment
+						currentSegment.positions.pop(); // drop the duplicate point
+						firstSegment.positions.unshift(...currentSegment.positions); // insert into start of firstSegment
+						for (const sector of currentSegment.sectors) {
+							firstSegment.sectors.add(sector);
+						}
+						currentSegment = { sectors: new Set(), positions: [] }; // clear currentSegment
 					}
 				});
 				// push last segment
-				if (currentSegment.length) {
+				if (currentSegment.positions.length) {
 					sectorSegments.push(currentSegment);
 				}
 			});
 			// make sure there are no 0 or 1 length segments
 			const nonEmptySectorSegments = sectorSegments.filter(
-				(segment): segment is [turf.Position, turf.Position, ...turf.Position[]] =>
-					segment.length > 1,
+				(
+					segment,
+				): segment is {
+					sectors: Set<Sector>;
+					positions: [turf.Position, turf.Position, ...turf.Position[]];
+				} => segment.positions.length > 1,
 			);
-			// check for union border segments
-			const unionBorderSegments = nonEmptySectorSegments.filter((segment) => {
-				const firstLineString = [positionToString(segment[0]), positionToString(segment[1])]
-					.sort()
-					.join(',');
-				return unionMemberBorderLines.has(firstLineString);
-			});
 			// extend segments at border, so they reach the border (border can shift from smoothing in next step)
 			if (settings.borderStroke.smoothing) {
 				nonEmptySectorSegments.forEach((segment) => {
-					if (allBorderPoints.has(positionToString(segment[0]))) {
-						segment[0] = getSmoothedPosition(segment[0], outerBorderGeoJSON);
+					if (allBorderPoints.has(positionToString(segment.positions[0]))) {
+						segment.positions[0] = getSmoothedPosition(segment.positions[0], outerBorderGeoJSON);
 					}
-					if (allBorderPoints.has(positionToString(segment[segment.length - 1] as turf.Position))) {
-						segment[segment.length - 1] = getSmoothedPosition(
-							segment[segment.length - 1] as turf.Position,
+					if (allBorderPoints.has(positionToString(segment.positions.at(-1) as turf.Position))) {
+						segment.positions[segment.positions.length - 1] = getSmoothedPosition(
+							segment.positions[segment.positions.length - 1] as turf.Position,
 							outerBorderGeoJSON,
 						);
 					}
@@ -296,15 +309,34 @@ export default function processBorders(
 				geojson: boundedOuterBorderGeoJSON,
 				hyperlanesPath,
 				relayHyperlanesPath,
-				sectorBorders: nonEmptySectorSegments.map((segment) => ({
-					path: segmentToPath(
-						segment,
-						unionBorderSegments.includes(segment)
-							? settings.unionBorderStroke.smoothing
-							: settings.sectorBorderStroke.smoothing,
-					),
-					isUnionBorder: unionBorderSegments.includes(segment),
-				})),
+				sectorBorders: nonEmptySectorSegments.map<SectorBorderPath>((segment) => {
+					let type: SectorBorderPath['type'] = 'standard';
+					let style = settings.sectorBorderStroke;
+
+					if (new Set(Array.from(segment.sectors).map((sector) => sector.owner)).size > 1) {
+						type = 'union';
+						style = settings.unionBorderStroke;
+					} else if (
+						settings.sectorTypeBorderStyles &&
+						Array.from(segment.sectors).some((s) => s.id < 0)
+					) {
+						type = 'frontier';
+						style = settings.sectorFrontierBorderStroke;
+					} else if (
+						settings.sectorTypeBorderStyles &&
+						Array.from(segment.sectors).some(
+							(s) => s.owner != null && s.local_capital === gameState.country[s.owner]?.capital,
+						)
+					) {
+						type = 'core';
+						style = settings.sectorCoreBorderStroke;
+					}
+
+					return {
+						path: segmentToPath(segment.positions, style.smoothing),
+						type,
+					};
+				}),
 				isKnown: knownCountries.has(countryId),
 			};
 		})

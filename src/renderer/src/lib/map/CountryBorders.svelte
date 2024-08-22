@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { match } from 'ts-pattern';
 	import { mapSettings } from '../settings';
 	import Glow from './Glow.svelte';
+	import type { SectorBorderPath } from './data/processBorders';
 	import type { MapData } from './data/processMapData';
 	import {
 		getFillColorAttributes,
@@ -11,16 +13,39 @@
 	export let data: MapData;
 	export let colors: Record<string, string>;
 
-	function filterSectorBorders(sectorBorder: { path: string; isUnionBorder: boolean }) {
-		if (sectorBorder.isUnionBorder) {
-			return $mapSettings.sectorBorderStroke.enabled || $mapSettings.unionBorderStroke.enabled;
-		} else {
-			return $mapSettings.sectorBorderStroke.enabled;
-		}
+	function getSectorBorderColorSetting(sectorBorder: SectorBorderPath) {
+		return match(sectorBorder)
+			.with({ type: 'union' }, () => $mapSettings.unionBorderColor)
+			.with({ type: 'core' }, () => $mapSettings.sectorCoreBorderColor)
+			.with({ type: 'standard' }, () => $mapSettings.sectorBorderColor)
+			.with({ type: 'frontier' }, () => $mapSettings.sectorFrontierBorderColor)
+			.exhaustive();
 	}
 
-	function sortSectorBorders(a: { isUnionBorder: boolean }, b: { isUnionBorder: boolean }) {
-		return (a.isUnionBorder ? 1 : -1) - (b.isUnionBorder ? 1 : -1);
+	function getSectorBorderStrokeSetting(sectorBorder: SectorBorderPath) {
+		return match(sectorBorder)
+			.with({ type: 'union' }, () => $mapSettings.unionBorderStroke)
+			.with({ type: 'core' }, () => $mapSettings.sectorCoreBorderStroke)
+			.with({ type: 'standard' }, () => $mapSettings.sectorBorderStroke)
+			.with({ type: 'frontier' }, () => $mapSettings.sectorFrontierBorderStroke)
+			.exhaustive();
+	}
+
+	function getSectorBorderSortValue(sectorBorder: SectorBorderPath) {
+		return match(sectorBorder)
+			.with({ type: 'union' }, () => 0)
+			.with({ type: 'core' }, () => 1)
+			.with({ type: 'standard' }, () => 2)
+			.with({ type: 'frontier' }, () => 3)
+			.exhaustive();
+	}
+
+	function filterSectorBorders(sectorBorder: SectorBorderPath) {
+		return getSectorBorderStrokeSetting(sectorBorder).enabled;
+	}
+
+	function sortSectorBorders(a: SectorBorderPath, b: SectorBorderPath) {
+		return getSectorBorderSortValue(a) - getSectorBorderSortValue(b);
 	}
 </script>
 
@@ -61,31 +86,17 @@
 			/>
 		{/if}
 		{#each border.sectorBorders.filter(filterSectorBorders).sort(sortSectorBorders) as sectorBorder}
-			<Glow
-				enabled={sectorBorder.isUnionBorder && $mapSettings.unionBorderStroke.enabled
-					? $mapSettings.unionBorderStroke.glow
-					: $mapSettings.sectorBorderStroke.glow}
-				let:filter
-			>
+			<Glow enabled={getSectorBorderStrokeSetting(sectorBorder).glow} let:filter>
 				<path
 					d={sectorBorder.path}
-					{...getStrokeAttributes(
-						sectorBorder.isUnionBorder && $mapSettings.unionBorderStroke.enabled
-							? $mapSettings.unionBorderStroke
-							: $mapSettings.sectorBorderStroke,
-					)}
+					{...getStrokeAttributes(getSectorBorderStrokeSetting(sectorBorder))}
 					{filter}
 					clip-path={`url(#border-${border.countryId}-outer-clip-path)`}
 					{...getStrokeColorAttributes({
 						mapSettings: $mapSettings,
 						colors,
 						countryColors: border,
-						colorStack: [
-							sectorBorder.isUnionBorder && $mapSettings.unionBorderStroke.enabled
-								? $mapSettings.unionBorderColor
-								: $mapSettings.sectorBorderColor,
-							$mapSettings.borderFillColor,
-						],
+						colorStack: [getSectorBorderColorSetting(sectorBorder), $mapSettings.borderFillColor],
 					})}
 					fill="none"
 				/>

@@ -265,8 +265,15 @@ export default {
 			<li>Starts at 100% opacity at the border.</li>
 			<li>Works best if Country Fill Color has low opacity.</li>
 		</ul>`,
+		sectorTypeBorderStyles: 'Distinct Sector Type Styles',
+		sectorTypeBorderStyles_tooltip:
+			'Adds separate style settings for Core and Frontier sector borders.',
 		sectorBorderStroke: 'Sector Borders',
 		sectorBorderColor: 'Sector Border Color',
+		sectorCoreBorderStroke: 'Core Sector Borders',
+		sectorCoreBorderColor: 'Core Sector Border Color',
+		sectorFrontierBorderStroke: 'Frontier Sector Borders',
+		sectorFrontierBorderColor: 'Frontier Sector Border Color',
 		unionBorderStroke: 'Union Borders',
 		unionBorderColor: 'Union Border Color',
 		unionMode: 'Union Mode',
