@@ -130,10 +130,16 @@ export default function processSystemOwnership(
 			// first try most connected (by hyperlane) neighbor
 			const reassignedSectorId = Object.keys(neighborSectorToNumConnections)
 				.map((key) => parseInt(key))
-				.sort(
-					(a, b) =>
-						(neighborSectorToNumConnections[b] ?? 0) - (neighborSectorToNumConnections[a] ?? 0),
-				)[0];
+				.sort((a, b) => {
+					let comparison =
+						(neighborSectorToNumConnections[b] ?? 0) - (neighborSectorToNumConnections[a] ?? 0);
+					if (comparison === 0) {
+						// if 0, sort by id, to safeguard against non-deterministic behavior
+						// (the order of the keys in json from rust is not guaranteed to be consistent)
+						comparison = a - b;
+					}
+					return comparison;
+				})[0];
 
 			// assign system to target if found
 			if (reassignedSectorId != null) {
