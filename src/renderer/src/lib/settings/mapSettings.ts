@@ -23,6 +23,7 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesMinSize'
 	| 'countryNamesSecondaryRelativeSize'
 	| 'claimVoidMaxSize'
+	| 'frontierBubbleThreshold'
 	| 'starScapeStarsCount';
 
 export type StringMapSettings =
@@ -190,6 +191,7 @@ export const defaultMapSettings: MapSettings = {
 		color: 'border',
 		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
 	},
+	frontierBubbleThreshold: null,
 	sectorTypeBorderStyles: false,
 	sectorCoreBorderStroke: {
 		enabled: true,

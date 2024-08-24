@@ -265,6 +265,13 @@ export default {
 			<li>Starts at 100% opacity at the border.</li>
 			<li>Works best if Country Fill Color has low opacity.</li>
 		</ul>`,
+		frontierBubbleThreshold: 'Frontier Bubble Threshold',
+		frontierBubbleThreshold_tooltip: `<ul>
+			<li>Frontier bubbles are drawn as if part of an adjacent sector.</li>
+			<li>Frontier bubbles are small clusters of hyperlane-connected sector-less systems.</li>
+			<li>This setting determines the maximum number of systems in a frontier bubble.</li>
+			<li>Leave blank or set to zero to disable.</li>
+		</ul>`,
 		sectorTypeBorderStyles: 'Distinct Sector Type Styles',
 		sectorTypeBorderStyles_tooltip:
 			'Adds separate style settings for Core and Frontier sector borders.',

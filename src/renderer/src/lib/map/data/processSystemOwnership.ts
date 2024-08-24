@@ -2,10 +2,11 @@ import * as turf from '@turf/turf';
 
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
-import { getOrSetDefault } from '../../utils';
+import { getOrDefault, getOrSetDefault, parseNumberEntry } from '../../utils';
 import { getFrontierSectorPseudoId, getUnionLeaderId, pointToGeoJSON } from './utils';
 
 export const processSystemOwnershipDeps = [
+	'frontierBubbleThreshold',
 	'unionMode',
 	'unionFederations',
 	'unionHegemonies',
@@ -24,6 +25,7 @@ export default function processSystemOwnership(
 			fleetToCountry[owned_fleet.fleet] = country.id;
 		});
 	});
+	const systemToSectorId: Record<number, number> = {};
 	const sectorToSystemIds: Record<number, Set<number>> = {};
 	const sectorToCountry: Record<number, number> = {};
 	const countryToSystemIds: Record<string, Set<number>> = {};
@@ -47,6 +49,7 @@ export default function processSystemOwnership(
 				(s) => s.owner === ownerId && s.systems.includes(system.id),
 			);
 			const sectorId = sector != null ? sector.id : getFrontierSectorPseudoId(ownerId);
+			systemToSectorId[system.id] = sectorId;
 			getOrSetDefault(sectorToSystemIds, sectorId, new Set()).add(system.id);
 			sectorToCountry[sectorId] = ownerId;
 			const joinedUnionLeaderId = getUnionLeaderId(ownerId, gameState, settings, ['joinedBorders']);
@@ -78,6 +81,66 @@ export default function processSystemOwnership(
 						`${ownerId}-${occupier}`,
 						new Set(),
 					).add(system.id);
+				}
+			}
+		}
+	}
+
+	// postprocess sectors: assign small "frontier bubbles" to nearby sectors
+	for (const [sectorId, systemIds] of Object.entries(sectorToSystemIds).map(parseNumberEntry)) {
+		if (sectorId >= 0) continue; // not a fronteir
+
+		// find the clusters (hyperlane connected systems in the same sector)
+		const clusters: Set<number>[] = [];
+		for (const systemId of systemIds) {
+			const neighborIds = gameState.galactic_object[systemId]?.hyperlane.map((h) => h.to) ?? [];
+			const cluster = clusters.find((c) => neighborIds.some((n) => c.has(n))) ?? new Set();
+			cluster.add(systemId);
+			if (!clusters.includes(cluster)) clusters.push(cluster);
+			let otherCluster = clusters.find((c) => c !== cluster && neighborIds.some((n) => c.has(n)));
+			while (otherCluster != null) {
+				for (const mergedSystemId of otherCluster) cluster.add(mergedSystemId);
+				clusters.splice(clusters.indexOf(otherCluster), 1);
+				otherCluster = clusters.find((c) => c !== cluster && neighborIds.some((n) => c.has(n)));
+			}
+		}
+
+		// reassign clusters that are below the "bubble" threshold
+		for (const cluster of clusters.filter(
+			(c) => c.size <= (settings.frontierBubbleThreshold ?? 0),
+		)) {
+			// count how many hyperlane connections each neighbor has
+			const neighborSectorToNumConnections: Record<number, number> = {};
+			for (const systemId of cluster) {
+				const neighborIds = gameState.galactic_object[systemId]?.hyperlane.map((h) => h.to) ?? [];
+				for (const neighborId of neighborIds) {
+					const neighborSectorId = systemToSectorId[neighborId];
+					if (
+						neighborSectorId != null &&
+						neighborSectorId !== sectorId &&
+						// only count sectors that belong to the same country
+						sectorToCountry[neighborSectorId] === sectorToCountry[sectorId]
+					) {
+						neighborSectorToNumConnections[neighborSectorId] =
+							getOrDefault(neighborSectorToNumConnections, neighborSectorId, 0) + 1;
+					}
+				}
+			}
+
+			// first try most connected (by hyperlane) neighbor
+			const reassignedSectorId = Object.keys(neighborSectorToNumConnections)
+				.map((key) => parseInt(key))
+				.sort(
+					(a, b) =>
+						(neighborSectorToNumConnections[b] ?? 0) - (neighborSectorToNumConnections[a] ?? 0),
+				)[0];
+
+			// assign system to target if found
+			if (reassignedSectorId != null) {
+				for (const systemId of cluster) {
+					systemIds.delete(systemId);
+					sectorToSystemIds[reassignedSectorId]?.add(systemId);
+					systemToSectorId[systemId] = reassignedSectorId;
 				}
 			}
 		}

@@ -70,6 +70,15 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				hideIf: (settings) => !settings.sectorBorderStroke.enabled,
 			},
 			{
+				id: 'frontierBubbleThreshold',
+				type: 'number',
+				min: 0,
+				step: 1,
+				optional: true,
+				requiresReprocessing: true,
+				tooltip: 'setting.frontierBubbleThreshold_tooltip',
+			},
+			{
 				id: 'sectorTypeBorderStyles',
 				type: 'toggle',
 				tooltip: 'setting.sectorTypeBorderStyles_tooltip',
