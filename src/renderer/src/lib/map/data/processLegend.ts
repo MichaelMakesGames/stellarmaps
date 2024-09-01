@@ -43,7 +43,7 @@ export default function processLegend(
 ): LegendData {
 	const mapMode = mapModes[settings.mapMode];
 	const mapModeLegendItems: LegendItem[] =
-		mapMode == null
+		mapMode?.country == null
 			? []
 			: mapMode.country
 					.filter(
@@ -53,7 +53,7 @@ export default function processLegend(
 								borders.some((b) => b.mapModeIndex === index)),
 					)
 					.map((mapModeCountry) => ({
-						label: get(t)(mapModeCountry.label),
+						label: mapModeCountry.label ? get(t)(mapModeCountry.label) : '',
 						symbol: {
 							type: 'border',
 							primaryColor: mapModeCountry.primaryColor,

@@ -32,6 +32,7 @@ export type StringMapSettings =
 	| 'labelsAvoidHoles'
 	| 'mapMode'
 	| 'mapModePointOfView'
+	| 'mapModeSpecies'
 	| 'systemNames'
 	| 'systemNamesFont'
 	| 'terraIncognitaPerspectiveCountry'
@@ -119,6 +120,7 @@ export type MapSettings = Record<NumberMapSettings, number> &
 export const defaultMapSettings: MapSettings = {
 	mapMode: 'default',
 	mapModePointOfView: 'player',
+	mapModeSpecies: 'player',
 	backgroundColor: { color: 'very_black', colorAdjustments: [] },
 	borderFillColor: {
 		color: 'secondary',

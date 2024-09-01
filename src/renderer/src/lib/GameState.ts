@@ -64,6 +64,7 @@ const galacticObjectSchema = z
 			)
 			.optional(),
 		planet: z.number().optional(),
+		fleet_presence: z.array(z.number()).default([]),
 		$multiKeys: z
 			.object({
 				planet: preprocessedArray(z.number()).optional(),
@@ -85,6 +86,9 @@ const planetSchema = z.object({
 	controller: z.number().optional(),
 	owner: z.number().optional(),
 	num_sapient_pops: z.number().optional(),
+	species_information: z
+		.record(z.string(), z.object({ num_pops: z.number(), num_enslaved: z.number().optional() }))
+		.optional(),
 });
 
 /**
@@ -153,6 +157,7 @@ const countrySchema = z.object({
 		})
 		.optional(),
 	capital: z.number().optional(),
+	founder_species_ref: z.number().optional(),
 	subjects: preprocessedArray(z.number()),
 	overlord: z.number().optional(),
 	federation: z.number().optional(),
@@ -163,6 +168,7 @@ const countrySchema = z.object({
 			owned_fleets: preprocessedArray(z.object({ fleet: z.number() })),
 		})
 		.optional(),
+	sensor_range_fleets: z.array(z.number()).default([]),
 	terra_incognita: z
 		.object({
 			systems: preprocessedArray(z.number()),
@@ -226,6 +232,7 @@ export type Ship = WithId<z.infer<typeof shipSchema>>;
 
 const fleetSchema = z.object({
 	station: z.boolean().optional(),
+	military_power: z.number(),
 });
 
 /**
@@ -305,6 +312,16 @@ const nebulaSchema = z
  */
 export type Nebula = z.infer<typeof nebulaSchema>;
 
+const speciesSchema = z.object({
+	base_ref: z.number().optional(),
+	name: localizedTextSchema,
+});
+
+/**
+ * @public
+ */
+export type Species = WithId<z.infer<typeof speciesSchema>>;
+
 function addIds<T>(db: Record<number, T>): Record<number, WithId<T>> {
 	return Object.fromEntries(
 		Object.entries(db).map(([id, obj]) => [id, { ...obj, id: parseInt(id) }]),
@@ -330,6 +347,7 @@ export const gameStateSchema = z
 		player: preprocessedArray(z.object({ name: z.coerce.string(), country: z.number() })),
 		galaxy: z.object({ shape: z.string(), core_radius: z.number() }),
 		planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
+		species_db: stellarisDb(speciesSchema),
 		nebula: nebulaSchema.optional(),
 		$multiKeys: z.object({ nebula: preprocessedArray(nebulaSchema).optional() }).optional(),
 	})

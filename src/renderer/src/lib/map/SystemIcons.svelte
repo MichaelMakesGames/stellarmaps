@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as d3Shape from 'd3-shape';
 	import {
 		mapSettings,
 		mapSettingsConfig,
@@ -125,8 +126,79 @@
 		if ($mapSettings.systemNames === 'colonized' && system.isColonized) return true;
 		return false;
 	}
+
+	function getMapModeIcons(systems: MapData['systems']) {
+		const max = Math.max(...systems.map((s) => s.mapModeTotalValue ?? 0));
+		const scale = 100 / max;
+		return systems
+			.filter((system) => system.mapModeTotalValue)
+			.map((system) => {
+				const total = system.mapModeTotalValue ?? 0;
+				const r = Math.sqrt(total * scale);
+				let startAngle = 0;
+				const arcs = (system.mapModeValues ?? [])
+					.filter((value) => value.value)
+					.map((value) => {
+						const angle = (value.value / total) * Math.PI * 2;
+						const start = startAngle;
+						const end = start + angle;
+						startAngle = end;
+						return {
+							...value,
+							start,
+							end,
+						};
+					});
+				return { r, arcs, ...system };
+			})
+			.sort((a, b) => b.r - a.r);
+	}
 </script>
 
+{#each getMapModeIcons(data.systems) as system}
+	{#if system.arcs.length <= 1}
+		<circle
+			cx={system.x}
+			cy={system.y}
+			r={system.r}
+			{...getFillColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				countryColors: system,
+				colorStack: [
+					system.arcs[0]?.color ?? { color: 'black', colorAdjustments: [] },
+					$mapSettings.borderFillColor,
+				],
+			})}
+		/>
+	{:else}
+		{#each system.arcs as arc}
+			<path
+				d={d3Shape.arc()({
+					innerRadius: 0,
+					outerRadius: system.r,
+					startAngle: arc.start,
+					endAngle: arc.end,
+				})}
+				transform="translate({system.x},{system.y})"
+				{...getFillColorAttributes({
+					mapSettings: $mapSettings,
+					colors,
+					countryColors: system,
+					colorStack: [arc.color, $mapSettings.borderFillColor],
+				})}
+			/>
+		{/each}
+	{/if}
+	<circle
+		cx={system.x}
+		cy={system.y}
+		r={system.r + 0.25}
+		stroke-width="0.5"
+		fill="none"
+		stroke={colors.black}
+	/>
+{/each}
 {#each data.systems
 	.filter((s) => s.systemIsKnown || !$mapSettings.terraIncognita)
 	.map((s) => getSystemIcons(s, $mapSettings)) as systemIcons}

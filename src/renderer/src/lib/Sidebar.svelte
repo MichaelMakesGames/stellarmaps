@@ -29,6 +29,7 @@
 		validateAndResetMapSettings,
 		type SavedMapSettings,
 	} from './settings';
+	import { speciesOptions } from './settings/options/speciesOptions';
 	import type { StellarisSaveMetadata } from './stellarMapsApi';
 	import stellarMapsApi from './stellarMapsApi';
 	import { saveToWindow, timeIt, timeItAsync, toastError, wait } from './utils';
@@ -91,12 +92,35 @@
 			);
 		promise.then(async (gameState) => {
 			Promise.all(
-				Object.entries(gameState.country)
-					.filter(([_id, country]) => country.type === 'default')
-					.map(([id, country]) =>
-						localizeText(country.name).then((name) => ({ id, literalName: name })),
+				Object.values(gameState.country)
+					.filter((country) => country.type === 'default')
+					.map((country) =>
+						localizeText(country.name).then((name) => ({
+							id: country.id.toString(),
+							literalName: name,
+						})),
 					),
 			).then(countryOptions.set);
+			const speciesWithPopulation = new Set(
+				Object.values(gameState.planets.planet).flatMap((planet) =>
+					Object.keys(planet.species_information ?? {}).map((id) => parseInt(id)),
+				),
+			);
+			Promise.all(
+				Object.values(gameState.species_db)
+					.filter(
+						(species) =>
+							speciesWithPopulation.has(species.id) &&
+							species.base_ref == null &&
+							species.name.key !== 'UNKNOWN',
+					)
+					.map((species) =>
+						localizeText(species.name).then((name) => ({
+							id: species.id.toString(),
+							literalName: name,
+						})),
+					),
+			).then(speciesOptions.set);
 		});
 		gameStatePromise.set(promise);
 
@@ -105,16 +129,19 @@
 			...prev,
 			terraIncognitaPerspectiveCountry: 'player',
 			mapModePointOfView: 'player',
+			mapModeSpecies: 'player',
 		}));
 		mapSettings.update((prev) => ({
 			...prev,
 			terraIncognitaPerspectiveCountry: 'player',
 			mapModePointOfView: 'player',
+			mapModeSpecies: 'player',
 		}));
 		lastProcessedMapSettings.update((prev) => ({
 			...prev,
 			terraIncognitaPerspectiveCountry: 'player',
 			mapModePointOfView: 'player',
+			mapModeSpecies: 'player',
 		}));
 
 		promise.catch(

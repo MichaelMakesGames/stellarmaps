@@ -235,6 +235,10 @@ export default {
 		map_mode: {
 			default: 'Empires',
 			wars: 'Wars',
+			population: 'Population',
+			populationByCountry: 'Population (Country Color)',
+			populationSpecies: 'Species Population',
+			fleetPowerAlliedAndHostile: 'Fleet Power (Allied and Hostile)',
 		},
 	},
 	// labels and tooltips for various settings
@@ -256,6 +260,7 @@ export default {
 		},
 		mapMode: 'Map Mode',
 		mapModePointOfView: 'Point of View',
+		mapModeSpecies: 'Species',
 		borderStroke: 'Country Borders',
 		borderColor: 'Country Border Color',
 		borderFillColor: 'Country Fill Color',

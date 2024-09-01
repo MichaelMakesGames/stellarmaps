@@ -1,7 +1,7 @@
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { isDefined } from '../../utils';
-import { defaultCountryMapModeInfo, getCountryMapModeInfo } from './mapModes';
+import { defaultCountryMapModeInfo, getCountryMapModeInfo, mapModes } from './mapModes';
 import type processSystemOwnership from './processSystemOwnership';
 
 export const processSystemsDeps = [
@@ -12,6 +12,7 @@ export const processSystemsDeps = [
 	'unionFederationsColor',
 	'mapMode',
 	'mapModePointOfView',
+	'mapModeSpecies',
 ] satisfies (keyof MapSettings)[];
 
 export default function processSystems(
@@ -23,6 +24,21 @@ export default function processSystems(
 	getSystemCoordinates: (id: number, options?: { invertX?: boolean }) => [number, number],
 	systemNames: Record<number, string>,
 ) {
+	const playerCountryId = gameState.player.filter((p) => gameState.country[p.country])[0]?.country;
+	const povCountryId =
+		settings.mapModePointOfView === 'player'
+			? playerCountryId
+			: parseInt(settings.mapModePointOfView);
+	const povCountry = povCountryId == null ? null : gameState.country[povCountryId];
+	const selectedSpeciesId =
+		settings.mapModeSpecies === 'player'
+			? playerCountryId == null
+				? null
+				: gameState.country[playerCountryId]?.founder_species_ref
+			: parseInt(settings.mapModeSpecies);
+	const selectedSpecies =
+		selectedSpeciesId == null ? null : gameState.species_db[selectedSpeciesId];
+
 	const systems = Object.values(gameState.galactic_object).map((system) => {
 		const countryId = systemIdToCountry[system.id];
 		const country = countryId != null ? gameState.country[countryId] : null;
@@ -50,6 +66,14 @@ export default function processSystems(
 		const hasLGate = bypassTypes.has('lgate');
 		const hasShroudTunnel = bypassTypes.has('shroud_tunnel');
 
+		const mapModeValues = mapModes[settings.mapMode]?.system?.getValues(
+			gameState,
+			system,
+			povCountry ?? null,
+			selectedSpecies ?? null,
+		);
+		const mapModeTotalValue = mapModeValues?.reduce((acc, cur) => acc + cur.value, 0);
+
 		return {
 			id: system.id,
 			...mapModeInfo,
@@ -66,6 +90,8 @@ export default function processSystems(
 			x,
 			y,
 			name: systemNames[system.id] ?? 'Unknown',
+			mapModeValues,
+			mapModeTotalValue,
 		};
 	});
 	return systems;

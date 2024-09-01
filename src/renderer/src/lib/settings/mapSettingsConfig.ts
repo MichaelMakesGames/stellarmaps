@@ -1,6 +1,7 @@
 import { countryOptions } from './options/countryOptions';
 import { fontOptions } from './options/fontOptions';
 import { glyphOptions } from './options/glyphOptions';
+import { speciesOptions } from './options/speciesOptions';
 import { unionOptions } from './options/unionOptions';
 import { type MapSettingConfigGroup } from './SettingConfig';
 import { isColorDynamic } from './utils';
@@ -16,6 +17,10 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				options: [
 					{ id: 'default', name: 'option.map_mode.default' },
 					{ id: 'wars', name: 'option.map_mode.wars' },
+					{ id: 'population', name: 'option.map_mode.population' },
+					{ id: 'populationByCountry', name: 'option.map_mode.populationByCountry' },
+					{ id: 'populationSpecies', name: 'option.map_mode.populationSpecies' },
+					{ id: 'fleetPowerAlliedAndHostile', name: 'option.map_mode.fleetPowerAlliedAndHostile' },
 				],
 				requiresReprocessing: true,
 			},
@@ -24,6 +29,13 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				type: 'select',
 				options: [{ id: 'player', name: 'option.country.player' }],
 				dynamicOptions: countryOptions,
+				requiresReprocessing: true,
+			},
+			{
+				id: 'mapModeSpecies',
+				type: 'select',
+				options: [{ id: 'player', name: 'option.country.player' }],
+				dynamicOptions: speciesOptions,
 				requiresReprocessing: true,
 			},
 		],
