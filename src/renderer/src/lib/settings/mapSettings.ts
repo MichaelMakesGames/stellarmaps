@@ -24,7 +24,8 @@ export type NumberOptionalMapSettings =
 	| 'countryNamesSecondaryRelativeSize'
 	| 'claimVoidMaxSize'
 	| 'frontierBubbleThreshold'
-	| 'starScapeStarsCount';
+	| 'starScapeStarsCount'
+	| 'systemMapPlanetScale';
 
 export type StringMapSettings =
 	| 'countryNamesFont'
@@ -71,6 +72,7 @@ export type ColorMapSettings =
 	| 'legendBorderColor'
 	| 'lGateStrokeColor'
 	| 'occupationColor'
+	| 'systemMapOrbitColor'
 	| 'sectorBorderColor'
 	| 'sectorCoreBorderColor'
 	| 'sectorFrontierBorderColor'
@@ -92,6 +94,7 @@ export type StrokeMapSettings =
 	| 'hyperRelayStroke'
 	| 'legendBorderStroke'
 	| 'lGateStroke'
+	| 'systemMapOrbitStroke'
 	| 'sectorBorderStroke'
 	| 'sectorCoreBorderStroke'
 	| 'sectorFrontierBorderStroke'
@@ -418,6 +421,16 @@ export const defaultMapSettings: MapSettings = {
 		color: 'border',
 		colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }],
 	},
+	systemMapOrbitColor: { color: 'dark_grey', colorAdjustments: [] },
+	systemMapOrbitStroke: {
+		dashArray: '3 3',
+		dashed: false,
+		enabled: true,
+		glow: false,
+		smoothing: false,
+		width: 0.5,
+	},
+	systemMapPlanetScale: 1,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

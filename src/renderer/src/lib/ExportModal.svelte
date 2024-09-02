@@ -6,11 +6,13 @@
 		getToastStore,
 		localStorageStore,
 	} from '@skeletonlabs/skeleton';
+	import { onDestroy } from 'svelte';
 	import { t } from '../intl';
-	import type { GameState } from './GameState';
+	import type { GalacticObject, GameState } from './GameState';
 	import convertSvgToPng from './convertSvgToPng';
 	import type { MapData } from './map/data/processMapData';
 	import { getBackgroundColor, getFillColorAttributes, resolveColor } from './map/mapUtils';
+	import SolarSystemMap from './map/solarSystemMap/SolarSystemMap.svelte';
 	import processStarScape from './map/starScape/renderStarScape';
 	import { mapSettings } from './settings';
 	import stellarMapsApi from './stellarMapsApi';
@@ -19,10 +21,26 @@
 	const _props = $$props; // this suppresses warning about unknown prop 'parent'
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
-	const svg: SVGGElement = $modalStore[0]?.meta?.svg;
+	const galaxyMapSvg: SVGElement = $modalStore[0]?.meta?.svg;
 	const colors: Record<string, string> = $modalStore[0]?.meta?.colors;
 	const mapData: MapData = $modalStore[0]?.meta?.mapData;
 	const gameState: GameState = $modalStore[0]?.meta?.gameState;
+	const openedSystem: GalacticObject | undefined = $modalStore[0]?.meta?.openedSystem;
+
+	const solarSystemMapTarget = document.createElement('div');
+	const solarSystemMap = openedSystem
+		? new SolarSystemMap({
+				target: solarSystemMapTarget,
+				props: {
+					id: 'exportSystemMap',
+					colors: colors,
+					gameState: gameState,
+					system: openedSystem,
+					exportMode: true,
+				},
+			})
+		: null;
+	onDestroy(() => solarSystemMap?.$destroy());
 
 	const defaultExportSettings = {
 		lockAspectRatio: true,
@@ -99,31 +117,36 @@
 	}
 
 	async function exportPng() {
-		const backgroundImageUrl = await processStarScape(
-			gameState,
-			$mapSettings,
-			colors,
+		const backgroundImageUrl = openedSystem
+			? undefined
+			: await processStarScape(
+					gameState,
+					$mapSettings,
+					colors,
+					{
+						left: mapLeft,
+						top: mapTop,
+						width: mapWidth,
+						height: mapHeight,
+					},
+					{
+						width: imageWidth,
+						height: imageHeight,
+					},
+				);
+		const buffer = await convertSvgToPng(
+			solarSystemMap ? (solarSystemMapTarget.firstChild as SVGElement) : galaxyMapSvg,
 			{
 				left: mapLeft,
 				top: mapTop,
 				width: mapWidth,
 				height: mapHeight,
+				outputWidth: imageWidth,
+				outputHeight: imageHeight,
+				backgroundImageUrl,
+				backgroundColor: getBackgroundColor(colors, $mapSettings),
 			},
-			{
-				width: imageWidth,
-				height: imageHeight,
-			},
-		);
-		const buffer = await convertSvgToPng(svg, {
-			left: mapLeft,
-			top: mapTop,
-			width: mapWidth,
-			height: mapHeight,
-			outputWidth: imageWidth,
-			outputHeight: imageHeight,
-			backgroundImageUrl,
-			backgroundColor: getBackgroundColor(colors, $mapSettings),
-		}).then((blob) => blob.arrayBuffer());
+		).then((blob) => blob.arrayBuffer());
 		const savePath = await stellarMapsApi.dialog.save({
 			defaultPath: await stellarMapsApi.path.join(
 				await stellarMapsApi.path.pictureDir(),
@@ -131,7 +154,7 @@
 			),
 			filters: [{ extensions: ['png'], name: 'Image' }],
 		});
-		if (savePath && svg) {
+		if (savePath && galaxyMapSvg) {
 			await stellarMapsApi.fs.writeBinaryFile(savePath, new Uint8Array(buffer)).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
@@ -154,34 +177,39 @@
 	}
 
 	async function exportSvg() {
-		svg.setAttribute('width', imageWidth.toString());
-		svg.setAttribute('height', imageHeight.toString());
-		svg.setAttribute('viewBox', `${mapLeft} ${mapTop} ${mapWidth} ${mapHeight}`);
+		const svgToExport = openedSystem
+			? (solarSystemMapTarget.firstChild as SVGElement)
+			: galaxyMapSvg;
+		svgToExport.setAttribute('width', imageWidth.toString());
+		svgToExport.setAttribute('height', imageHeight.toString());
+		svgToExport.setAttribute('viewBox', `${mapLeft} ${mapTop} ${mapWidth} ${mapHeight}`);
 
 		const bgImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-		bgImage.setAttribute('x', mapLeft.toString());
-		bgImage.setAttribute('y', mapTop.toString());
-		bgImage.setAttribute('width', mapWidth.toString());
-		bgImage.setAttribute('height', mapHeight.toString());
-		bgImage.setAttribute(
-			'xlink:href',
-			await processStarScape(
-				gameState,
-				$mapSettings,
-				colors,
-				{
-					left: mapLeft,
-					top: mapTop,
-					width: mapWidth,
-					height: mapHeight,
-				},
-				{
-					width: imageWidth,
-					height: imageHeight,
-				},
-			),
-		);
-		svg.prepend(bgImage);
+		if (!openedSystem) {
+			bgImage.setAttribute('x', mapLeft.toString());
+			bgImage.setAttribute('y', mapTop.toString());
+			bgImage.setAttribute('width', mapWidth.toString());
+			bgImage.setAttribute('height', mapHeight.toString());
+			bgImage.setAttribute(
+				'xlink:href',
+				await processStarScape(
+					gameState,
+					$mapSettings,
+					colors,
+					{
+						left: mapLeft,
+						top: mapTop,
+						width: mapWidth,
+						height: mapHeight,
+					},
+					{
+						width: imageWidth,
+						height: imageHeight,
+					},
+				),
+			);
+			svgToExport.prepend(bgImage);
+		}
 
 		const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
 		bgRect.setAttribute('x', mapLeft.toString());
@@ -189,11 +217,11 @@
 		bgRect.setAttribute('width', mapWidth.toString());
 		bgRect.setAttribute('height', mapHeight.toString());
 		bgRect.setAttribute('fill', getBackgroundColor(colors, $mapSettings));
-		svg.prepend(bgRect);
+		svgToExport.prepend(bgRect);
 
-		const svgString = svg.outerHTML;
-		svg.removeChild(bgImage);
-		svg.removeChild(bgRect);
+		const svgString = svgToExport.outerHTML;
+		if (!openedSystem) svgToExport.removeChild(bgImage);
+		svgToExport.removeChild(bgRect);
 
 		const savePath = await stellarMapsApi.dialog.save({
 			defaultPath: await stellarMapsApi.path
@@ -201,7 +229,7 @@
 				.catch(() => ''),
 			filters: [{ extensions: ['svg'], name: 'Image' }],
 		});
-		if (savePath && svg) {
+		if (savePath && svgToExport) {
 			await stellarMapsApi.fs.writeFile(savePath, svgString).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
@@ -377,7 +405,15 @@
 				role="button"
 				style:cursor="pointer"
 			>
-				{#if mapData}
+				{#if openedSystem}
+					<SolarSystemMap
+						system={openedSystem}
+						{colors}
+						{gameState}
+						id="systemMapPreview"
+						previewMode
+					/>
+				{:else if mapData}
 					{#each mapData.borders as border}
 						<path
 							d={border.borderPath}

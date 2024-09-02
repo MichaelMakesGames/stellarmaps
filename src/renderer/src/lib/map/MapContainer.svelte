@@ -31,6 +31,7 @@
 	import MapTooltip from './MapTooltip.svelte';
 	import processMapData from './data/processMapData';
 	import { getBackgroundColor } from './mapUtils';
+	import SolarSystemMap from './solarSystemMap/SolarSystemMap.svelte';
 	import processStarScape from './starScape/renderStarScape';
 
 	const modalStore = getModalStore();
@@ -73,7 +74,13 @@
 			modalStore.trigger({
 				type: 'component',
 				component: 'export',
-				meta: { colors, mapData, gameState: gameStateOrNull, svg: mapTarget.firstChild },
+				meta: {
+					colors,
+					mapData,
+					gameState: gameStateOrNull,
+					svg: mapTarget.firstChild,
+					openedSystem,
+				},
 			});
 		});
 	}
@@ -375,35 +382,52 @@
 		onMouseMoveInnerDebounced(e);
 	}
 
-	function onMapClick() {
-		const countryId = tooltip?.countryId;
-		if (countryId != null) {
-			editedMapSettings.update((value) => ({ ...value, mapModePointOfView: countryId.toString() }));
-			mapSettings.update((value) => ({ ...value, mapModePointOfView: countryId.toString() }));
-			lastProcessedMapSettings.update((value) => ({
-				...value,
-				mapModePointOfView: countryId.toString(),
-			}));
+	let openedSystem: GalacticObject | undefined = undefined;
+	function closeSystemMap() {
+		openedSystem = undefined;
+	}
+	$: if (gameStateOrNull || !gameStateOrNull) {
+		closeSystemMap();
+	}
+
+	function onMapClick(e: MouseEvent) {
+		if (e.shiftKey) {
+			const countryId = tooltip?.countryId;
+			if (countryId != null) {
+				editedMapSettings.update((value) => ({
+					...value,
+					mapModePointOfView: countryId.toString(),
+				}));
+				mapSettings.update((value) => ({ ...value, mapModePointOfView: countryId.toString() }));
+				lastProcessedMapSettings.update((value) => ({
+					...value,
+					mapModePointOfView: countryId.toString(),
+				}));
+			}
+		} else {
+			openedSystem = tooltip?.system;
 		}
 	}
 </script>
 
 <div class="relative h-full w-full" style:background={bg} bind:this={container}>
-	{#if dataOrNull && colorsOrNull}
+	{#if dataOrNull && colorsOrNull && openedSystem == null}
 		<div class="absolute left-0 top-16">
 			<Legend data={dataOrNull} colors={colorsOrNull}></Legend>
 		</div>
 	{/if}
-	{#if transform != null}
-		<button
-			type="button"
-			class="variant-filled btn-icon absolute left-3 top-3"
-			transition:fade
-			on:click={resetZoom}
-		>
-			<HeroiconArrowsPointingOut />
-		</button>
-	{/if}
+	<div class="absolute left-3 top-3 flex gap-3">
+		{#if openedSystem}
+			<button type="button" class="variant-filled btn" on:click={closeSystemMap}>
+				{$t('generic.back_button')}
+			</button>
+		{/if}
+		{#if transform != null && !openedSystem}
+			<button type="button" class="variant-filled btn-icon" transition:fade on:click={resetZoom}>
+				<HeroiconArrowsPointingOut />
+			</button>
+		{/if}
+	</div>
 	{#if dataOrNull}
 		<button
 			type="button"
@@ -414,7 +438,7 @@
 			{$t('export.button')}
 		</button>
 	{/if}
-	{#if tooltip != null && !tooltip.hidden && !zooming && !resizing}
+	{#if tooltip != null && openedSystem == null && !tooltip.hidden && !zooming && !resizing}
 		<div class="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
 			<MapTooltip x={tooltip.x} y={tooltip.y} system={tooltip.system} gameState={gameStateOrNull} />
 		</div>
@@ -451,92 +475,101 @@
 				</div>
 			</div>
 		{/await}
-		<!-- svelte-ignore a11y-mouse-events-have-key-events -->
-		<svg
-			bind:this={svg}
-			width={outputWidth}
-			height={outputHeight}
-			viewBox="0 0 {outputWidth} {outputHeight}"
-			role="presentation"
-			on:mousemove={onMouseMove}
-			on:mouseout={() => {
-				tooltip = null;
-			}}
-			on:click={onMapClick}
-			class:cursor-pointer={tooltip?.countryId != null}
-			class="h-full w-full"
-		>
-			<g transform={transform?.toString()}>
-				{#if unzoomedStarScapeDataUrl}
-					<image
-						x="0"
-						y="0"
-						width={outputWidth}
-						height={outputHeight}
-						href={unzoomedStarScapeDataUrl}
-					/>
-				{/if}
-			</g>
-			<g bind:this={g}>
-				{#if pngDataUrl}
-					<image x="0" y="0" width={outputWidth} height={outputHeight} href={pngDataUrl} />
-				{/if}
-			</g>
-			{#if starScapeDataUrl}
-				<rect
-					x="0"
-					y="0"
-					width={outputWidth}
-					height={outputHeight}
-					fill={getBackgroundColor(colorsOrNull, $mapSettings)}
-				/>
-				<image x="0" y="0" width={outputWidth} height={outputHeight} href={starScapeDataUrl} />
-			{:else if lastRenderedTransformStarScapePngDataUrl}
+		{#if openedSystem && gameStateOrNull && colorsOrNull}
+			<SolarSystemMap
+				id="systemMap"
+				gameState={gameStateOrNull}
+				system={openedSystem}
+				colors={colorsOrNull}
+			/>
+		{:else}
+			<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+			<svg
+				bind:this={svg}
+				width={outputWidth}
+				height={outputHeight}
+				viewBox="0 0 {outputWidth} {outputHeight}"
+				role="presentation"
+				on:mousemove={onMouseMove}
+				on:mouseout={() => {
+					tooltip = null;
+				}}
+				on:click={onMapClick}
+				class:cursor-pointer={tooltip?.countryId != null}
+				class="h-full w-full"
+			>
 				<g transform={transform?.toString()}>
+					{#if unzoomedStarScapeDataUrl}
+						<image
+							x="0"
+							y="0"
+							width={outputWidth}
+							height={outputHeight}
+							href={unzoomedStarScapeDataUrl}
+						/>
+					{/if}
+				</g>
+				<g bind:this={g}>
+					{#if pngDataUrl}
+						<image x="0" y="0" width={outputWidth} height={outputHeight} href={pngDataUrl} />
+					{/if}
+				</g>
+				{#if starScapeDataUrl}
 					<rect
 						x="0"
 						y="0"
 						width={outputWidth}
 						height={outputHeight}
 						fill={getBackgroundColor(colorsOrNull, $mapSettings)}
-						transform={lastRenderedTransformStarScape
-							? `scale(${
-									1 / lastRenderedTransformStarScape.k
-								}) translate(${-lastRenderedTransformStarScape.x},${-lastRenderedTransformStarScape.y})`
-							: undefined}
 					/>
-					<image
-						x="0"
-						y="0"
-						width={outputWidth}
-						height={outputHeight}
-						href={lastRenderedTransformStarScapePngDataUrl}
-						transform={lastRenderedTransformStarScape
-							? `scale(${
-									1 / lastRenderedTransformStarScape.k
-								}) translate(${-lastRenderedTransformStarScape.x},${-lastRenderedTransformStarScape.y})`
-							: undefined}
-					/>
-				</g>
-			{/if}
-			{#if zoomedPngDataUrl}
-				<image x="0" y="0" width={outputWidth} height={outputHeight} href={zoomedPngDataUrl} />
-			{:else if lastRenderedTransformPngDataUrl}
-				<g transform={transform?.toString()}>
-					<image
-						x="0"
-						y="0"
-						width={outputWidth}
-						height={outputHeight}
-						href={lastRenderedTransformPngDataUrl}
-						transform={lastRenderedTransform
-							? `scale(${
-									1 / lastRenderedTransform.k
-								}) translate(${-lastRenderedTransform.x},${-lastRenderedTransform.y})`
-							: undefined}
-					/>
-				</g>
-			{/if}
-		</svg>
+					<image x="0" y="0" width={outputWidth} height={outputHeight} href={starScapeDataUrl} />
+				{:else if lastRenderedTransformStarScapePngDataUrl}
+					<g transform={transform?.toString()}>
+						<rect
+							x="0"
+							y="0"
+							width={outputWidth}
+							height={outputHeight}
+							fill={getBackgroundColor(colorsOrNull, $mapSettings)}
+							transform={lastRenderedTransformStarScape
+								? `scale(${
+										1 / lastRenderedTransformStarScape.k
+									}) translate(${-lastRenderedTransformStarScape.x},${-lastRenderedTransformStarScape.y})`
+								: undefined}
+						/>
+						<image
+							x="0"
+							y="0"
+							width={outputWidth}
+							height={outputHeight}
+							href={lastRenderedTransformStarScapePngDataUrl}
+							transform={lastRenderedTransformStarScape
+								? `scale(${
+										1 / lastRenderedTransformStarScape.k
+									}) translate(${-lastRenderedTransformStarScape.x},${-lastRenderedTransformStarScape.y})`
+								: undefined}
+						/>
+					</g>
+				{/if}
+				{#if zoomedPngDataUrl}
+					<image x="0" y="0" width={outputWidth} height={outputHeight} href={zoomedPngDataUrl} />
+				{:else if lastRenderedTransformPngDataUrl}
+					<g transform={transform?.toString()}>
+						<image
+							x="0"
+							y="0"
+							width={outputWidth}
+							height={outputHeight}
+							href={lastRenderedTransformPngDataUrl}
+							transform={lastRenderedTransform
+								? `scale(${
+										1 / lastRenderedTransform.k
+									}) translate(${-lastRenderedTransform.x},${-lastRenderedTransform.y})`
+								: undefined}
+						/>
+					</g>
+				{/if}
+			</svg>
+		{/if}
 	{/if}
 </div>

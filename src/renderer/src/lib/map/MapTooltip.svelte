@@ -92,4 +92,7 @@
 			{/each}
 		</ul>
 	{/if}
+	<small class="w-10">
+		{$t('map.click_to_view_system')}
+	</small>
 </div>

@@ -65,6 +65,14 @@ const galacticObjectSchema = z
 			.optional(),
 		planet: z.number().optional(),
 		fleet_presence: z.array(z.number()).default([]),
+		asteroid_belts: z
+			.array(
+				z.object({
+					type: z.string(),
+					inner_radius: z.number(),
+				}),
+			)
+			.default([]),
 		$multiKeys: z
 			.object({
 				planet: preprocessedArray(z.number()).optional(),
@@ -89,6 +97,13 @@ const planetSchema = z.object({
 	species_information: z
 		.record(z.string(), z.object({ num_pops: z.number(), num_enslaved: z.number().optional() }))
 		.optional(),
+	planet_size: z.number(),
+	planet_class: z.string(),
+	entity_name: z.string().optional(),
+	orbit: z.number(),
+	moon_of: z.number().optional(),
+	has_ring: z.boolean().optional(),
+	coordinate: z.object({ x: z.number(), y: z.number() }),
 });
 
 /**

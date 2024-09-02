@@ -24,11 +24,13 @@ export default {
 		select_save: 'Select a save in the top left',
 		loading: 'This could take a few seconds',
 		error: 'Something has gone wrong',
+		click_to_view_system: 'Click to open map',
 	},
 	// various generic messages
 	generic: {
 		enabled: 'Enabled',
 		disabled: 'Disabled',
+		back_button: 'Back',
 		cancel_button: 'Cancel',
 		close_button: 'Close',
 		loading: 'Loading...',
@@ -257,6 +259,7 @@ export default {
 			advancedBorder: 'Advanced Border Settings',
 			starscape: 'Starscape',
 			legend: 'Legend',
+			solarSystemMap: 'Solar System Maps',
 		},
 		mapMode: 'Map Mode',
 		mapModePointOfView: 'Point of View',
@@ -402,6 +405,9 @@ export default {
 		legendBorderStroke: 'Border',
 		legendBorderColor: 'Border Color',
 		legendBackgroundColor: 'Background Color',
+		systemMapOrbitStroke: 'Orbit Lines',
+		systemMapOrbitColor: 'Orbit Lines Color',
+		systemMapPlanetScale: 'Planet Scale',
 		appLocale: 'StellarMaps Language',
 		appLocale_tooltip:
 			'Join the Discord server (link in the top bar) if you want to help translate!',

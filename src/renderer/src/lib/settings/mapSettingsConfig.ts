@@ -693,4 +693,28 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 			},
 		],
 	},
+	{
+		id: 'solarSystemMap',
+		name: 'setting.group.solarSystemMap',
+		settings: [
+			{
+				id: 'systemMapOrbitStroke',
+				type: 'stroke',
+				noSmoothing: true,
+			},
+			{
+				id: 'systemMapOrbitColor',
+				type: 'color',
+				allowedDynamicColors: [],
+				hideIf: (settings) => !settings.systemMapOrbitStroke.enabled,
+			},
+			{
+				id: 'systemMapPlanetScale',
+				type: 'number',
+				optional: true,
+				min: 0,
+				step: 0.1,
+			},
+		],
+	},
 ];
