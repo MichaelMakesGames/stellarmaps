@@ -769,6 +769,10 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'systemMapLabelAsteroidsEnabled',
 				type: 'toggle',
 			},
+			{
+				id: 'systemMapHyperlanesEnabled',
+				type: 'toggle',
+			},
 		],
 	},
 ];

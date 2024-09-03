@@ -67,6 +67,7 @@ export type BooleanMapSettings =
 	| 'systemMapLabelPlanetsEnabled'
 	| 'systemMapLabelMoonsEnabled'
 	| 'systemMapLabelAsteroidsEnabled'
+	| 'systemMapHyperlanesEnabled'
 	| 'terraIncognita'
 	| 'unionLeaderUnderline'
 	| 'unionMode';
@@ -449,6 +450,7 @@ export const defaultMapSettings: MapSettings = {
 	systemMapLabelPlanetsEnabled: false,
 	systemMapLabelMoonsEnabled: false,
 	systemMapLabelAsteroidsEnabled: false,
+	systemMapHyperlanesEnabled: true,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

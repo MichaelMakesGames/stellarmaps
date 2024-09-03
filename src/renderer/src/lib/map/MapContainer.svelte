@@ -486,6 +486,9 @@
 				gameState={gameStateOrNull}
 				system={openedSystem}
 				colors={colorsOrNull}
+				onSystemSelected={(system) => {
+					openedSystem = system;
+				}}
 			/>
 		{/if}
 		<!-- svelte-ignore a11y-mouse-events-have-key-events -->

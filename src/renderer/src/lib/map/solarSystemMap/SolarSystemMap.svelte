@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { select } from 'd3-selection';
-	import { zoom } from 'd3-zoom';
+	import { zoom, zoomIdentity } from 'd3-zoom';
 	import { t } from '../../../intl';
 	import type { GalacticObject, GameState, Planet } from '../../GameState';
 	import { mapSettings, type MapSettings } from '../../settings';
@@ -15,18 +15,64 @@
 	export let id: string;
 	export let exportMode = false;
 	export let previewMode = false;
+	export let onSystemSelected: null | ((system: GalacticObject) => void) = null;
 
 	let svg: SVGElement;
 	let g: SVGGElement;
-	let zoomHandler = zoom().on('zoom', (e) => {
-		if (g) g.setAttribute('transform', e.transform.toString());
-	});
+	let zoomHandler = zoom()
+		.on('zoom', (e) => {
+			if (g) g.setAttribute('transform', e.transform.toString());
+		})
+		.filter(function filter(event: MouseEvent) {
+			// click and drag for middle button only
+			if (event.type === 'mousedown') return event.button === 1;
+			// this is the default implementation
+			return (!event.ctrlKey || event.type === 'wheel') && !event.button;
+		});
 	$: if (svg && !exportMode && !previewMode) {
 		select(svg).call(zoomHandler as any);
+	}
+	function resetZoom() {
+		if (svg) {
+			select(svg).call(zoomHandler.transform as any, zoomIdentity);
+		}
 	}
 
 	$: planets = system.planet
 		.map((planetId) => gameState.planets.planet[planetId])
+		.filter(isDefined);
+
+	$: systemConnections = system.hyperlane
+		.map((h) => {
+			const toSystem = gameState.galactic_object[h.to];
+			if (!toSystem) return null;
+			const theta = Math.atan2(
+				toSystem.coordinate.y - system.coordinate.y,
+				// note: inverted x value
+				system.coordinate.x - toSystem.coordinate.x,
+			);
+			const x = 400 * Math.cos(theta);
+			const y = 400 * Math.sin(theta);
+			const trianglePath = `
+				M ${x + Math.cos(theta + Math.PI / 2) * 30} ${y + Math.sin(theta + Math.PI / 2) * 30}
+				L ${x - Math.cos(theta + Math.PI / 2) * 30} ${y - Math.sin(theta + Math.PI / 2) * 30}
+				L ${x + Math.cos(theta) * 20} ${y + Math.sin(theta) * 20}
+				Z
+			`;
+			const textPathPoints: [[number, number], [number, number]] = [
+				[
+					x - Math.cos(theta) * 5 + Math.cos(theta + Math.PI / 2) * 500,
+					y - Math.sin(theta) * 5 + Math.sin(theta + Math.PI / 2) * 500,
+				],
+				[
+					x - Math.cos(theta) * 5 - Math.cos(theta + Math.PI / 2) * 500,
+					y - Math.sin(theta) * 5 - Math.sin(theta + Math.PI / 2) * 500,
+				],
+			];
+			if (y < 0) textPathPoints.reverse();
+			const textPath = `M ${textPathPoints[0][0]} ${textPathPoints[0][1]} L ${textPathPoints[1][0]} ${textPathPoints[1][1]}`;
+			return { x, y, system: toSystem, trianglePath, textPath };
+		})
 		.filter(isDefined);
 
 	function getPlanetColor(planet: Planet): string | undefined {
@@ -251,6 +297,15 @@
 		return Boolean(planet.is_moon);
 	}
 
+	function getPlanetRadius(planet: Planet, settings: MapSettings) {
+		return Math.sqrt(
+			planet.planet_size *
+				(settings.systemMapPlanetScale ?? 1) *
+				(isStar(planet) ? 2 : 1) *
+				(isMoon(planet) ? 0.5 : 1),
+		);
+	}
+
 	function isPlanetLabeled(planet: Planet, settings: MapSettings) {
 		return (
 			(isColony(planet) && settings.systemMapLabelColoniesEnabled) ||
@@ -265,9 +320,7 @@
 	}
 
 	function getPlanetLabelPathAttributes(planet: Planet, settings: MapSettings) {
-		const r = Math.sqrt(
-			planet.planet_size * (settings.systemMapPlanetScale ?? 1) * (isStar(planet) ? 2 : 1),
-		);
+		const r = getPlanetRadius(planet, settings);
 		let x = -planet.coordinate.x;
 		let y = planet.coordinate.y;
 		let position = settings.systemMapLabelPlanetsPosition;
@@ -314,9 +367,7 @@
 	}
 
 	function getPlanetLabelTextPathAttributes(planet: Planet, settings: MapSettings) {
-		const r = Math.sqrt(
-			planet.planet_size * (settings.systemMapPlanetScale ?? 1) * (isStar(planet) ? 2 : 1),
-		);
+		const r = getPlanetRadius(planet, settings);
 		let position = settings.systemMapLabelPlanetsPosition;
 		if (position === 'orbit' && !planet.orbit) {
 			position = settings.systemMapLabelPlanetsFallbackPosition;
@@ -363,8 +414,8 @@
 		}
 	}
 
-	function getShadowPath(planet: Planet, scale: number) {
-		const r = Math.sqrt(planet.planet_size * scale);
+	function getShadowPath(planet: Planet, settings: MapSettings) {
+		const r = getPlanetRadius(planet, settings);
 		return `
 			M 0 ${r}
 			A ${r} ${r} 0 0 0 0 ${-r}
@@ -468,7 +519,7 @@
 				<Glow enabled filterId="starGlow" let:filter>
 					<circle
 						fill={isBlackHole(planet) && filter ? '#FFFFFF' : getPlanetColor(planet)}
-						r={Math.sqrt(planet.planet_size * 2 * ($mapSettings.systemMapPlanetScale ?? 1))}
+						r={getPlanetRadius(planet, $mapSettings)}
 						cx={-planet.coordinate.x}
 						cy={planet.coordinate.y}
 						{filter}
@@ -477,12 +528,12 @@
 			{:else}
 				<circle
 					fill={getPlanetColor(planet)}
-					r={Math.sqrt(planet.planet_size * ($mapSettings.systemMapPlanetScale ?? 1))}
+					r={getPlanetRadius(planet, $mapSettings)}
 					cx={-planet.coordinate.x}
 					cy={planet.coordinate.y}
 				/>
 				<path
-					d={getShadowPath(planet, $mapSettings.systemMapPlanetScale ?? 1)}
+					d={getShadowPath(planet, $mapSettings)}
 					transform=" translate({-planet.coordinate.x} {planet.coordinate
 						.y}) rotate({getShadowRotation(planet)})"
 					fill="#000000"
@@ -514,5 +565,46 @@
 				</textPath>
 			</text>
 		{/each}
+		{#if $mapSettings.systemMapHyperlanesEnabled}
+			{#each systemConnections as connection}
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<g
+					style={!previewMode && !exportMode ? 'cursor: pointer;' : undefined}
+					fill={colors.dark_teal}
+					on:click={() => {
+						if (previewMode || exportMode) return;
+						resetZoom();
+						onSystemSelected?.(connection.system);
+					}}
+				>
+					<path d={connection.trianglePath} />
+					<defs>
+						<path
+							id="connectionLabelPath{connection.system.id}"
+							pathLength="1"
+							d={connection.textPath}
+						/>
+					</defs>
+					<text
+						font-family={$mapSettings.systemMapLabelPlanetsFont}
+						font-size={$mapSettings.systemMapLabelPlanetsFontSize}
+					>
+						<textPath
+							href="#connectionLabelPath{connection.system.id}"
+							startOffset="0.5"
+							text-anchor="middle"
+							dominant-baseline={connection.y < 0 ? 'hanging' : 'auto'}
+						>
+							{#await localizeText(connection.system.name)}
+								{$t('generic.loading')}
+							{:then systemName}
+								{systemName}
+							{/await}
+						</textPath>
+					</text>
+				</g>
+			{/each}
+		{/if}
 	</g>
 </svg>

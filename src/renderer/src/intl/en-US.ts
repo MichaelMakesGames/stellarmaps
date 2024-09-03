@@ -424,6 +424,7 @@ export default {
 		systemMapLabelPlanetsEnabled: 'Planet Names Enabled',
 		systemMapLabelMoonsEnabled: 'Moon Names Enabled',
 		systemMapLabelAsteroidsEnabled: 'Asteroid Names Enabled',
+		systemMapHyperlanesEnabled: 'Hyperlane Connections Enabled',
 		appLocale: 'StellarMaps Language',
 		appLocale_tooltip:
 			'Join the Discord server (link in the top bar) if you want to help translate!',
