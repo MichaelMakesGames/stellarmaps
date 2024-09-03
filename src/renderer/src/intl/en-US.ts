@@ -242,6 +242,13 @@ export default {
 			populationSpecies: 'Species Population',
 			fleetPowerAlliedAndHostile: 'Fleet Power (Allied and Hostile)',
 		},
+		system_map_label_position: {
+			top: 'Top',
+			bottom: 'Bottom',
+			right: 'Right',
+			left: 'Left',
+			orbit: 'Orbit',
+		},
 	},
 	// labels and tooltips for various settings
 	setting: {
@@ -408,6 +415,15 @@ export default {
 		systemMapOrbitStroke: 'Orbit Lines',
 		systemMapOrbitColor: 'Orbit Lines Color',
 		systemMapPlanetScale: 'Planet Scale',
+		systemMapLabelPlanetsFont: 'Planet Name Font',
+		systemMapLabelPlanetsFontSize: 'Planet Name Font Size',
+		systemMapLabelPlanetsPosition: 'Planet Name Position',
+		systemMapLabelPlanetsFallbackPosition: 'Planet Name Fallback Position',
+		systemMapLabelColoniesEnabled: 'Colony Names Enabled',
+		systemMapLabelStarsEnabled: 'Star Names Enabled',
+		systemMapLabelPlanetsEnabled: 'Planet Names Enabled',
+		systemMapLabelMoonsEnabled: 'Moon Names Enabled',
+		systemMapLabelAsteroidsEnabled: 'Asteroid Names Enabled',
 		appLocale: 'StellarMaps Language',
 		appLocale_tooltip:
 			'Join the Discord server (link in the top bar) if you want to help translate!',

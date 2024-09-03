@@ -10,6 +10,7 @@ export type NumberMapSettings =
 	| 'borderFillFade'
 	| 'claimVoidBorderThreshold'
 	| 'legendFontSize'
+	| 'systemMapLabelPlanetsFontSize'
 	| 'systemNamesFontSize'
 	| 'terraIncognitaBrightness'
 	| 'unionLeaderSymbolSize'
@@ -34,6 +35,9 @@ export type StringMapSettings =
 	| 'mapMode'
 	| 'mapModePointOfView'
 	| 'mapModeSpecies'
+	| 'systemMapLabelPlanetsFont'
+	| 'systemMapLabelPlanetsPosition'
+	| 'systemMapLabelPlanetsFallbackPosition'
 	| 'systemNames'
 	| 'systemNamesFont'
 	| 'terraIncognitaPerspectiveCountry'
@@ -58,6 +62,11 @@ export type BooleanMapSettings =
 	| 'starScapeDust'
 	| 'starScapeNebula'
 	| 'starScapeStars'
+	| 'systemMapLabelColoniesEnabled'
+	| 'systemMapLabelStarsEnabled'
+	| 'systemMapLabelPlanetsEnabled'
+	| 'systemMapLabelMoonsEnabled'
+	| 'systemMapLabelAsteroidsEnabled'
 	| 'terraIncognita'
 	| 'unionLeaderUnderline'
 	| 'unionMode';
@@ -431,6 +440,15 @@ export const defaultMapSettings: MapSettings = {
 		width: 0.5,
 	},
 	systemMapPlanetScale: 1,
+	systemMapLabelPlanetsFont: 'Orbitron',
+	systemMapLabelPlanetsFontSize: 10,
+	systemMapLabelPlanetsPosition: 'right',
+	systemMapLabelPlanetsFallbackPosition: 'bottom',
+	systemMapLabelColoniesEnabled: true,
+	systemMapLabelStarsEnabled: true,
+	systemMapLabelPlanetsEnabled: false,
+	systemMapLabelMoonsEnabled: false,
+	systemMapLabelAsteroidsEnabled: false,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

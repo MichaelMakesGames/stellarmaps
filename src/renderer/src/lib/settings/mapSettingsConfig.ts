@@ -715,6 +715,60 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				min: 0,
 				step: 0.1,
 			},
+			{
+				id: 'systemMapLabelPlanetsFont',
+				type: 'select',
+				options: [{ id: 'Orbitron', literalName: 'Orbitron' }],
+				dynamicOptions: fontOptions,
+			},
+			{
+				id: 'systemMapLabelPlanetsFontSize',
+				type: 'number',
+				min: 0,
+				step: 1,
+			},
+			{
+				id: 'systemMapLabelPlanetsPosition',
+				type: 'select',
+				options: [
+					{ id: 'top', name: 'option.system_map_label_position.top' },
+					{ id: 'bottom', name: 'option.system_map_label_position.bottom' },
+					{ id: 'left', name: 'option.system_map_label_position.left' },
+					{ id: 'right', name: 'option.system_map_label_position.right' },
+					{ id: 'orbit', name: 'option.system_map_label_position.orbit' },
+				],
+			},
+			{
+				id: 'systemMapLabelPlanetsFallbackPosition',
+				type: 'select',
+				hideIf: (settings) => settings.systemMapLabelPlanetsPosition !== 'orbit',
+				options: [
+					{ id: 'top', name: 'option.system_map_label_position.top' },
+					{ id: 'bottom', name: 'option.system_map_label_position.bottom' },
+					{ id: 'left', name: 'option.system_map_label_position.left' },
+					{ id: 'right', name: 'option.system_map_label_position.right' },
+				],
+			},
+			{
+				id: 'systemMapLabelColoniesEnabled',
+				type: 'toggle',
+			},
+			{
+				id: 'systemMapLabelStarsEnabled',
+				type: 'toggle',
+			},
+			{
+				id: 'systemMapLabelPlanetsEnabled',
+				type: 'toggle',
+			},
+			{
+				id: 'systemMapLabelMoonsEnabled',
+				type: 'toggle',
+			},
+			{
+				id: 'systemMapLabelAsteroidsEnabled',
+				type: 'toggle',
+			},
 		],
 	},
 ];

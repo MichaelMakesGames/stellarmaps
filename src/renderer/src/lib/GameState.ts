@@ -101,6 +101,7 @@ const planetSchema = z.object({
 	planet_class: z.string(),
 	entity_name: z.string().optional(),
 	orbit: z.number(),
+	is_moon: z.boolean().optional(),
 	moon_of: z.number().optional(),
 	has_ring: z.boolean().optional(),
 	coordinate: z.object({ x: z.number(), y: z.number() }),

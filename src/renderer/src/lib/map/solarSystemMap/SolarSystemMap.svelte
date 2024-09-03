@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { select } from 'd3-selection';
 	import { zoom } from 'd3-zoom';
+	import { t } from '../../../intl';
 	import type { GalacticObject, GameState, Planet } from '../../GameState';
-	import { mapSettings } from '../../settings';
+	import { mapSettings, type MapSettings } from '../../settings';
 	import { isDefined } from '../../utils';
+	import { localizeText } from '../data/locUtils';
 	import Glow from '../Glow.svelte';
 	import { getStrokeAttributes, getStrokeColorAttributes } from '../mapUtils';
 
@@ -241,6 +243,126 @@
 		return planet.planet_class.includes('black_hole');
 	}
 
+	function isColony(planet: Planet) {
+		return planet.owner != null;
+	}
+
+	function isMoon(planet: Planet) {
+		return Boolean(planet.is_moon);
+	}
+
+	function isPlanetLabeled(planet: Planet, settings: MapSettings) {
+		return (
+			(isColony(planet) && settings.systemMapLabelColoniesEnabled) ||
+			(isStar(planet) && settings.systemMapLabelStarsEnabled) ||
+			(isMoon(planet) && settings.systemMapLabelMoonsEnabled) ||
+			(isAsteroid(planet) && settings.systemMapLabelAsteroidsEnabled) ||
+			(!isStar(planet) &&
+				!isMoon(planet) &&
+				!isAsteroid(planet) &&
+				settings.systemMapLabelPlanetsEnabled)
+		);
+	}
+
+	function getPlanetLabelPathAttributes(planet: Planet, settings: MapSettings) {
+		const r = Math.sqrt(
+			planet.planet_size * (settings.systemMapPlanetScale ?? 1) * (isStar(planet) ? 2 : 1),
+		);
+		let x = -planet.coordinate.x;
+		let y = planet.coordinate.y;
+		let position = settings.systemMapLabelPlanetsPosition;
+		if (position === 'orbit' && !planet.orbit) {
+			position = settings.systemMapLabelPlanetsFallbackPosition;
+		}
+		switch (position) {
+			case 'top': {
+				y -= r + settings.systemMapLabelPlanetsFontSize / 2;
+				x -= 500;
+				return { d: `M ${x} ${y} h 1000`, pathLength: 1 };
+			}
+			case 'bottom': {
+				y += r + settings.systemMapLabelPlanetsFontSize / 2;
+				x -= 500;
+				return { d: `M ${x} ${y} h 1000`, pathLength: 1 };
+			}
+			case 'right': {
+				x += r + settings.systemMapLabelPlanetsFontSize / 2;
+				return { d: `M ${x} ${y} h 1000`, pathLength: 1 };
+			}
+			case 'left': {
+				x -= r + settings.systemMapLabelPlanetsFontSize / 2 + 1000;
+				return { d: `M ${x} ${y} h 1000`, pathLength: 1 };
+			}
+			case 'orbit': {
+				const cx = -(planets.find((p) => p.id === planet.moon_of)?.coordinate.x ?? 0);
+				const cy = planets.find((p) => p.id === planet.moon_of)?.coordinate.y ?? 0;
+				const orbitRadius = planet.orbit;
+				if (cy > y) {
+					return {
+						d: `M ${x} ${y} A ${orbitRadius} ${orbitRadius} 0 0 1 ${cx + (cx - x)} ${cy + (cy - y)}`,
+					};
+				} else {
+					return {
+						d: `M ${x} ${y} A ${orbitRadius} ${orbitRadius} 0 0 0 ${cx + (cx - x)} ${cy + (cy - y)}`,
+					};
+				}
+			}
+			default: {
+				throw new Error(`Unhandled label position: ${position}`);
+			}
+		}
+	}
+
+	function getPlanetLabelTextPathAttributes(planet: Planet, settings: MapSettings) {
+		const r = Math.sqrt(
+			planet.planet_size * (settings.systemMapPlanetScale ?? 1) * (isStar(planet) ? 2 : 1),
+		);
+		let position = settings.systemMapLabelPlanetsPosition;
+		if (position === 'orbit' && !planet.orbit) {
+			position = settings.systemMapLabelPlanetsFallbackPosition;
+		}
+		switch (position) {
+			case 'top': {
+				return {
+					startOffset: 0.5,
+					'dominant-baseline': 'auto',
+					'text-anchor': 'middle',
+				};
+			}
+			case 'bottom': {
+				return {
+					startOffset: 0.5,
+					'dominant-baseline': 'hanging',
+					'text-anchor': 'middle',
+				};
+			}
+			case 'right': {
+				return {
+					startOffset: 0,
+					'dominant-baseline': 'middle',
+					'text-anchor': 'start',
+				};
+			}
+			case 'left': {
+				return {
+					startOffset: 1,
+					'dominant-baseline': 'middle',
+					'text-anchor': 'end',
+				};
+			}
+			case 'orbit': {
+				return {
+					startOffset: r + settings.systemMapLabelPlanetsFontSize / 2,
+					'dominant-baseline': 'auto',
+					'text-anchor': 'start',
+				};
+			}
+			default: {
+				throw new Error(`Unhandled label position: ${position}`);
+			}
+		}
+	}
+
 	function getShadowPath(planet: Planet, scale: number) {
 		const r = Math.sqrt(planet.planet_size * scale);
 		return `
@@ -286,7 +408,7 @@
 	</defs>
 	<g bind:this={g}>
 		{#if $mapSettings.systemMapOrbitStroke.enabled}
-			{#each planets.filter((p) => !isAsteroid(p)) as planet (planet.id)}
+			{#each planets.filter((p) => !isAsteroid(p) && p.orbit > 0) as planet (planet.id)}
 				<Glow enabled={$mapSettings.systemMapOrbitStroke.glow}>
 					<circle
 						cx={-(planets.find((p) => p.id === planet.moon_of)?.coordinate.x ?? 0)}
@@ -367,6 +489,30 @@
 					opacity={0.5}
 				/>
 			{/if}
+		{/each}
+		{#each planets.filter((p) => isPlanetLabeled(p, $mapSettings)) as planet (planet.id)}
+			<defs>
+				<path
+					id="planetLabelPath{planet.id}"
+					{...getPlanetLabelPathAttributes(planet, $mapSettings)}
+				/>
+			</defs>
+			<text
+				font-family={$mapSettings.systemMapLabelPlanetsFont}
+				font-size={$mapSettings.systemMapLabelPlanetsFontSize}
+				fill="#FFFFFF"
+			>
+				<textPath
+					href="#planetLabelPath{planet.id}"
+					{...getPlanetLabelTextPathAttributes(planet, $mapSettings)}
+				>
+					{#await localizeText(planet.name)}
+						{$t('generic.loading')}
+					{:then planetName}
+						{planetName}
+					{/await}
+				</textPath>
+			</text>
 		{/each}
 	</g>
 </svg>
