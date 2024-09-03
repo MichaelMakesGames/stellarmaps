@@ -1,5 +1,8 @@
 ﻿name: 'debug_build'
-on: workflow_dispatch
+on:
+  push:
+    branches:
+      - main
 
 # This workflow will build your tauri app without uploading it anywhere.
 
@@ -8,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [windows-latest]
+        platform: [macos-latest, ubuntu-20.04, windows-latest]
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -43,3 +46,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: "${{ join(fromJSON(steps.build.outputs.artifactPaths), '\n') }}"
+          name: 'stellarmaps-debug-${{ matrix.platform }}'
