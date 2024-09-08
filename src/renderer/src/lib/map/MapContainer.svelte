@@ -445,7 +445,14 @@
 	{/if}
 	{#if tooltip != null && openedSystem == null && !tooltip.hidden && !zooming && !resizing}
 		<div class="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
-			<MapTooltip x={tooltip.x} y={tooltip.y} system={tooltip.system} gameState={gameStateOrNull} />
+			<MapTooltip
+				x={tooltip.x}
+				y={tooltip.y}
+				system={tooltip.system}
+				processedSystem={dataOrNull?.systems.find((s) => s.id === tooltip?.system.id)}
+				gameState={gameStateOrNull}
+				colors={colorsOrNull ?? {}}
+			/>
 		</div>
 	{/if}
 	{#if !$gameStatePromise}

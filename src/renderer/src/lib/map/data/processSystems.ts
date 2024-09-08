@@ -1,8 +1,33 @@
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import { isDefined } from '../../utils';
-import { defaultCountryMapModeInfo, getCountryMapModeInfo, mapModes } from './mapModes';
+import {
+	defaultCountryMapModeInfo,
+	getCountryMapModeInfo,
+	type MapModeCountryInfo,
+	mapModes,
+	type MapModeSystemValue,
+} from './mapModes';
 import type processSystemOwnership from './processSystemOwnership';
+
+export interface ProcessedSystem extends MapModeCountryInfo {
+	id: number;
+	isColonized: boolean;
+	isSectorCapital: boolean;
+	isCountryCapital: boolean;
+	isOwned: boolean;
+	ownerIsKnown: boolean;
+	systemIsKnown: boolean;
+	hasWormhole: boolean;
+	hasGateway: boolean;
+	hasLGate: boolean;
+	hasShroudTunnel: boolean;
+	x: number;
+	y: number;
+	name: string;
+	mapModeValues?: MapModeSystemValue[];
+	mapModeTotalValue?: number;
+}
 
 export const processSystemsDeps = [
 	'unionMode',
@@ -39,7 +64,7 @@ export default function processSystems(
 	const selectedSpecies =
 		selectedSpeciesId == null ? null : gameState.species_db[selectedSpeciesId];
 
-	const systems = Object.values(gameState.galactic_object).map((system) => {
+	const systems = Object.values(gameState.galactic_object).map<ProcessedSystem>((system) => {
 		const countryId = systemIdToCountry[system.id];
 		const country = countryId != null ? gameState.country[countryId] : null;
 		const mapModeInfo =

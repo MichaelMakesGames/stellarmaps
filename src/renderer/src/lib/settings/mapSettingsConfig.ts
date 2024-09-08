@@ -1,3 +1,4 @@
+import { mapModes } from '../map/data/mapModes';
 import { countryOptions } from './options/countryOptions';
 import { fontOptions } from './options/fontOptions';
 import { glyphOptions } from './options/glyphOptions';
@@ -14,14 +15,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 			{
 				id: 'mapMode',
 				type: 'select',
-				options: [
-					{ id: 'default', name: 'option.map_mode.default' },
-					{ id: 'wars', name: 'option.map_mode.wars' },
-					{ id: 'population', name: 'option.map_mode.population' },
-					{ id: 'populationByCountry', name: 'option.map_mode.populationByCountry' },
-					{ id: 'populationSpecies', name: 'option.map_mode.populationSpecies' },
-					{ id: 'fleetPowerAlliedAndHostile', name: 'option.map_mode.fleetPowerAlliedAndHostile' },
-				],
+				options: Object.values(mapModes),
 				requiresReprocessing: true,
 			},
 			{

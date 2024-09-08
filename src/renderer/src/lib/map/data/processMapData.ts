@@ -200,12 +200,13 @@ export default async function processMapData(
 		knownWormholes,
 		getSystemCoordinates,
 	);
-	const legend = timeIt(
+	const legend = await timeItAsync(
 		'legend',
 		cached(processLegend),
 		gameState,
 		pickSettings(settings, processLegendDeps),
 		borders,
+		systems,
 	);
 	const emblems = await emblemsPromise;
 

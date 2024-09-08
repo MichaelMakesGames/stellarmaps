@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { mapSettings } from '../settings';
 	import type { MapData } from './data/processMapData';
+	import Icons from './Icons.svelte';
 	import {
 		getFillColorAttributes,
 		getStrokeAttributes,
@@ -33,6 +34,7 @@
 			{#if colors}
 				<OccupationPatternDefs {colors} {data} />
 			{/if}
+			<Icons />
 		</defs>
 		<rect
 			x={borderWidth / 2}
@@ -74,6 +76,20 @@
 							countryColors: item.symbol,
 							colorStack: [$mapSettings.borderFillColor],
 							colors,
+						})}
+					/>
+				{/if}
+				{#if colors && item.symbol.type === 'icon'}
+					<use
+						href="#{item.symbol.icon}"
+						x={0}
+						y={0}
+						width={symbolSize}
+						height={symbolSize}
+						{...getFillColorAttributes({
+							mapSettings: $mapSettings,
+							colors,
+							colorStack: [item.symbol.color],
 						})}
 					/>
 				{/if}

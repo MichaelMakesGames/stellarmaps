@@ -25,9 +25,13 @@ export default {
 		loading: 'This could take a few seconds',
 		error: 'Something has gone wrong',
 		click_to_view_system: 'Click to open map',
+		tooltip: {
+			colonies: 'Colonies',
+		},
 	},
 	// various generic messages
 	generic: {
+		NEVER: 'THIS IS A BUG', // this message will never be displayed
 		enabled: 'Enabled',
 		disabled: 'Disabled',
 		back_button: 'Back',
@@ -234,14 +238,6 @@ export default {
 			colonized: 'Colonized Systems',
 			all: 'All Systems',
 		},
-		map_mode: {
-			default: 'Empires',
-			wars: 'Wars',
-			population: 'Population',
-			populationByCountry: 'Population (Country Color)',
-			populationSpecies: 'Species Population',
-			fleetPowerAlliedAndHostile: 'Fleet Power (Allied and Hostile)',
-		},
 		system_map_label_position: {
 			top: 'Top',
 			bottom: 'Bottom',
@@ -446,11 +442,37 @@ export default {
 		common: {
 			selected_country: 'Selected Country',
 		},
+		default: {
+			name: 'Empires',
+		},
 		wars: {
+			name: 'Wars',
+			tooltip_label: 'War Status',
 			hostile: 'Hostile',
 			ally: 'Ally in Active War',
 			at_war: 'At War (Uninvolved)',
 			at_peace: 'At Peace',
+		},
+		population: {
+			name_total: 'Total Population',
+			name_by_country: 'Population by Country',
+			name_species: 'Species Population',
+			tooltip_label: 'Population',
+			total: 'Total Population',
+			country: 'Population (Colored by Country)',
+			free_species: 'Free {species}',
+			enslaved_species: 'Enslaved {species}',
+			other_species: 'Other Species',
+		},
+		fleet_power: {
+			name_allied_and_hostile: 'Allied and Hostile Fleet Power',
+			tooltip_label: 'Fleet Power',
+			own_fleet: 'Own Fleet',
+			own_station: 'Own Station',
+			allied_fleet: 'Allied Fleet',
+			allied_station: 'Allied Station',
+			hostile_fleet: 'Hostile Fleet',
+			hostile_station: 'Hostile Station',
 		},
 	},
 	legend: {

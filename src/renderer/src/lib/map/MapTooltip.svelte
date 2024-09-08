@@ -1,16 +1,22 @@
 <script lang="ts">
 	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	import { onDestroy, onMount } from 'svelte';
-	import { t } from '../../intl';
+	import { locale, t } from '../../intl';
 	import type { GalacticObject, GameState } from '../GameState';
 	import HeroiconUserMicro from '../icons/HeroiconUserMicro.svelte';
+	import { mapSettings } from '../settings';
 	import { isDefined } from '../utils';
 	import { localizeText } from './data/locUtils';
+	import { mapModes, type MapModeSystemValue } from './data/mapModes';
+	import type { ProcessedSystem } from './data/processSystems';
+	import { resolveColor } from './mapUtils';
 
 	export let x: number;
 	export let y: number;
 	export let system: GalacticObject;
+	export let processedSystem: ProcessedSystem | null | undefined;
 	export let gameState: null | GameState;
+	export let colors: Record<string, string>;
 
 	let targetEl: HTMLDivElement;
 	let popupEl: HTMLDivElement;
@@ -53,6 +59,16 @@
 		?.map((planetId) => gameState?.planets.planet[planetId])
 		.filter(isDefined)
 		.sort((a, b) => (b?.num_sapient_pops ?? 0) - (a?.num_sapient_pops ?? 0));
+
+	async function localizeValueLabel(value: MapModeSystemValue) {
+		const values: Record<string, string> = {};
+		for (const [k, v] of Object.entries(value.legendLabelData ?? {})) {
+			values[k] = await localizeText(v);
+		}
+		return typeof value.legendLabel === 'string'
+			? $t(value.legendLabel, values)
+			: await localizeText(value.legendLabel);
+	}
 </script>
 
 <div
@@ -69,13 +85,60 @@
 	bind:this={popupEl}
 >
 	<div class="arrow bg-surface-600" bind:this={arrowEl} />
-	{#await localizeText(system.name)}
-		{$t('generic.loading')}
-	{:then name}
-		{name}
-	{/await}
-	{#if planets}
-		<ul class="ps-3">
+	<strong>
+		{#await localizeText(system.name)}
+			{$t('generic.loading')}
+		{:then name}
+			{name}
+		{/await}
+	</strong>
+	{#if processedSystem?.mapModeCountryLabel}
+		<div class="flex flex-row justify-between gap-1 text-sm">
+			<span>
+				{$t(mapModes[$mapSettings.mapMode]?.tooltipLabel ?? 'generic.NEVER')}:
+			</span>
+			<strong>{$t(processedSystem.mapModeCountryLabel)}</strong>
+		</div>
+	{/if}
+	{#if processedSystem?.mapModeValues?.length}
+		<strong class="mt-2 block">
+			{$t(mapModes[$mapSettings.mapMode]?.tooltipLabel ?? 'generic.NEVER')}
+		</strong>
+		<ul class="text-sm">
+			{#each processedSystem.mapModeValues.filter((v) => v.value) as systemValue}
+				<li class="flex flex-row justify-between gap-3">
+					<span>
+						<svg class="inline-block h-3 w-3" viewBox="-1 -1 2 2">
+							<circle
+								r="0.875"
+								fill={resolveColor({
+									mapSettings: $mapSettings,
+									colorStack: [systemValue.color],
+									colors,
+								})}
+								stroke={colors.black}
+								stroke-width="0.125"
+							/>
+						</svg>
+						{#await localizeValueLabel(systemValue)}
+							{$t('generic.loading')}
+						{:then label}
+							{label}
+						{/await}
+					</span>
+					<strong>
+						{new Intl.NumberFormat($locale, {
+							notation: 'compact',
+							maximumFractionDigits: 1,
+						}).format(systemValue.value)}
+					</strong>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+	{#if planets?.length}
+		<strong class="mt-2 block">{$t('map.tooltip.colonies')}</strong>
+		<ul class="ps-4">
 			{#each planets as planet}
 				<li class="flex flex-row justify-between text-sm">
 					<span>
@@ -92,7 +155,7 @@
 			{/each}
 		</ul>
 	{/if}
-	<small class="w-10">
+	<div class="text-sm">
 		{$t('map.click_to_view_system')}
-	</small>
+	</div>
 </div>

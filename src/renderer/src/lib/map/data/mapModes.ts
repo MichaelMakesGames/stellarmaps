@@ -1,17 +1,20 @@
 import type { MessageID } from '../../../intl';
-import type { Country, GalacticObject, GameState, Species } from '../../GameState';
+import type { Country, GalacticObject, GameState, LocalizedText, Species } from '../../GameState';
 import type { ColorSetting, MapSettings } from '../../settings';
 import { isDefined, parseNumberEntry } from '../../utils';
 import { getUnionLeaderId } from './utils';
 
 interface MapMode {
+	id: string;
+	name: MessageID;
+	tooltipLabel?: MessageID;
 	country?: MapModeBorder[];
 	system?: MapModeSystem;
 }
 
 interface MapModeBorder {
 	label: MessageID | null;
-	showInLegend: 'always' | 'never' | 'exists';
+	showInLegend: 'always' | 'never';
 	primaryColor: string;
 	secondaryColor?: string;
 	matches: (gameState: GameState, countryId: number, povCountryId?: number) => boolean;
@@ -26,15 +29,24 @@ interface MapModeSystem {
 	) => MapModeSystemValue[];
 }
 
-interface MapModeSystemValue {
+export interface MapModeSystemValue {
 	value: number;
 	color: ColorSetting;
-	// TODO tooltip
-	// TODO legend
+	legendColor?: ColorSetting;
+	legendIndex: number;
+	legendLabel: MessageID | LocalizedText;
+	legendLabelData?: Record<string, LocalizedText>;
 }
 
 export const mapModes: Record<string, MapMode> = {
+	default: {
+		id: 'default',
+		name: 'map_mode.default.name',
+	},
 	wars: {
+		id: 'wars',
+		name: 'map_mode.wars.name',
+		tooltipLabel: 'map_mode.wars.tooltip_label',
 		country: [
 			{
 				label: 'map_mode.common.selected_country',
@@ -81,6 +93,9 @@ export const mapModes: Record<string, MapMode> = {
 		],
 	},
 	population: {
+		id: 'population',
+		name: 'map_mode.population.name_total',
+		tooltipLabel: 'map_mode.population.tooltip_label',
 		country: [
 			{
 				label: 'map_mode.common.selected_country',
@@ -102,12 +117,17 @@ export const mapModes: Record<string, MapMode> = {
 					{
 						value: population,
 						color: { color: 'intense_blue', colorAdjustments: [{ type: 'OPACITY', value: 0.5 }] },
+						legendIndex: 0,
+						legendLabel: 'map_mode.population.total',
 					},
 				];
 			},
 		},
 	},
 	populationByCountry: {
+		id: 'populationByCountry',
+		name: 'map_mode.population.name_by_country',
+		tooltipLabel: 'map_mode.population.tooltip_label',
 		country: [
 			{
 				label: null,
@@ -142,6 +162,9 @@ export const mapModes: Record<string, MapMode> = {
 									{ type: 'OPACITY', value: 0.75 },
 								],
 							},
+							legendColor: { color: 'white', colorAdjustments: [] },
+							legendIndex: 0,
+							legendLabel: 'map_mode.population.country',
 						};
 					})
 					.sort((a, b) => b.value - a.value);
@@ -149,6 +172,9 @@ export const mapModes: Record<string, MapMode> = {
 		},
 	},
 	populationSpecies: {
+		id: 'populationSpecies',
+		name: 'map_mode.population.name_species',
+		tooltipLabel: 'map_mode.population.tooltip_label',
 		country: [
 			{
 				label: null,
@@ -193,20 +219,31 @@ export const mapModes: Record<string, MapMode> = {
 					{
 						value: freePopulation,
 						color: { color: 'intense_blue', colorAdjustments: [] },
+						legendIndex: 0,
+						legendLabel: 'map_mode.population.free_species',
+						legendLabelData: { species: selectedSpecies?.name ?? { key: 'UNKNOWN' } },
 					},
 					{
 						value: enslavedPopulation,
 						color: { color: 'intense_red', colorAdjustments: [] },
+						legendIndex: 1,
+						legendLabel: 'map_mode.population.enslaved_species',
+						legendLabelData: { species: selectedSpecies?.name ?? { key: 'UNKNOWN' } },
 					},
 					{
 						value: population - freePopulation - enslavedPopulation,
 						color: { color: 'dark_grey', colorAdjustments: [] },
+						legendIndex: 2,
+						legendLabel: 'map_mode.population.other_species',
 					},
 				];
 			},
 		},
 	},
 	fleetPowerAlliedAndHostile: {
+		id: 'fleetPowerAlliedAndHostile',
+		name: 'map_mode.fleet_power.name_allied_and_hostile',
+		tooltipLabel: 'map_mode.fleet_power.tooltip_label',
 		country: [
 			{
 				label: null,
@@ -266,26 +303,38 @@ export const mapModes: Record<string, MapMode> = {
 					{
 						value: ownMobileFleetPower,
 						color: { color: 'dark_teal', colorAdjustments: [{ type: 'LIGHTEN', value: 0.0 }] },
+						legendIndex: 0,
+						legendLabel: 'map_mode.fleet_power.own_fleet',
 					},
 					{
 						value: ownStationFleetPower,
 						color: { color: 'dark_teal', colorAdjustments: [{ type: 'DARKEN', value: 0.2 }] },
+						legendIndex: 1,
+						legendLabel: 'map_mode.fleet_power.own_station',
 					},
 					{
 						value: alliedMobileFleetPower,
 						color: { color: 'intense_blue', colorAdjustments: [{ type: 'LIGHTEN', value: 0.0 }] },
+						legendIndex: 2,
+						legendLabel: 'map_mode.fleet_power.allied_fleet',
 					},
 					{
 						value: alliedStationFleetPower,
 						color: { color: 'intense_blue', colorAdjustments: [{ type: 'DARKEN', value: 0.2 }] },
+						legendIndex: 3,
+						legendLabel: 'map_mode.fleet_power.allied_station',
 					},
 					{
 						value: hostileMobileFleetPower,
 						color: { color: 'intense_red', colorAdjustments: [{ type: 'LIGHTEN', value: 0.0 }] },
+						legendIndex: 4,
+						legendLabel: 'map_mode.fleet_power.hostile_fleet',
 					},
 					{
 						value: hostileStationFleetPower,
 						color: { color: 'intense_red', colorAdjustments: [{ type: 'DARKEN', value: 0.2 }] },
+						legendIndex: 5,
+						legendLabel: 'map_mode.fleet_power.hostile_station',
 					},
 				];
 			},
@@ -293,14 +342,13 @@ export const mapModes: Record<string, MapMode> = {
 	},
 };
 
-interface CountryMapModeInfo {
+export interface MapModeCountryInfo {
 	primaryColor: string;
 	secondaryColor: string;
-	mapModeIndex?: number;
-	// TODO tooltip
+	mapModeCountryLabel?: MessageID;
 }
 
-export const defaultCountryMapModeInfo: CountryMapModeInfo = {
+export const defaultCountryMapModeInfo: MapModeCountryInfo = {
 	primaryColor: 'black',
 	secondaryColor: 'black',
 };
@@ -318,7 +366,7 @@ export function getCountryMapModeInfo(
 		| 'unionSubjects'
 		| 'unionFederationsColor'
 	>,
-): CountryMapModeInfo {
+): MapModeCountryInfo {
 	const povCountryId =
 		settings.mapModePointOfView === 'player'
 			? gameState.player.filter((p) => gameState.country[p.country])[0]?.country
@@ -332,6 +380,7 @@ export function getCountryMapModeInfo(
 			return {
 				primaryColor: match.primaryColor,
 				secondaryColor: match.secondaryColor ?? match.primaryColor,
+				mapModeCountryLabel: match.showInLegend === 'always' ? match.label ?? undefined : undefined,
 			};
 		} else {
 			return defaultCountryMapModeInfo;
@@ -341,7 +390,6 @@ export function getCountryMapModeInfo(
 			gameState.country[
 				getUnionLeaderId(countryId, gameState, settings, ['joinedBorders', 'separateBorders'])
 			]?.flag?.colors;
-		// TODO tooltips including country name, federation status, subject status
 		return { primaryColor: colors?.[0] ?? 'black', secondaryColor: colors?.[1] ?? 'black' };
 	}
 }
