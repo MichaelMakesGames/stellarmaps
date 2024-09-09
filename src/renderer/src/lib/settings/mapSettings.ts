@@ -369,7 +369,7 @@ export const defaultMapSettings: MapSettings = {
 		colorAdjustments: [],
 	},
 	voronoiGridSize: 30,
-	borderGap: null,
+	borderGap: 2,
 	hyperlaneSensitiveBorders: true,
 	claimVoidBorderThreshold: 0.6,
 	claimVoidMaxSize: 1000,
