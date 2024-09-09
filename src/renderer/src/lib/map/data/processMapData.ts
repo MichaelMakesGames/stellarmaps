@@ -36,7 +36,7 @@ export default async function processMapData(
 	const settings = { ...rawSettings };
 	if (settings.hyperlaneMetroStyle) settings.alignStarsToGrid = true;
 	if (settings.alignStarsToGrid) settings.hyperlaneSensitiveBorders = false;
-	if (settings.mapMode !== 'default') settings.unionMode = false;
+	settings.unionMode = settings.mapMode === 'unions';
 
 	// get these started right away; await just before needed
 	const emblemsPromise = timeItAsync(

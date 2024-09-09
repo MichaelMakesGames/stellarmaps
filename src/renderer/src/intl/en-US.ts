@@ -292,8 +292,8 @@ export default {
 		sectorCoreBorderColor: 'Core Sector Border Color',
 		sectorFrontierBorderStroke: 'Frontier Sector Borders',
 		sectorFrontierBorderColor: 'Frontier Sector Border Color',
-		unionBorderStroke: 'Union Borders',
-		unionBorderColor: 'Union Border Color',
+		unionBorderStroke: 'Union Joined Borders',
+		unionBorderColor: 'Union Joined Border Color',
 		unionMode: 'Union Mode',
 		unionSubjects: 'Subjects',
 		unionHegemonies: 'Hegemony Federations',
@@ -444,6 +444,9 @@ export default {
 		},
 		default: {
 			name: 'Empires',
+		},
+		unions: {
+			name: 'Unions',
 		},
 		wars: {
 			name: 'Wars',

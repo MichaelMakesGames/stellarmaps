@@ -45,6 +45,10 @@ export const mapModes: Record<string, MapMode> = {
 		id: 'default',
 		name: 'map_mode.default.name',
 	},
+	unions: {
+		id: 'unions',
+		name: 'map_mode.unions.name',
+	},
 	wars: {
 		id: 'wars',
 		name: 'map_mode.wars.name',

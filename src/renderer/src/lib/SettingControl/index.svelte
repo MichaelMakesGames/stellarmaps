@@ -96,7 +96,7 @@
 				</div>
 			{/if}
 			<div class="grow" />
-			{#if config.type === 'stroke' || config.type === 'icon'}
+			{#if (config.type === 'stroke' && !config.noDisable) || config.type === 'icon'}
 				<div class="relative top-1 inline-block">
 					<SlideToggle
 						name={config.id}

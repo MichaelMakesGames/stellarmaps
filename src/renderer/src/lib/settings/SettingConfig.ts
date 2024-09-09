@@ -66,6 +66,7 @@ export interface SettingConfigStroke<Settings, ID> extends SettingConfigBase<Set
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<StrokeSetting>;
 	noSmoothing?: boolean;
 	noDashed?: boolean;
+	noDisable?: boolean;
 }
 
 export interface SettingConfigIcon<Settings, ID> extends SettingConfigBase<Settings, ID> {

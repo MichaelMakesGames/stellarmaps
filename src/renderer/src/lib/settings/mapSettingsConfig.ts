@@ -116,26 +116,6 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				hideIf: (settings) =>
 					!settings.sectorTypeBorderStyles || !settings.sectorBorderStroke.enabled,
 			},
-			{
-				id: 'unionBorderStroke',
-				type: 'stroke',
-				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
-				hideIf: (settings) =>
-					!settings.unionMode ||
-					![settings.unionFederations, settings.unionHegemonies, settings.unionSubjects].includes(
-						'joinedBorders',
-					),
-			},
-			{
-				id: 'unionBorderColor',
-				type: 'color',
-				hideIf: (settings) =>
-					!settings.unionBorderStroke.enabled ||
-					!settings.unionMode ||
-					![settings.unionFederations, settings.unionHegemonies, settings.unionSubjects].includes(
-						'joinedBorders',
-					),
-			},
 		],
 	},
 	{
@@ -143,30 +123,41 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 		name: 'setting.group.unions',
 		settings: [
 			{
-				id: 'unionMode',
-				type: 'toggle',
-				requiresReprocessing: true,
-			},
-			{
 				id: 'unionSubjects',
 				requiresReprocessing: true,
 				type: 'select',
 				options: unionOptions,
-				hideIf: (settings) => !settings.unionMode,
 			},
 			{
 				id: 'unionHegemonies',
 				requiresReprocessing: true,
 				type: 'select',
 				options: unionOptions,
-				hideIf: (settings) => !settings.unionMode,
 			},
 			{
 				id: 'unionFederations',
 				requiresReprocessing: true,
 				type: 'select',
 				options: unionOptions,
-				hideIf: (settings) => !settings.unionMode,
+			},
+			{
+				id: 'unionBorderStroke',
+				type: 'stroke',
+				requiresReprocessing: (prev, next) => prev.smoothing !== next.smoothing,
+				hideIf: (settings) =>
+					![settings.unionFederations, settings.unionHegemonies, settings.unionSubjects].includes(
+						'joinedBorders',
+					),
+				noDisable: true,
+			},
+			{
+				id: 'unionBorderColor',
+				type: 'color',
+				hideIf: (settings) =>
+					!settings.unionBorderStroke.enabled ||
+					![settings.unionFederations, settings.unionHegemonies, settings.unionSubjects].includes(
+						'joinedBorders',
+					),
 			},
 			{
 				id: 'unionFederationsColor',
@@ -177,14 +168,13 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 					{ id: 'leader', name: 'option.union_federations_color.leader' },
 				],
 				hideIf: (settings) =>
-					!settings.unionMode ||
-					(settings.unionFederations === 'off' && settings.unionHegemonies === 'off'),
+					settings.unionFederations === 'off' && settings.unionHegemonies === 'off',
 			},
 			{
 				id: 'unionLeaderSymbol',
 				type: 'select',
 				options: glyphOptions,
-				hideIf: (settings) => !settings.unionMode || !settings.countryEmblems,
+				hideIf: (settings) => !settings.countryEmblems,
 			},
 			{
 				id: 'unionLeaderSymbolSize',
@@ -192,13 +182,12 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				min: 0.05,
 				max: 1,
 				step: 0.05,
-				hideIf: (settings) =>
-					!settings.unionMode || !settings.countryEmblems || settings.unionLeaderSymbol === 'none',
+				hideIf: (settings) => !settings.countryEmblems || settings.unionLeaderSymbol === 'none',
 			},
 			{
 				id: 'unionLeaderUnderline',
 				type: 'toggle',
-				hideIf: (settings) => !settings.unionMode || !settings.countryNames,
+				hideIf: (settings) => !settings.countryNames,
 			},
 		],
 	},
