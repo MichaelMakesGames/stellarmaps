@@ -10,6 +10,8 @@ interface MapMode {
 	tooltipLabel?: MessageID;
 	country?: MapModeBorder[];
 	system?: MapModeSystem;
+	hasPov?: boolean;
+	hasSpecies?: boolean;
 }
 
 interface MapModeBorder {
@@ -47,6 +49,7 @@ export const mapModes: Record<string, MapMode> = {
 		id: 'wars',
 		name: 'map_mode.wars.name',
 		tooltipLabel: 'map_mode.wars.tooltip_label',
+		hasPov: true,
 		country: [
 			{
 				label: 'map_mode.common.selected_country',
@@ -175,6 +178,7 @@ export const mapModes: Record<string, MapMode> = {
 		id: 'populationSpecies',
 		name: 'map_mode.population.name_species',
 		tooltipLabel: 'map_mode.population.tooltip_label',
+		hasSpecies: true,
 		country: [
 			{
 				label: null,
@@ -244,6 +248,7 @@ export const mapModes: Record<string, MapMode> = {
 		id: 'fleetPowerAlliedAndHostile',
 		name: 'map_mode.fleet_power.name_allied_and_hostile',
 		tooltipLabel: 'map_mode.fleet_power.tooltip_label',
+		hasPov: true,
 		country: [
 			{
 				label: null,

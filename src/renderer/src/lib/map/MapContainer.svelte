@@ -29,6 +29,7 @@
 	import Legend from './Legend.svelte';
 	import Map from './Map.svelte';
 	import MapTooltip from './MapTooltip.svelte';
+	import { mapModes } from './data/mapModes';
 	import processMapData from './data/processMapData';
 	import { getBackgroundColor } from './mapUtils';
 	import SolarSystemMap from './solarSystemMap/SolarSystemMap.svelte';
@@ -397,6 +398,7 @@
 
 	function onMapClick(e: MouseEvent) {
 		if (e.shiftKey) {
+			if (!mapModes[$mapSettings.mapMode]?.hasPov) return;
 			const countryId = tooltip?.countryId;
 			if (countryId != null) {
 				editedMapSettings.update((value) => ({
@@ -410,6 +412,7 @@
 				}));
 			}
 		} else {
+			if (tooltip?.hidden) return;
 			openedSystem = tooltip?.system;
 		}
 	}
@@ -417,11 +420,11 @@
 
 <div class="relative h-full w-full" style:background={bg} bind:this={container}>
 	{#if dataOrNull && colorsOrNull && openedSystem == null}
-		<div class="absolute left-0 top-16">
+		<div class="absolute left-3 top-3">
 			<Legend data={dataOrNull} colors={colorsOrNull}></Legend>
 		</div>
 	{/if}
-	<div class="absolute left-3 top-3 flex gap-3">
+	<div class="absolute right-3 top-3 flex gap-3">
 		{#if openedSystem}
 			<button type="button" class="variant-filled btn" on:click={closeSystemMap}>
 				{$t('generic.back_button')}
@@ -432,17 +435,12 @@
 				<HeroiconArrowsPointingOut />
 			</button>
 		{/if}
+		{#if dataOrNull}
+			<button type="button" class="variant-filled btn" transition:fade on:click={openExportModal}>
+				{$t('export.button')}
+			</button>
+		{/if}
 	</div>
-	{#if dataOrNull}
-		<button
-			type="button"
-			class="variant-filled btn absolute right-3 top-3"
-			transition:fade
-			on:click={openExportModal}
-		>
-			{$t('export.button')}
-		</button>
-	{/if}
 	{#if tooltip != null && openedSystem == null && !tooltip.hidden && !zooming && !resizing}
 		<div class="pointer-events-none absolute left-0 top-0 h-full w-full overflow-hidden">
 			<MapTooltip
@@ -511,7 +509,8 @@
 			}}
 			on:click={onMapClick}
 			class:hidden={openedSystem != null}
-			class:cursor-pointer={tooltip?.countryId != null}
+			class:cursor-pointer={(mapModes[$mapSettings.mapMode]?.hasPov && tooltip?.countryId) ||
+				(tooltip != null && !tooltip.hidden)}
 			class="h-full w-full"
 		>
 			<g transform={transform?.toString()}>

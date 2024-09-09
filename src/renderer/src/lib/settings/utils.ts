@@ -7,8 +7,7 @@ import { colorSettingSchema } from './ColorSetting';
 import { iconSettingSchema } from './IconSetting';
 import { defaultMapSettings, type MapSettings } from './mapSettings';
 import { mapSettingsConfig } from './mapSettingsConfig';
-import type { UnknownSettingConfig } from './SettingConfig';
-import type { AppSettingConfig, MapSettingConfig } from './SettingConfig';
+import type { AppSettingConfig, MapSettingConfig, UnknownSettingConfig } from './SettingConfig';
 import { strokeSettingSchema } from './StrokeSetting';
 
 export function isColorDynamic(color: string, settings: MapSettings): boolean {
@@ -44,6 +43,22 @@ export function validateAndResetMapSettings(unvalidatedSettings: MapSettings): M
 		}
 	}
 	return settings;
+}
+
+export function copyGroupSettings(
+	groupId: string,
+	fromSettings: MapSettings,
+	toSettings: MapSettings,
+) {
+	const newSettings = {
+		...toSettings,
+	};
+	const group = mapSettingsConfig.find((group) => group.id === groupId);
+	group?.settings.forEach((setting) => {
+		// @ts-expect-error -- ts doesn't recognize that since the same expression is used for the key, the value will be the right type
+		newSettings[setting.id] = fromSettings[setting.id];
+	});
+	return newSettings;
 }
 
 export function validateSetting<T extends UnknownSettingConfig>(
@@ -139,12 +154,18 @@ export function asUnknownSettingConfig(config: AppSettingConfig | MapSettingConf
 export function asKnownSettingId(id: string) {
 	return id as keyof MapSettings | keyof AppSettings;
 }
+
+interface SettingsAreDifferentOptions {
+	requiresReprocessingOnly?: boolean;
+	excludeGroups?: string[];
+}
 export function settingsAreDifferent(
 	a: MapSettings,
 	b: MapSettings,
-	{ requiresReprocessingOnly = false } = {},
+	{ requiresReprocessingOnly = false, excludeGroups }: SettingsAreDifferentOptions = {},
 ) {
 	return mapSettingsConfig
+		.filter((group) => !excludeGroups?.includes(group.id))
 		.flatMap((group) => group.settings)
 		.filter((setting) => !requiresReprocessingOnly || setting.requiresReprocessing)
 		.some((setting) => {

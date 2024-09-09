@@ -19,6 +19,7 @@
 	import {
 		applyMapSettings,
 		asUnknownSettingConfig,
+		copyGroupSettings,
 		countryOptions,
 		editedMapSettings,
 		lastProcessedMapSettings,
@@ -160,7 +161,12 @@
 			? presetMapSettings.find((preset) => preset.name === loadedSettingsName)
 			: $customSavedSettings.find((saved) => saved.name === loadedSettingsName);
 		let confirmed = true;
-		if (!loadedSettings || settingsAreDifferent(loadedSettings.settings, $editedMapSettings)) {
+		if (
+			!loadedSettings ||
+			settingsAreDifferent(loadedSettings.settings, $editedMapSettings, {
+				excludeGroups: ['mapMode'],
+			})
+		) {
 			confirmed = await new Promise<boolean>((resolve) => {
 				modalStore.trigger({
 					type: 'confirm',
@@ -172,8 +178,12 @@
 		}
 		if (confirmed) {
 			loadedSettingsKey.set(`${type}|${savedSettings.name}`);
-			if (settingsAreDifferent(savedSettings.settings, $mapSettings)) {
-				const validated = validateAndResetMapSettings(savedSettings.settings);
+			if (
+				settingsAreDifferent(savedSettings.settings, $mapSettings, { excludeGroups: ['mapMode'] })
+			) {
+				const validated = validateAndResetMapSettings(
+					copyGroupSettings('mapMode', $editedMapSettings, savedSettings.settings),
+				);
 				editedMapSettings.set(validated);
 				mapSettings.set(validated);
 				lastProcessedMapSettings.set(validated);
@@ -271,6 +281,16 @@
 		</button>
 	</form>
 
+	<div class="flex-column my-3 flex-col space-y-2 px-4">
+		{#each mapSettingsConfig[0]?.settings ?? [] as config (config.id)}
+			<SettingControl
+				config={asUnknownSettingConfig(config)}
+				settings={editedMapSettings}
+				writeToSettings={[mapSettings, lastProcessedMapSettings]}
+			/>
+		{/each}
+	</div>
+
 	<div class="flex items-baseline p-4 pb-1" style="transition-duration: 50ms;">
 		<h2 class="h3 flex-1">{$t('side_bar.map_settings')}</h2>
 		<button type="button" class="mx-2 text-primary-500" on:click={saveSettings}>
@@ -354,7 +374,7 @@
 
 	<div class="flex-shrink flex-grow overflow-y-auto">
 		<Accordion spacing="space-y-2">
-			{#each mapSettingsConfig as settingGroup (settingGroup.id)}
+			{#each mapSettingsConfig.slice(1) as settingGroup (settingGroup.id)}
 				<AccordionItem regionPanel="space-y-6">
 					<svelte:fragment slot="summary">
 						<h3 class="h4 font-bold">

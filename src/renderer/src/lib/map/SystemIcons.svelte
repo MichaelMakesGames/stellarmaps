@@ -155,7 +155,41 @@
 	}
 </script>
 
-{#each getMapModeIcons(data.systems) as system}
+{#each data.systems
+	.filter((s) => s.systemIsKnown || !$mapSettings.terraIncognita)
+	.map((s) => getSystemIcons(s, $mapSettings)) as systemIcons}
+	{#each [...(systemIcons.center ? [systemIcons.center] : []), ...systemIcons.left, ...systemIcons.right, ...systemIcons.top, ...systemIcons.bottom] as systemIcon}
+		<use
+			href="#{systemIcon.icon}"
+			x={systemIcon.x - systemIcon.size / 2}
+			y={systemIcon.y - systemIcon.size / 2}
+			width={systemIcon.size}
+			height={systemIcon.size}
+			{...getFillColorAttributes({
+				mapSettings: $mapSettings,
+				colors,
+				countryColors: systemIcons.system,
+				colorStack: [systemIcon.color, $mapSettings.borderFillColor],
+			})}
+		/>
+	{/each}
+	{#if shouldShowLabel(systemIcons.system)}
+		<text
+			x={systemIcons.system.x}
+			y={getIconsBottom(systemIcons) + $mapSettings.systemNamesFontSize / 4}
+			text-anchor="middle"
+			dominant-baseline="hanging"
+			font-size={$mapSettings.systemNamesFontSize}
+			fill="white"
+			font-family={$mapSettings.systemNamesFont}
+			style:text-shadow="0px 0px 3px black"
+		>
+			{systemIcons.system.name}
+		</text>
+	{/if}
+{/each}
+
+{#each getMapModeIcons(data.systems.filter((s) => s.systemIsKnown || !$mapSettings.terraIncognita)) as system}
 	{#if system.arcs.length <= 1}
 		<circle
 			cx={system.x}
@@ -199,36 +233,21 @@
 		stroke={colors.black}
 	/>
 {/each}
+
 {#each data.systems
 	.filter((s) => s.systemIsKnown || !$mapSettings.terraIncognita)
+	.filter(shouldShowLabel)
 	.map((s) => getSystemIcons(s, $mapSettings)) as systemIcons}
-	{#each [...(systemIcons.center ? [systemIcons.center] : []), ...systemIcons.left, ...systemIcons.right, ...systemIcons.top, ...systemIcons.bottom] as systemIcon}
-		<use
-			href="#{systemIcon.icon}"
-			x={systemIcon.x - systemIcon.size / 2}
-			y={systemIcon.y - systemIcon.size / 2}
-			width={systemIcon.size}
-			height={systemIcon.size}
-			{...getFillColorAttributes({
-				mapSettings: $mapSettings,
-				colors,
-				countryColors: systemIcons.system,
-				colorStack: [systemIcon.color, $mapSettings.borderFillColor],
-			})}
-		/>
-	{/each}
-	{#if shouldShowLabel(systemIcons.system)}
-		<text
-			x={systemIcons.system.x}
-			y={getIconsBottom(systemIcons) + $mapSettings.systemNamesFontSize / 4}
-			text-anchor="middle"
-			dominant-baseline="hanging"
-			font-size={$mapSettings.systemNamesFontSize}
-			fill="white"
-			font-family={$mapSettings.systemNamesFont}
-			style:text-shadow="0px 0px 3px black"
-		>
-			{systemIcons.system.name}
-		</text>
-	{/if}
+	<text
+		x={systemIcons.system.x}
+		y={getIconsBottom(systemIcons) + $mapSettings.systemNamesFontSize / 4}
+		text-anchor="middle"
+		dominant-baseline="hanging"
+		font-size={$mapSettings.systemNamesFontSize}
+		fill="white"
+		font-family={$mapSettings.systemNamesFont}
+		style:text-shadow="0px 0px 3px black"
+	>
+		{systemIcons.system.name}
+	</text>
 {/each}

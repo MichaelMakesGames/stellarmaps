@@ -19,6 +19,7 @@
 	import StrokeSettingControl from './StrokeSettingControl.svelte';
 
 	export let settings: Writable<Record<string, any>>;
+	export let writeToSettings: Writable<Record<string, any>>[] = [];
 	export let config: UnknownSettingConfig;
 
 	let value: any = get(settings)[config.id];
@@ -31,6 +32,12 @@
 				...prev,
 				[config.id]: value,
 			}));
+			for (const otherSettings of writeToSettings) {
+				otherSettings.update((prev) => ({
+					...prev,
+					[config.id]: value,
+				}));
+			}
 		}
 	}
 

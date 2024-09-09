@@ -24,6 +24,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				options: [{ id: 'player', name: 'option.country.player' }],
 				dynamicOptions: countryOptions,
 				requiresReprocessing: true,
+				hideIf: (settings) => !mapModes[settings.mapMode]?.hasPov,
 			},
 			{
 				id: 'mapModeSpecies',
@@ -31,6 +32,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				options: [{ id: 'player', name: 'option.country.player' }],
 				dynamicOptions: speciesOptions,
 				requiresReprocessing: true,
+				hideIf: (settings) => !mapModes[settings.mapMode]?.hasSpecies,
 			},
 		],
 	},
