@@ -37,7 +37,7 @@
 
 {#each data.occupationBorders as occupation}
 	<pattern
-		id="pattern-${occupation.partial
+		id="pattern-{occupation.partial
 			? 'partial'
 			: 'full'}-occupation-{occupation.occupier}-on-{occupation.occupied}"
 		viewBox="0,0,10,20"
