@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SYSTEM_FONTS } from '../constants';
 	import { mapSettings } from '../settings';
 	import type { MapData } from './data/processMapData';
 	import Icons from './Icons.svelte';
@@ -29,7 +30,13 @@
 </script>
 
 {#if data?.legend.items.length && $mapSettings.legend}
-	<svg viewBox="0 0 {width} {height}" width="{width}px" height="{height}px">
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		xmlns:xlink="http://www.w3.org/1999/xlink"
+		viewBox="0 0 {width} {height}"
+		width="{width}px"
+		height="{height}px"
+	>
 		<defs>
 			{#if colors}
 				<OccupationPatternDefs {colors} {data} />
@@ -117,6 +124,7 @@
 					y={symbolSize / 2}
 					dominant-baseline="central"
 					font-size={$mapSettings.legendFontSize}
+					font-family={SYSTEM_FONTS}
 				>
 					{item.label}
 				</text>

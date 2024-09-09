@@ -9,12 +9,14 @@
 	import { onDestroy } from 'svelte';
 	import { t } from '../intl';
 	import type { GalacticObject, GameState } from './GameState';
+	import convertBlobToDataUrl from './convertBlobToDataUrl';
 	import convertSvgToPng from './convertSvgToPng';
+	import Legend from './map/Legend.svelte';
 	import type { MapData } from './map/data/processMapData';
 	import { getBackgroundColor, getFillColorAttributes, resolveColor } from './map/mapUtils';
 	import SolarSystemMap from './map/solarSystemMap/SolarSystemMap.svelte';
 	import processStarScape from './map/starScape/renderStarScape';
-	import { mapSettings } from './settings';
+	import { mapSettings, type MapSettings } from './settings';
 	import stellarMapsApi from './stellarMapsApi';
 	import { toastError } from './utils';
 
@@ -40,7 +42,18 @@
 				},
 			})
 		: null;
-	onDestroy(() => solarSystemMap?.$destroy());
+	const legendTarget = document.createElement('div');
+	const legend = new Legend({
+		target: legendTarget,
+		props: {
+			colors: colors,
+			data: mapData,
+		},
+	});
+	onDestroy(() => {
+		solarSystemMap?.$destroy();
+		legend?.$destroy();
+	});
 
 	const defaultExportSettings = {
 		lockAspectRatio: true,
@@ -85,6 +98,15 @@
 			? Math.max(mapHeight, 500 - viewBoxTop)
 			: Math.max(1000, 500 + mapTop + mapHeight);
 
+	function hasBackgroundImage(mapSettings: MapSettings) {
+		return (
+			mapSettings.starScapeDust ||
+			mapSettings.starScapeCore ||
+			mapSettings.starScapeNebula ||
+			mapSettings.starScapeStars
+		);
+	}
+
 	function closeAndSaveSettings() {
 		exportSettings.set({
 			lockAspectRatio,
@@ -117,23 +139,34 @@
 	}
 
 	async function exportPng() {
-		const backgroundImageUrl = openedSystem
-			? undefined
-			: await processStarScape(
-					gameState,
-					$mapSettings,
-					colors,
-					{
-						left: mapLeft,
-						top: mapTop,
-						width: mapWidth,
-						height: mapHeight,
-					},
-					{
-						width: imageWidth,
-						height: imageHeight,
-					},
-				);
+		const backgroundImageUrl =
+			openedSystem || !hasBackgroundImage($mapSettings)
+				? undefined
+				: await processStarScape(
+						gameState,
+						$mapSettings,
+						colors,
+						{
+							left: mapLeft,
+							top: mapTop,
+							width: mapWidth,
+							height: mapHeight,
+						},
+						{
+							width: imageWidth,
+							height: imageHeight,
+						},
+					);
+
+		const legendImageUrl = await convertSvgToPng(legendTarget.firstChild as SVGElement, {
+			left: 0,
+			top: 0,
+			width: (1000 * imageWidth) / imageHeight,
+			height: 1000,
+			outputWidth: imageWidth,
+			outputHeight: imageHeight,
+		}).then(convertBlobToDataUrl);
+
 		const buffer = await convertSvgToPng(
 			solarSystemMap ? (solarSystemMapTarget.firstChild as SVGElement) : galaxyMapSvg,
 			{
@@ -144,6 +177,7 @@
 				outputWidth: imageWidth,
 				outputHeight: imageHeight,
 				backgroundImageUrl,
+				foregroundImageUrl: openedSystem ? undefined : legendImageUrl,
 				backgroundColor: getBackgroundColor(colors, $mapSettings),
 			},
 		).then((blob) => blob.arrayBuffer());
@@ -185,7 +219,7 @@
 		svgToExport.setAttribute('viewBox', `${mapLeft} ${mapTop} ${mapWidth} ${mapHeight}`);
 
 		const bgImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
-		if (!openedSystem) {
+		if (!openedSystem && hasBackgroundImage($mapSettings)) {
 			bgImage.setAttribute('x', mapLeft.toString());
 			bgImage.setAttribute('y', mapTop.toString());
 			bgImage.setAttribute('width', mapWidth.toString());
@@ -212,6 +246,7 @@
 		}
 
 		const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+		bgRect.setAttribute('class', 'bg-rect');
 		bgRect.setAttribute('x', mapLeft.toString());
 		bgRect.setAttribute('y', mapTop.toString());
 		bgRect.setAttribute('width', mapWidth.toString());
@@ -219,9 +254,15 @@
 		bgRect.setAttribute('fill', getBackgroundColor(colors, $mapSettings));
 		svgToExport.prepend(bgRect);
 
+		const legendContainer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+		legendContainer.setAttribute('transform', `translate(${mapLeft} ${mapTop}) scale(${scale})`);
+		legendContainer.innerHTML = openedSystem ? '' : legendTarget.innerHTML;
+		svgToExport.append(legendContainer);
+
 		const svgString = svgToExport.outerHTML;
-		if (!openedSystem) svgToExport.removeChild(bgImage);
+		if (!openedSystem && hasBackgroundImage($mapSettings)) svgToExport.removeChild(bgImage);
 		svgToExport.removeChild(bgRect);
+		svgToExport.removeChild(legendContainer);
 
 		const savePath = await stellarMapsApi.dialog.save({
 			defaultPath: await stellarMapsApi.path
@@ -445,6 +486,9 @@
 							fill={`rgba(${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness},${$mapSettings.terraIncognitaBrightness})`}
 						/>
 					{/if}
+					<g transform="translate({mapLeft} {mapTop}) scale({scale})">
+						<Legend data={mapData} {colors} />
+					</g>
 				{/if}
 				<path
 					fill="rgba(150, 150, 150, 0.5)"
