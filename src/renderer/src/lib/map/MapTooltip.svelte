@@ -100,7 +100,7 @@
 			<strong>{$t(processedSystem.mapModeCountryLabel)}</strong>
 		</div>
 	{/if}
-	{#if processedSystem?.mapModeValues?.length}
+	{#if processedSystem?.mapModeValues?.filter((v) => v.value).length}
 		<strong class="mt-2 block">
 			{$t(mapModes[$mapSettings.mapMode]?.tooltipLabel ?? 'generic.NEVER')}
 		</strong>
