@@ -93,6 +93,8 @@
 						y={0}
 						width={symbolSize}
 						height={symbolSize}
+						transform="scale({item.symbol.scale ?? 1})"
+						transform-origin="{symbolSize / 2} {symbolSize / 2}"
 						{...getFillColorAttributes({
 							mapSettings: $mapSettings,
 							colors,

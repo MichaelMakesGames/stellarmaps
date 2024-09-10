@@ -351,14 +351,17 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 			{
 				id: 'countryCapitalIcon',
 				type: 'icon',
+				requiresReprocessing: true,
 			},
 			{
 				id: 'sectorCapitalIcon',
 				type: 'icon',
+				requiresReprocessing: true,
 			},
 			{
 				id: 'populatedSystemIcon',
 				type: 'icon',
+				requiresReprocessing: true,
 			},
 			{
 				id: 'unpopulatedSystemIcon',
@@ -367,18 +370,22 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 			{
 				id: 'wormholeIcon',
 				type: 'icon',
+				requiresReprocessing: true,
 			},
 			{
 				id: 'gatewayIcon',
 				type: 'icon',
+				requiresReprocessing: true,
 			},
 			{
 				id: 'lGateIcon',
 				type: 'icon',
+				requiresReprocessing: true,
 			},
 			{
 				id: 'shroudTunnelIcon',
 				type: 'icon',
+				requiresReprocessing: true,
 			},
 		],
 	},

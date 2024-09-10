@@ -1,8 +1,8 @@
 import { get } from 'svelte/store';
 
-import { t } from '../../../intl';
+import { type MessageID, t } from '../../../intl';
 import type { GameState } from '../../GameState';
-import type { ColorSetting, MapSettings } from '../../settings';
+import type { ColorSetting, IconSetting, MapSettings } from '../../settings';
 import { localizeText } from './locUtils';
 import { mapModes, type MapModeSystemValue } from './mapModes';
 import type processBorders from './processBorders';
@@ -15,6 +15,7 @@ interface LegendItem {
 				type: 'icon';
 				icon: string;
 				color: ColorSetting;
+				scale?: number;
 		  }
 		| {
 				type: 'border';
@@ -41,6 +42,13 @@ export const processLegendDeps = [
 	'mapModePointOfView',
 	'legendFontSize',
 	'occupation',
+	'countryCapitalIcon',
+	'sectorCapitalIcon',
+	'populatedSystemIcon',
+	'wormholeIcon',
+	'gatewayIcon',
+	'lGateIcon',
+	'shroudTunnelIcon',
 ] satisfies (keyof MapSettings)[];
 
 export default async function processLegend(
@@ -112,10 +120,37 @@ export default async function processLegend(
 			]
 		: [];
 
+	const systemIconSettings: [MessageID, IconSetting][] = [
+		['setting.countryCapitalIcon', settings.countryCapitalIcon],
+		['setting.sectorCapitalIcon', settings.sectorCapitalIcon],
+		['setting.populatedSystemIcon', settings.populatedSystemIcon],
+		['setting.wormholeIcon', settings.wormholeIcon],
+		['setting.gatewayIcon', settings.gatewayIcon],
+		['setting.lGateIcon', settings.lGateIcon],
+		['setting.shroudTunnelIcon', settings.shroudTunnelIcon],
+	];
+	const largestIconSize = Math.max(
+		...systemIconSettings
+			.filter(([_messageId, setting]) => setting.enabled)
+			.map(([_messageId, setting]) => setting.size),
+	);
+	const systemIconItems: LegendItem[] = systemIconSettings
+		.filter(([_messageId, setting]) => setting.enabled)
+		.map(([messageId, setting]) => ({
+			label: get(t)(messageId),
+			symbol: {
+				type: 'icon',
+				icon: setting.icon,
+				color: setting.color,
+				scale: setting.size / largestIconSize,
+			},
+		}));
+
 	const items = insertHrBetweenGroups([
 		countryMapModeLegendItems,
 		systemMapModeLegendItems,
 		occupationLegendItems,
+		systemIconItems,
 	]);
 	return {
 		items,
