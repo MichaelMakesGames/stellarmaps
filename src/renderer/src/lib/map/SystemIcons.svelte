@@ -7,15 +7,16 @@
 		type MapSettings,
 		type SettingConfigIcon,
 	} from '../settings';
+	import { mapModes } from './data/mapModes';
 	import type { MapData } from './data/processMapData';
+	import type { ProcessedSystem } from './data/processSystems';
 	import { getFillColorAttributes } from './mapUtils';
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
 
-	type SystemData = MapData['systems'][number];
 	interface IconSettingMetadata {
-		systemProperty?: keyof SystemData;
+		systemProperty?: keyof ProcessedSystem;
 		mustKnowOwner?: boolean;
 	}
 	const metadata: Record<IconMapSettings, IconSettingMetadata> = {
@@ -129,7 +130,7 @@
 
 	function getMapModeIcons(systems: MapData['systems']) {
 		const max = Math.max(...systems.map((s) => s.mapModeTotalValue ?? 0));
-		const scale = 100 / max;
+		const scale = (100 / max) * (mapModes[$mapSettings.mapMode]?.system?.scale ?? 1);
 		return systems
 			.filter((system) => system.mapModeTotalValue)
 			.map((system) => {

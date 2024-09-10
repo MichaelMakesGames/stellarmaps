@@ -61,16 +61,21 @@ export default async function processLegend(
 	const countryMapModeLegendItems: LegendItem[] =
 		mapMode?.country == null
 			? []
-			: mapMode.country
-					.filter((mapModeCountry) => mapModeCountry.showInLegend === 'always')
-					.map((mapModeCountry) => ({
-						label: mapModeCountry.label ? get(t)(mapModeCountry.label) : '',
-						symbol: {
-							type: 'border',
-							primaryColor: mapModeCountry.primaryColor,
-							secondaryColor: mapModeCountry.secondaryColor ?? mapModeCountry.primaryColor,
-						},
-					}));
+			: await Promise.all(
+					mapMode.country
+						.filter((mapModeCountry) => mapModeCountry.showInLegend === 'always')
+						.map(async (mapModeCountry) => ({
+							label:
+								typeof mapModeCountry.label === 'string'
+									? get(t)(mapModeCountry.label)
+									: await localizeText(mapModeCountry.label ?? { key: 'UNKNOWN' }),
+							symbol: {
+								type: 'border',
+								primaryColor: mapModeCountry.primaryColor,
+								secondaryColor: mapModeCountry.secondaryColor ?? mapModeCountry.primaryColor,
+							},
+						})),
+				);
 
 	const systemMapModeLegendItems: LegendItem[] = await Promise.all(
 		Object.values(

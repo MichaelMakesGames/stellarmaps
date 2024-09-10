@@ -15,7 +15,7 @@ interface MapMode {
 }
 
 interface MapModeBorder {
-	label: MessageID | null;
+	label: LocalizedText | MessageID | null;
 	showInLegend: 'always' | 'never';
 	primaryColor: string;
 	secondaryColor?: string;
@@ -23,16 +23,19 @@ interface MapModeBorder {
 }
 
 interface MapModeSystem {
+	scale?: number;
 	getValues: (
 		gameState: GameState,
 		system: GalacticObject,
 		povCountry: Country | null,
 		selectedSpecies: Species | null,
+		systemOwner: Country | null,
 	) => MapModeSystemValue[];
 }
 
 export interface MapModeSystemValue {
 	value: number;
+	directedValues?: Map<number, number>;
 	color: ColorSetting;
 	legendColor?: ColorSetting;
 	legendIndex: number;
@@ -349,12 +352,225 @@ export const mapModes: Record<string, MapMode> = {
 			},
 		},
 	},
+	tradeRoutes: {
+		id: 'tradeRoutes',
+		name: 'map_mode.trade_routes.name',
+		tooltipLabel: 'map_mode.trade_routes.tooltip_label',
+		hasPov: true,
+		country: [
+			{
+				label: null,
+				showInLegend: 'never',
+				matches: () => true,
+				primaryColor: 'black',
+			},
+		],
+		system: {
+			scale: 0.25,
+			getValues(gameState, system, povCountry, _species, owner) {
+				const ownedByPov = owner != null && owner.id === povCountry?.id;
+				const collectedValue = !ownedByPov ? 0 : system.trade_hub.collected ?? 0;
+				const incomingValue = !ownedByPov
+					? undefined
+					: system.trade_hub.sources?.reduce(
+							(acc, cur) => acc + (gameState.trade_routes[cur]?.delivered ?? 0),
+							0,
+						);
+				let deliveredValue = 0;
+				const deliveredValueTo = new Map<number, number>();
+				let piratedValue = 0;
+				const piratedValueTo = new Map<number, number>();
+				for (const route of Object.values(gameState.trade_routes).filter(
+					(route) => route.owner === povCountry?.id && (route.path[0]?.collected ?? 0) > 0,
+				)) {
+					route.path.forEach((node, i) => {
+						if (node.id === system.id) {
+							deliveredValue += node.delivered;
+							piratedValue += node.collected - node.delivered;
+							const next = route.path[i + 1];
+							if (next) {
+								if (node.delivered === 0) {
+									piratedValueTo.set(next.id, 0);
+								} else {
+									deliveredValueTo.set(
+										next.id,
+										(deliveredValueTo.get(next.id) ?? 0) + node.delivered,
+									);
+								}
+							}
+						}
+					});
+				}
+				return [
+					{
+						value: collectedValue,
+						color: { color: 'intense_blue', colorAdjustments: [] },
+						legendIndex: 1,
+						legendLabel: 'map_mode.trade_routes.collected',
+					},
+					{
+						value: incomingValue ?? Math.max(0, deliveredValue - collectedValue),
+						directedValues: deliveredValueTo,
+						color: { color: 'faded_blue', colorAdjustments: [] },
+						legendIndex: 2,
+						legendLabel: 'map_mode.trade_routes.pass_through',
+					},
+					{
+						value: piratedValue,
+						directedValues: piratedValueTo,
+						color: { color: 'intense_red', colorAdjustments: [] },
+						legendIndex: 3,
+						legendLabel: 'map_mode.trade_routes.pirated',
+					},
+				];
+			},
+		},
+	},
+	authority: {
+		id: 'authority',
+		name: 'map_mode.authority.name',
+		tooltipLabel: 'map_mode.authority.tooltip_label',
+		country: [
+			{
+				label: { key: 'auth_democratic' },
+				primaryColor: 'teal',
+				showInLegend: 'always',
+				matches: (gameState, country) =>
+					gameState.country[country]?.government?.authority === 'auth_democratic',
+			},
+			{
+				label: { key: 'auth_oligarchic' },
+				primaryColor: 'yellow',
+				showInLegend: 'always',
+				matches: (gameState, country) =>
+					gameState.country[country]?.government?.authority === 'auth_oligarchic',
+			},
+			{
+				label: { key: 'auth_dictatorial' },
+				primaryColor: 'intense_orange',
+				showInLegend: 'always',
+				matches: (gameState, country) =>
+					gameState.country[country]?.government?.authority === 'auth_dictatorial',
+			},
+			{
+				label: { key: 'auth_imperial' },
+				primaryColor: 'red',
+				showInLegend: 'always',
+				matches: (gameState, country) =>
+					gameState.country[country]?.government?.authority === 'auth_imperial',
+			},
+			{
+				label: { key: 'auth_corporate' },
+				primaryColor: 'desert_yellow',
+				showInLegend: 'always',
+				matches: (gameState, country) =>
+					gameState.country[country]?.government?.authority === 'auth_corporate',
+			},
+			{
+				label: { key: 'auth_hive_mind' },
+				primaryColor: 'bright_yellow',
+				showInLegend: 'always',
+				matches: (gameState, country) =>
+					gameState.country[country]?.government?.authority === 'auth_hive_mind',
+			},
+			{
+				label: { key: 'auth_machine_intelligence' },
+				primaryColor: 'sky_blue',
+				showInLegend: 'always',
+				matches: (gameState, country) =>
+					gameState.country[country]?.government?.authority === 'auth_machine_intelligence',
+			},
+			{
+				label: null,
+				showInLegend: 'never',
+				matches: () => true,
+				primaryColor: 'black',
+			},
+		],
+	},
+	relations: {
+		id: 'relations',
+		name: 'map_mode.relations.name',
+		tooltipLabel: 'map_mode.relations.tooltip_label',
+		hasPov: true,
+		country: [
+			{
+				label: 'map_mode.common.selected_country',
+				primaryColor: 'white',
+				showInLegend: 'always',
+				matches: (_gameState, country, povCountry) => {
+					return country === povCountry;
+				},
+			},
+			{
+				label: { key: 'OPINION_EXCELLENT' },
+				primaryColor: 'intense_blue',
+				showInLegend: 'always',
+				matches: (gameState, country, povCountry) => {
+					const relation = gameState.country[country]?.relations_manager.relation.find(
+						(r) => r.country === povCountry,
+					);
+					return relation != null && relation.relation_current >= 750;
+				},
+			},
+			{
+				label: { key: 'OPINION_GOOD' },
+				primaryColor: 'turquoise',
+				showInLegend: 'always',
+				matches: (gameState, country, povCountry) => {
+					const relation = gameState.country[country]?.relations_manager.relation.find(
+						(r) => r.country === povCountry,
+					);
+					return relation != null && relation.relation_current >= 300;
+				},
+			},
+			{
+				label: { key: 'OPINION_NEUTRAL' },
+				primaryColor: 'yellow',
+				showInLegend: 'always',
+				matches: (gameState, country, povCountry) => {
+					const relation = gameState.country[country]?.relations_manager.relation.find(
+						(r) => r.country === povCountry,
+					);
+					return relation != null && relation.relation_current >= -300;
+				},
+			},
+			{
+				label: { key: 'OPINION_POOR' },
+				primaryColor: 'intense_orange',
+				showInLegend: 'always',
+				matches: (gameState, country, povCountry) => {
+					const relation = gameState.country[country]?.relations_manager.relation.find(
+						(r) => r.country === povCountry,
+					);
+					return relation != null && relation.relation_current >= -750;
+				},
+			},
+			{
+				label: { key: 'OPINION_TERRIBLE' },
+				primaryColor: 'intense_red',
+				showInLegend: 'always',
+				matches: (gameState, country, povCountry) => {
+					const relation = gameState.country[country]?.relations_manager.relation.find(
+						(r) => r.country === povCountry,
+					);
+					return relation != null && relation.relation_current < -750;
+				},
+			},
+			{
+				label: null,
+				showInLegend: 'never',
+				matches: () => true,
+				primaryColor: 'black',
+			},
+		],
+	},
 };
 
 export interface MapModeCountryInfo {
 	primaryColor: string;
 	secondaryColor: string;
-	mapModeCountryLabel?: MessageID;
+	mapModeCountryLabel?: LocalizedText | MessageID;
 }
 
 export const defaultCountryMapModeInfo: MapModeCountryInfo = {

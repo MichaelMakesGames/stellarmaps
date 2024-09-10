@@ -266,6 +266,10 @@ export default {
 		},
 		mapMode: 'Map Mode',
 		mapModePointOfView: 'Point of View',
+		mapModePointOfView_tooltip: `<ul>
+			<li><strong>WARNING</strong>: changing this can reveal information you normally could not see. Avoid if you want a "pure" experience.</li>
+			<li>Tip: <strong>shift+click</strong> a country on the map to change to their Point of View.</li>
+		</ul>`,
 		mapModeSpecies: 'Species',
 		borderStroke: 'Country Borders',
 		borderColor: 'Country Border Color',
@@ -476,6 +480,21 @@ export default {
 			allied_station: 'Allied Station',
 			hostile_fleet: 'Hostile Fleet',
 			hostile_station: 'Hostile Station',
+		},
+		trade_routes: {
+			name: 'Trade Routes',
+			tooltip_label: 'Trade Value',
+			collected: 'Collected Value',
+			pass_through: 'Passed Through Value',
+			pirated: 'Pirated Value',
+		},
+		authority: {
+			name: 'Authority',
+			tooltip_label: 'Authority',
+		},
+		relations: {
+			name: 'Relations',
+			tooltip_label: 'Relations',
 		},
 	},
 	legend: {

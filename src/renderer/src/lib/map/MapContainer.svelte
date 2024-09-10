@@ -398,6 +398,7 @@
 
 	function onMapClick(e: MouseEvent) {
 		if (e.shiftKey) {
+			document.getSelection()?.removeAllRanges();
 			if (!mapModes[$mapSettings.mapMode]?.hasPov) return;
 			const countryId = tooltip?.countryId;
 			if (countryId != null) {
@@ -425,14 +426,14 @@
 		</div>
 	{/if}
 	<div class="absolute right-3 top-3 flex gap-3">
-		{#if openedSystem}
-			<button type="button" class="variant-filled btn" on:click={closeSystemMap}>
-				{$t('generic.back_button')}
-			</button>
-		{/if}
 		{#if transform != null && !openedSystem}
 			<button type="button" class="variant-filled btn-icon" transition:fade on:click={resetZoom}>
 				<HeroiconArrowsPointingOut />
+			</button>
+		{/if}
+		{#if openedSystem}
+			<button type="button" class="variant-filled btn" on:click={closeSystemMap}>
+				{$t('generic.back_button')}
 			</button>
 		{/if}
 		{#if dataOrNull}

@@ -5,13 +5,14 @@
 	import BypassLinks from './BypassLinks.svelte';
 	import CountryBorders from './CountryBorders.svelte';
 	import CountryLabels from './CountryLabels.svelte';
+	import type { MapData } from './data/processMapData';
 	import Hyperlanes from './Hyperlanes.svelte';
 	import Icons from './Icons.svelte';
+	import MapModePaths from './MapModePaths.svelte';
 	import OccupationPatternDefs from './OccupationPatternDefs.svelte';
 	import SystemIcons from './SystemIcons.svelte';
 	import TerraIncognita from './TerraIncognita.svelte';
 	import TerraIncognitaDefs from './TerraIncognitaDefs.svelte';
-	import type { MapData } from './data/processMapData';
 
 	export let id: string = '';
 	export let data: null | MapData;
@@ -77,6 +78,7 @@
 			<Hyperlanes {data} {colors} />
 			<TerraIncognita {data} />
 			<BypassLinks {data} {colors} />
+			<MapModePaths {data} {colors} />
 			<SystemIcons {data} {colors} />
 			<CountryLabels {data} />
 			{#if $debug}

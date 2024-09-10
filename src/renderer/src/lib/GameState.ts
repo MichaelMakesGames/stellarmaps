@@ -65,6 +65,12 @@ const galacticObjectSchema = z
 			.optional(),
 		planet: z.number().optional(),
 		fleet_presence: z.array(z.number()).default([]),
+		trade_hub: z.object({
+			collected: z.number().optional(), // this does NOT include value delivered by other trade routes
+			destination: z.number().optional(), // trade_route ID
+			collected_from: z.array(z.number()).optional(), // galactic_object IDs
+			sources: z.array(z.number()).optional(), // trade_route IDs
+		}),
 		asteroid_belts: z
 			.array(
 				z.object({
@@ -170,6 +176,11 @@ const countrySchema = z.object({
 					file: z.string(),
 				})
 				.optional(),
+		})
+		.optional(),
+	government: z
+		.object({
+			authority: z.string(),
 		})
 		.optional(),
 	capital: z.number().optional(),
@@ -338,6 +349,25 @@ const speciesSchema = z.object({
  */
 export type Species = WithId<z.infer<typeof speciesSchema>>;
 
+const tradeRouteSchema = z.object({
+	owner: z.number(),
+	from: z.number(),
+	to: z.number(),
+	delivered: z.number(),
+	path: z.array(
+		z.object({
+			id: z.number(),
+			collected: z.number(),
+			delivered: z.number(),
+		}),
+	),
+});
+
+/**
+ * @public
+ */
+export type TradeRoute = WithId<z.infer<typeof tradeRouteSchema>>;
+
 function addIds<T>(db: Record<number, T>): Record<number, WithId<T>> {
 	return Object.fromEntries(
 		Object.entries(db).map(([id, obj]) => [id, { ...obj, id: parseInt(id) }]),
@@ -364,6 +394,7 @@ export const gameStateSchema = z
 		galaxy: z.object({ shape: z.string(), core_radius: z.number() }),
 		planets: z.object({ planet: stellarisDb(planetSchema) }).default({}),
 		species_db: stellarisDb(speciesSchema),
+		trade_routes: stellarisDb(tradeRouteSchema),
 		nebula: nebulaSchema.optional(),
 		$multiKeys: z.object({ nebula: preprocessedArray(nebulaSchema).optional() }).optional(),
 	})
@@ -426,3 +457,35 @@ function convertSchemaToGameStateFilter(schema: z.ZodType): boolean | Record<str
 	}
 }
 export const gameStateFilter = convertSchemaToGameStateFilter(gameStateSchema);
+
+// trade
+// galactic_object:
+// - trade_collection { targets: { target: GalacticObjectID; distance: number }[] }
+// - - targets is length 1; the ID it points to will have a trade_hub with this gal_obj in its collected_from
+// - trade_hub {
+//     collected: number; // this does NOT include value delivered by other trade routes
+//     destination: TradeRouteID;
+//     collected_from: GalacticObjectID[]
+//     sources: TradeRouteID[]
+//   }
+// - trade_piracy {
+//     active: number; ???
+//     max: number; ???
+//     total: number; un-pirated value
+//     throughput: number; pirate + un-pirated value
+//     used: number; pirated value
+//     targets: { target: GalacticObjectID; distance: number }[] ???
+//   }
+// trade route:
+// - delivered: number;
+// - from: GalacticObjectID
+// - to: GalacticObjectID
+// - owner: CountryID
+// - path: {
+//     id: GalacticObjectID
+//     collected: number; value entered, same as that obj's trade_piracy.throughput
+//     delivered: number; value left, same as that obj's trade_piracy.total
+//   }[]
+// - - first entry in path is same ID as from
+// - - last entry in path is same ID as to
+// - - last entry delivered is the same as route delivered

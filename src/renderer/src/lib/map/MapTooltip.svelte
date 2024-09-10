@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	import { onDestroy, onMount } from 'svelte';
-	import { locale, t } from '../../intl';
-	import type { GalacticObject, GameState } from '../GameState';
+	import { locale, t, type MessageID } from '../../intl';
+	import type { GalacticObject, GameState, LocalizedText } from '../GameState';
 	import HeroiconUserMicro from '../icons/HeroiconUserMicro.svelte';
 	import { mapSettings } from '../settings';
 	import { isDefined } from '../utils';
 	import { localizeText } from './data/locUtils';
-	import { mapModes, type MapModeSystemValue } from './data/mapModes';
+	import { mapModes } from './data/mapModes';
 	import type { ProcessedSystem } from './data/processSystems';
 	import { resolveColor } from './mapUtils';
 
@@ -60,14 +60,15 @@
 		.filter(isDefined)
 		.sort((a, b) => (b?.num_sapient_pops ?? 0) - (a?.num_sapient_pops ?? 0));
 
-	async function localizeValueLabel(value: MapModeSystemValue) {
+	async function localizeValueLabel(
+		message: MessageID | LocalizedText,
+		data: Record<string, LocalizedText> = {},
+	) {
 		const values: Record<string, string> = {};
-		for (const [k, v] of Object.entries(value.legendLabelData ?? {})) {
+		for (const [k, v] of Object.entries(data)) {
 			values[k] = await localizeText(v);
 		}
-		return typeof value.legendLabel === 'string'
-			? $t(value.legendLabel, values)
-			: await localizeText(value.legendLabel);
+		return typeof message === 'string' ? $t(message, values) : await localizeText(message);
 	}
 </script>
 
@@ -89,7 +90,7 @@
 		{#await localizeText(system.name)}
 			{$t('generic.loading')}
 		{:then name}
-			{name}
+			{name} {system.id}
 		{/await}
 	</strong>
 	{#if processedSystem?.mapModeCountryLabel}
@@ -97,7 +98,13 @@
 			<span>
 				{$t(mapModes[$mapSettings.mapMode]?.tooltipLabel ?? 'generic.NEVER')}:
 			</span>
-			<strong>{$t(processedSystem.mapModeCountryLabel)}</strong>
+			<strong>
+				{#await localizeValueLabel(processedSystem.mapModeCountryLabel)}
+					{$t('generic.loading')}
+				{:then label}
+					{label}
+				{/await}
+			</strong>
 		</div>
 	{/if}
 	{#if processedSystem?.mapModeValues?.filter((v) => v.value).length}
@@ -120,7 +127,7 @@
 								stroke-width="0.125"
 							/>
 						</svg>
-						{#await localizeValueLabel(systemValue)}
+						{#await localizeValueLabel(systemValue.legendLabel, systemValue.legendLabelData)}
 							{$t('generic.loading')}
 						{:then label}
 							{label}

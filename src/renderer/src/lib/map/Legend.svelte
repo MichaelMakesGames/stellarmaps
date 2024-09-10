@@ -123,8 +123,8 @@
 				<text
 					fill="#FFFFFF"
 					x={symbolSize + symbolLabelGap}
-					y={symbolSize / 2}
-					dominant-baseline="central"
+					y={$mapSettings.legendFontSize}
+					dominant-baseline="auto"
 					font-size={$mapSettings.legendFontSize}
 					font-family={SYSTEM_FONTS}
 				>

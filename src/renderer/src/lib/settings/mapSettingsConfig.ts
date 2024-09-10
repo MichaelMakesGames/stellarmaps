@@ -15,7 +15,10 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 			{
 				id: 'mapMode',
 				type: 'select',
-				options: Object.values(mapModes),
+				options: Object.values(mapModes).filter(
+					// disable wars and fleet power map modes for now, until issues are addressed
+					(mode) => !['wars', 'fleetPowerAlliedAndHostile'].includes(mode.id),
+				),
 				requiresReprocessing: true,
 			},
 			{
@@ -25,6 +28,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				dynamicOptions: countryOptions,
 				requiresReprocessing: true,
 				hideIf: (settings) => !mapModes[settings.mapMode]?.hasPov,
+				tooltip: 'setting.mapModePointOfView_tooltip',
 			},
 			{
 				id: 'mapModeSpecies',

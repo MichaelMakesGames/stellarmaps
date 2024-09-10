@@ -96,6 +96,7 @@ export default function processSystems(
 			system,
 			povCountry ?? null,
 			selectedSpecies ?? null,
+			country ?? null,
 		);
 		const mapModeTotalValue = mapModeValues?.reduce((acc, cur) => acc + cur.value, 0);
 
