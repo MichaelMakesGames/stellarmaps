@@ -6,13 +6,14 @@ Stylized and customizable Stellaris maps
 
 # Features
 
+- Map modes (unions, population, relations, etc)
 - Country borders
 - Country names and emblems
 - Sector borders
+- System occupation
 - Capital / sector capital / populated system icons
 - Hyperlanes and hyper relays
 - Gateways and wormholes
-- Unions mode
 - Terra incognita
 - Background galaxy graphics
 - PNG and SVG export
@@ -22,8 +23,8 @@ Stylized and customizable Stellaris maps
 ## Planned
 
 - Time-lapses
-- Map Modes
-- Map Legend
+- More map modes
+- Fleets and more in system maps
 
 ## Known Issues
 
@@ -32,6 +33,8 @@ Stylized and customizable Stellaris maps
 - If viewing an SVG with Inkscape, the default Orbitron font will not work unless installed on your computer. [You can download it here.](https://fonts.google.com/specimen/Orbitron)
 
 # Credits
+
+A big thanks to an anonymous sponsor for supporting the development of system maps <3
 
 Special thanks to the translators:
 

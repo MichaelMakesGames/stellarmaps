@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.0](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.11.1...stellarmaps-v0.12.0) (2024-09-11)
+
+### Features
+
+#### Highlights
+
+- **map:** add map modes: total population, population by country, species population, trade routes, authority, relations, wars (temporarily disabled), and fleet power (temporarily disabled) ([e14e240](https://github.com/MichaelMakesGames/stellarmaps/commit/e14e2402d91db72b460ed775a2706b0e64a3ccdc), [482acf6](https://github.com/MichaelMakesGames/stellarmaps/commit/482acf66741790e52e95fc90a2a131903cb47f40), [d33a810](https://github.com/MichaelMakesGames/stellarmaps/commit/d33a81045ae78ec36b59fbe95ca31eb831a68b33))
+- **map:** add map mode info to system tooltips ([1ab0ba0](https://github.com/MichaelMakesGames/stellarmaps/commit/1ab0ba03b6ff4526f30778a9c49dde2a9a5ce3ec))
+- **map,ui:** add legends, with map mode info, system symbols, and occupation stripes ([19af168](https://github.com/MichaelMakesGames/stellarmaps/commit/19af168ad0f20ed938a8921fa47f4a8c683d4895), [1ab0ba0](https://github.com/MichaelMakesGames/stellarmaps/commit/1ab0ba03b6ff4526f30778a9c49dde2a9a5ce3ec), [5efb1c7](https://github.com/MichaelMakesGames/stellarmaps/commit/5efb1c77cfdf640de12578a6c603ccef12fbbead), [a33fa32](https://github.com/MichaelMakesGames/stellarmaps/commit/a33fa322c09546e35ff89dedbc91312dfe02d463))
+- **map:** add solar system maps, with basic display of stars, planets, moons, and asteroids, clickable hyperlane links, and configurable planet labels ([005f3bb](https://github.com/MichaelMakesGames/stellarmaps/commit/005f3bbe541d8fe6297f40b8e87d2d447d337a04), [d9d4816](https://github.com/MichaelMakesGames/stellarmaps/commit/d9d48160be03d813bb7d9af6e6ba63ad26cc2bc7), [5197804](https://github.com/MichaelMakesGames/stellarmaps/commit/5197804ff93ebf0e0180ca05cc3093b05a9947b7))
+- **map:** add optional occupation stripes to map and legend ([24cd624](https://github.com/MichaelMakesGames/stellarmaps/commit/24cd624ea424c001d9a3a30a8707273538a6f40e))
+
+#### Other Features
+
+- **map:** improve how "Min Contrast" color adjustment chooses to darken vs lighten ([0e72f57](https://github.com/MichaelMakesGames/stellarmaps/commit/0e72f573a1a58965599df0729857455539945436))
+- **map,ui:** tweaks to zooming and panning ([3b17dfd](https://github.com/MichaelMakesGames/stellarmaps/commit/3b17dfd3d60a383906f698d6bfe57526e90ba2b5))
+- **map:** add border gap setting ([cd0798a](https://github.com/MichaelMakesGames/stellarmaps/commit/cd0798a8c3c74213a24573be376256e58349640d))
+- **map,ui:** set a default border gap of 2 ([bc85abd](https://github.com/MichaelMakesGames/stellarmaps/commit/bc85abd7ba12705d1368f6fd17761158bafc7b26))
+- **map:** add option to absorb small "frontier bubbles" into nearby sectors ([b720cc2](https://github.com/MichaelMakesGames/stellarmaps/commit/b720cc24d9492864c5a688f42438070831399212))
+- **map:** add optional distinct styles for core and frontier sector borders ([6733c8e](https://github.com/MichaelMakesGames/stellarmaps/commit/6733c8e28f99aa2af93c72766fa693c215b645d5))
+- **ui:** add ability to click on country to change map mode point-of-view ([7bce924](https://github.com/MichaelMakesGames/stellarmaps/commit/7bce92434f4f70f287169e8560aa65d0413f0f28))
+- **ui:** convert union mode to map mode ([6ad9fa1](https://github.com/MichaelMakesGames/stellarmaps/commit/6ad9fa1dc88d1df89077f1f6fc5ad24b2a37a737))
+
+### Bug Fixes
+
+- fix crash loading saves with value-less loc variables ([ee3eeb2](https://github.com/MichaelMakesGames/stellarmaps/commit/ee3eeb2307a4dc66ad2cfc3cef582f99db77b887))
+- **map:** fix crash processing circular borders ([b1120c3](https://github.com/MichaelMakesGames/stellarmaps/commit/b1120c3bb884ef6bc75f4e4b2c49483d332dc647))
+- **map:** fix failed map renders when names contain color codes ([44f1926](https://github.com/MichaelMakesGames/stellarmaps/commit/44f1926a044e3d83df57b5e3eefc2a5abeeaeb81))
+- **map:** fix localization complex adjectives such as half-species ([213f90a](https://github.com/MichaelMakesGames/stellarmaps/commit/213f90ae0a1081e7ce7ca89c51a9241ae3c4db8b)), closes [#8](https://github.com/MichaelMakesGames/stellarmaps/issues/8)
+- **ui:** fix map mode system tooltip header displayed even if no values available ([b342e58](https://github.com/MichaelMakesGames/stellarmaps/commit/b342e58eabc52d9893e47a2c6e1a4d766baa6ee0))
+- **ui:** fix overflowing error toast ([3542b50](https://github.com/MichaelMakesGames/stellarmaps/commit/3542b50eec1c10484c691fd60e2aa37c1b26a82f))
+
 ## [0.11.1](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.11.0...stellarmaps-v0.11.1) (2024-06-01)
 
 ### Features
