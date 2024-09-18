@@ -1,7 +1,7 @@
 import { hfs } from '@humanfs/node';
 import * as prettier from 'prettier';
 
-const langs = ['ja-JP', 'zh-TW'];
+const langs = ['fi-FI', 'ja-JP', 'zh-TW'];
 let text = await hfs.text('./src/renderer/src/intl/en-US.ts');
 let messages = {};
 eval(text.replace('export default', 'messages ='));

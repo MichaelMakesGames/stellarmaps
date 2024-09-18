@@ -2,6 +2,7 @@ import IntlMessageFormat, { type FormatXMLElementFn, type PrimitiveType } from '
 import { derived, writable } from 'svelte/store';
 
 import enUS from './en-US';
+import fiFI from './fi-FI';
 import jaJP from './ja-JP';
 import zhTW from './zh-TW';
 
@@ -26,6 +27,7 @@ function flattenMessages(messages: UnflattenedMessages, prefix = ''): Record<str
 
 const locales = {
 	'en-US': flattenMessages(enUS) as Record<MessageID, string>,
+	'fi-FI': flattenMessages(fiFI) as Partial<Record<MessageID, string>>,
 	'ja-JP': flattenMessages(jaJP) as Partial<Record<MessageID, string>>,
 	'zh-TW': flattenMessages(zhTW) as Partial<Record<MessageID, string>>,
 	MessageID: Object.fromEntries(Object.keys(flattenMessages(enUS)).map((k) => [k, k])) as Record<

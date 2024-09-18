@@ -7,6 +7,7 @@ export const appSettingsConfig: AppSettingConfig[] = [
 		tooltip: 'setting.appLocale_tooltip',
 		options: [
 			{ id: 'en-US', literalName: 'English' },
+			{ id: 'fi-FI', literalName: 'Suomi' },
 			{ id: 'ja-JP', literalName: '日本語' },
 			{ id: 'zh-TW', literalName: '中文（正體字）' },
 		],

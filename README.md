@@ -40,6 +40,7 @@ Special thanks to the translators:
 
 - HYA for Traditional Chinese
 - karokaro for Japanese
+- Tarkkaillaan for Finnish
 
 The app icon is [Orbital](https://game-icons.net/1x1/lorc/orbital.html) by Lorc, licensed under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0/).
 
