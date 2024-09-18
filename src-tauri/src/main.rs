@@ -43,12 +43,11 @@ fn main() {
 
 #[tauri::command]
 async fn get_stellaris_colors_cmd(path: String) -> Result<Vec<String>, String> {
-	let paths = get_stellaris_data_paths(
-		Path::new(&path).to_path_buf(),
-		Path::new("flags").to_path_buf(),
-		FileFilter::Name(OsString::from("colors.txt")),
-		1,
-	);
+	let paths: Vec<PathBuf> = get_stellaris_data_dirs(Path::new(&path).to_path_buf())
+		.into_iter()
+		.map(|p| p.join("flags").join("colors.txt"))
+		.filter(|p| p.exists())
+		.collect();
 	if paths.is_empty() {
 		return Err(String::from("No color files found"));
 	}
@@ -207,7 +206,6 @@ fn get_sub_dirs(path: &PathBuf) -> anyhow::Result<Vec<PathBuf>> {
 }
 
 enum FileFilter {
-	Name(OsString),
 	Extension(OsString),
 }
 
@@ -226,10 +224,6 @@ fn get_files_matching_filter(
 				files.append(&mut sub_dir_files);
 			} else {
 				match filter {
-					FileFilter::Name(filter_name) => match path.file_name() {
-						Some(name) if name == filter_name => files.push(path),
-						_ => (),
-					},
 					FileFilter::Extension(filter_ext) => match path.extension() {
 						Some(ext) if ext == filter_ext => files.push(path),
 						_ => (),
