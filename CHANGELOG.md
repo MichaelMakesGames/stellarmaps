@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.2](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.12.1...stellarmaps-v0.12.2) (2024-09-18)
+
+### Bug Fixes
+
+- **export:** png export fails if legend disabled ([c7a0de6](https://github.com/MichaelMakesGames/stellarmaps/commit/c7a0de6ba45fe2fcf94f377ef3fb8f16eb46a804))
+
 ## [0.12.1](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.12.0...stellarmaps-v0.12.1) (2024-09-18)
 
 ### Features
