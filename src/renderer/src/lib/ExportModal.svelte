@@ -158,14 +158,16 @@
 						},
 					);
 
-		const legendImageUrl = await convertSvgToPng(legendTarget.firstChild as SVGElement, {
-			left: 0,
-			top: 0,
-			width: (1000 * imageWidth) / imageHeight,
-			height: 1000,
-			outputWidth: imageWidth,
-			outputHeight: imageHeight,
-		}).then(convertBlobToDataUrl);
+		const legendImageUrl = $mapSettings.legend
+			? await convertSvgToPng(legendTarget.firstChild as SVGElement, {
+					left: 0,
+					top: 0,
+					width: (1000 * imageWidth) / imageHeight,
+					height: 1000,
+					outputWidth: imageWidth,
+					outputHeight: imageHeight,
+				}).then(convertBlobToDataUrl)
+			: undefined;
 
 		const buffer = await convertSvgToPng(
 			solarSystemMap ? (solarSystemMapTarget.firstChild as SVGElement) : galaxyMapSvg,
