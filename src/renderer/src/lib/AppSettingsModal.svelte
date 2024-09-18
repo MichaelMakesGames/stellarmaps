@@ -45,10 +45,10 @@
 					})}
 				</strong>
 				<ul class="list-disc ps-4">
-					{#each $translatorModeUntranslatedMessageIDs.slice(0, 5) as messageId}<li>
+					{#each $translatorModeUntranslatedMessageIDs.slice(0, 10) as messageId}<li>
 							{messageId}
 						</li>{/each}
-					{#if $translatorModeUntranslatedMessageIDs.length > 5}<li>...</li>{/if}
+					{#if $translatorModeUntranslatedMessageIDs.length > 10}<li>...</li>{/if}
 				</ul>
 			{/if}
 			{#if $translatorModeExtraMessageIDs.length > 0}

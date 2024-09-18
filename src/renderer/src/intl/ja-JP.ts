@@ -24,11 +24,17 @@ export default {
 		select_save: 'ウィンドウ左上部の『セーブデータ』からセーブデータを選択してください',
 		loading: '数秒お待ちください...',
 		error: '何か問題があります',
+		click_to_view_system: 'Click to open map',
+		tooltip: {
+			colonies: 'Colonies',
+		},
 	},
 	// various generic messages
 	generic: {
+		NEVER: 'THIS IS A BUG', // this message will never be displayed
 		enabled: '有効',
 		disabled: '無効',
+		back_button: 'Back',
 		cancel_button: 'キャンセル',
 		close_button: '閉じる',
 		loading: 'ロード中...',
@@ -39,22 +45,22 @@ export default {
 		unsaved_setting_profile: '変更したマップ設定が保存されていません。これらの変更は失われます。',
 		delete_setting_profile: '"{name}"を削除しようとしています。実行すると取り消しできません。',
 	},
-	// various prompt popups
 	prompt: {
+		// various prompt popups
 		enter_settings_profile_name: '設定名の入力',
 		select_save_file: 'セーブデータの選択',
 		select_save_file_filter_name: 'Stellarisセーブデータ',
 		select_stellaris_install: 'Stellarisのインストールフォルダを選択',
 	},
-	// input validation messages
 	validation: {
+		// input validation messages
 		required: '必要',
 		min: '最小: {min, number}',
 		max: '最大: {max, number}',
 		min_max: '最小: {min, number}, 最大: {max, number}',
 	},
-	// various notification popups
 	notification: {
+		// various notification popups
 		settings_profile_saved: '"設定{name}"をセーブしました',
 		failed_to_load_save_list: 'Stellarisのセーブデータの読み込みに失敗しました',
 		failed_to_load_save_file: '{filePath}の読み込みに失敗しました',
@@ -67,8 +73,8 @@ export default {
 			action: 'インストール場所を選択',
 		},
 	},
-	// messages for the export button and popup
 	export: {
+		// messages for the export button and popup
 		button: 'エクスポート',
 		header: '画像を出力する',
 		image_size: '画像サイズ',
@@ -83,8 +89,8 @@ export default {
 		export_png_button: 'PNGファイルで出力',
 		processing: '出力中...',
 	},
-	// messages in the app settings popup
 	app_settings: {
+		// messages in the app settings popup
 		title: '設定',
 		description: 'すべての変更は自動的に保存され、適用されます。',
 		select_translator_mode_file: '翻訳ファイルの選択',
@@ -93,9 +99,9 @@ export default {
 		translator_mode_untranslated_messages: '未翻訳メッセージ: {number, number}',
 		translator_mode_extra_messages: '無効なメッセージID: {number, number}',
 	},
-	// labels for various types of setting controls
-	// (shared by multiple settings)
 	control: {
+		// labels for various types of setting controls
+		// (shared by multiple settings)
 		color: {
 			label: '色',
 			adjustment: {
@@ -126,8 +132,8 @@ export default {
 			},
 		},
 	},
-	// dropdown options for various settings
 	option: {
+		// dropdown options for various settings
 		color: {
 			group: {
 				dynamic: 'ダイナミック・カラー',
@@ -216,8 +222,8 @@ export default {
 			owned: '他国の領土は避ける',
 			none: '無視する',
 		},
-		terra_incognita_perspective_country: {
-			player: 'プレイヤー',
+		country: {
+			player: 'Player',
 		},
 		terra_incognita_style: {
 			flat: 'フラット',
@@ -231,16 +237,20 @@ export default {
 			colonized: '入植済みの星系',
 			all: 'すべての星系',
 		},
-		map_mode: {
-			default: '帝国',
-			wars: '戦争',
+		system_map_label_position: {
+			top: 'Top',
+			bottom: 'Bottom',
+			right: 'Right',
+			left: 'Left',
+			orbit: 'Orbit',
 		},
 	},
-	// labels and tooltips for various settings
 	setting: {
+		// labels and tooltips for various settings
 		group: {
 			borders: '境界線',
 			unions: '同盟モード',
+			occupation: 'Occupation',
 			countryLabels: '国ラベル',
 			systemLabels: '星系ラベル',
 			systemIcons: '星系アイコン',
@@ -250,9 +260,16 @@ export default {
 			misc: 'その他',
 			advancedBorder: '境界線の詳細設定',
 			starscape: '星景',
+			legend: 'Legend',
+			solarSystemMap: 'Solar System Maps',
 		},
 		mapMode: 'マップモード',
 		mapModePointOfView: '視点',
+		mapModePointOfView_tooltip: `<ul>
+			<li><strong>WARNING</strong>: changing this can reveal information you normally could not see. Avoid if you want a "pure" experience.</li>
+			<li>Tip: <strong>shift+click</strong> a country on the map to change to their Point of View.</li>
+		</ul>`,
+		mapModeSpecies: 'Species',
 		borderStroke: '国境線',
 		borderColor: '国境線の色',
 		borderFillColor: '帝国の塗りつぶし色',
@@ -262,8 +279,22 @@ export default {
 			<li>不透明度は100％から開始します。</li>
 			<li>帝国の塗りつぶし色の不透明度が低い場合に最適です。</li>
 		</ul>`,
+		frontierBubbleThreshold: 'Frontier Bubble Threshold',
+		frontierBubbleThreshold_tooltip: `<ul>
+			<li>Frontier bubbles are drawn as if part of an adjacent sector.</li>
+			<li>Frontier bubbles are small clusters of hyperlane-connected sector-less systems.</li>
+			<li>This setting determines the maximum number of systems in a frontier bubble.</li>
+			<li>Leave blank or set to zero to disable.</li>
+		</ul>`,
+		sectorTypeBorderStyles: 'Distinct Sector Type Styles',
+		sectorTypeBorderStyles_tooltip:
+			'Adds separate style settings for Core and Frontier sector borders.',
 		sectorBorderStroke: 'セクター境界',
 		sectorBorderColor: 'セクター境界色',
+		sectorCoreBorderStroke: 'Core Sector Borders',
+		sectorCoreBorderColor: 'Core Sector Border Color',
+		sectorFrontierBorderStroke: 'Frontier Sector Borders',
+		sectorFrontierBorderColor: 'Frontier Sector Border Color',
 		unionBorderStroke: '連邦の境界',
 		unionBorderColor: '連邦境界色',
 		unionMode: '同盟モード',
@@ -274,6 +305,8 @@ export default {
 		unionLeaderSymbol: '宗主国/連邦指導国のシンボル',
 		unionLeaderSymbolSize: '宗主国/連邦指導国のシンボルのサイズ',
 		unionLeaderUnderline: '宗主国/連邦指導国の名前に下線を付ける',
+		occupation: 'Occupation',
+		occupationColor: 'Occupation Color',
 		countryNames: '国名表示',
 		countryNamesType: '国名のタイプ',
 		countryNamesMinSize: '名前の文字最小サイズ',
@@ -373,6 +406,24 @@ export default {
 		starScapeStars: '背景の星',
 		starScapeStarsColor: '背景の星の色',
 		starScapeStarsCount: '背景の星の数',
+		legend: 'Legend',
+		legendFontSize: 'Font Size',
+		legendBorderStroke: 'Border',
+		legendBorderColor: 'Border Color',
+		legendBackgroundColor: 'Background Color',
+		systemMapOrbitStroke: 'Orbit Lines',
+		systemMapOrbitColor: 'Orbit Lines Color',
+		systemMapPlanetScale: 'Planet Scale',
+		systemMapLabelPlanetsFont: 'Planet Name Font',
+		systemMapLabelPlanetsFontSize: 'Planet Name Font Size',
+		systemMapLabelPlanetsPosition: 'Planet Name Position',
+		systemMapLabelPlanetsFallbackPosition: 'Planet Name Fallback Position',
+		systemMapLabelColoniesEnabled: 'Colony Names Enabled',
+		systemMapLabelStarsEnabled: 'Star Names Enabled',
+		systemMapLabelPlanetsEnabled: 'Planet Names Enabled',
+		systemMapLabelMoonsEnabled: 'Moon Names Enabled',
+		systemMapLabelAsteroidsEnabled: 'Asteroid Names Enabled',
+		systemMapHyperlanesEnabled: 'Hyperlane Connections Enabled',
 		appLocale: 'StellarMapsの言語',
 		appLocale_tooltip:
 			'翻訳を手伝いたい人はDiscordサーバー（トップバーのリンク）に参加してください！',
@@ -389,5 +440,64 @@ export default {
 			<li>メッセージの欠落や余分なメッセージについて警告を表示します。</li>
 			<li>アプリケーションを再起動する場合は、翻訳ファイルを再選択する必要があります。</li>
 		</ul>`,
+	},
+	map_mode: {
+		common: {
+			selected_country: 'Selected Country',
+		},
+		default: {
+			name: 'Empires',
+		},
+		unions: {
+			name: 'Unions',
+		},
+		wars: {
+			name: 'Wars',
+			tooltip_label: 'War Status',
+			hostile: 'Hostile',
+			ally: 'Ally in Active War',
+			at_war: 'At War (Uninvolved)',
+			at_peace: 'At Peace',
+		},
+		population: {
+			name_total: 'Total Population',
+			name_by_country: 'Population by Country',
+			name_species: 'Species Population',
+			tooltip_label: 'Population',
+			total: 'Total Population',
+			country: 'Population (Colored by Country)',
+			free_species: 'Free {species}',
+			enslaved_species: 'Enslaved {species}',
+			other_species: 'Other Species',
+		},
+		fleet_power: {
+			name_allied_and_hostile: 'Allied and Hostile Fleet Power',
+			tooltip_label: 'Fleet Power',
+			own_fleet: 'Own Fleet',
+			own_station: 'Own Station',
+			allied_fleet: 'Allied Fleet',
+			allied_station: 'Allied Station',
+			hostile_fleet: 'Hostile Fleet',
+			hostile_station: 'Hostile Station',
+		},
+		trade_routes: {
+			name: 'Trade Routes',
+			tooltip_label: 'Trade Value',
+			collected: 'Collected Value',
+			pass_through: 'Passed Through Value',
+			pirated: 'Pirated Value',
+		},
+		authority: {
+			name: 'Authority',
+			tooltip_label: 'Authority',
+		},
+		relations: {
+			name: 'Relations',
+			tooltip_label: 'Relations',
+		},
+	},
+	legend: {
+		fully_occupied: 'Fully Occupied',
+		partially_occupied: 'Partially Occupied',
 	},
 };

@@ -9,7 +9,7 @@
 		"vite:build": "vite build",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
-		"lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts",
+		"lint": "eslint . --ext .ts",
 		"typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
 		"svelte-check": "svelte-check --tsconfig ./tsconfig.json",
 		"typecheck": "npm run typecheck:node && npm run svelte-check",
@@ -17,7 +17,8 @@
 		"knip": "knip",
 		"update-git-hooks": "simple-git-hooks",
 		"commitlint": "commitlint --edit",
-		"generate-changelog": "commit-and-tag-version --skip.bump --skip.commit --skip.tag -t stellarmaps-v && prettier --write ./CHANGELOG.md"
+		"generate-changelog": "commit-and-tag-version --skip.bump --skip.commit --skip.tag -t stellarmaps-v && prettier --write ./CHANGELOG.md",
+		"update-intl": "node ./scripts/update-intl"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "npm run knip && npm run typecheck && npm run format:check && npm run lint",
@@ -27,6 +28,7 @@
 		"@commitlint/cli": "^19.2.2",
 		"@commitlint/config-conventional": "^19.2.2",
 		"@electron-toolkit/tsconfig": "^1.0.1",
+		"@humanfs/node": "^0.16.5",
 		"@skeletonlabs/skeleton": "^2.9.1",
 		"@skeletonlabs/tw-plugin": "^0.4.0",
 		"@sveltejs/vite-plugin-svelte": "^3.1.0",

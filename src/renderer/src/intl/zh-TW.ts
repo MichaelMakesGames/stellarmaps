@@ -24,11 +24,17 @@ export default {
 		select_save: '左上角選擇存檔',
 		loading: '讀取中...',
 		error: '發生了錯誤',
+		click_to_view_system: 'Click to open map',
+		tooltip: {
+			colonies: 'Colonies',
+		},
 	},
 	// various generic messages
 	generic: {
+		NEVER: 'THIS IS A BUG', // this message will never be displayed
 		enabled: '啓用',
 		disabled: '停用',
+		back_button: 'Back',
 		cancel_button: '取消',
 		close_button: '關閉',
 		loading: '讀取中...',
@@ -39,22 +45,22 @@ export default {
 		unsaved_setting_profile: '您尚未儲存自訂地圖的設定，這些變更將會遺失。',
 		delete_setting_profile: '您即將刪除 "{name}". 這是無法挽回的。',
 	},
-	// various prompt popups
 	prompt: {
+		// various prompt popups
 		enter_settings_profile_name: '輸入名稱',
 		select_save_file: '選擇存檔',
 		select_save_file_filter_name: '群星存檔',
 		select_stellaris_install: '選擇安裝位置',
 	},
-	// input validation messages
 	validation: {
+		// input validation messages
 		required: '必填',
 		min: '最小: {min, number}',
 		max: '最大: {max, number}',
 		min_max: '最小: {min, number}, 最大: {max, number}',
 	},
-	// various notification popups
 	notification: {
+		// various notification popups
 		settings_profile_saved: '"{name}" 設定儲存',
 		failed_to_load_save_list: '未能讀取群星存檔',
 		failed_to_load_save_file: '未能讀取 {filePath}',
@@ -67,8 +73,8 @@ export default {
 			action: '選擇安裝',
 		},
 	},
-	// messages for the export button and popup
 	export: {
+		// messages for the export button and popup
 		button: '導出',
 		header: '導出圖片',
 		image_size: '圖片大小',
@@ -83,8 +89,8 @@ export default {
 		export_png_button: '導出 PNG',
 		processing: '處理中...',
 	},
-	// messages in the app settings popup
 	app_settings: {
+		// messages in the app settings popup
 		title: '設定',
 		description: '所有更改都會自動保存和應用。',
 		select_translator_mode_file: '選擇翻譯文本',
@@ -93,9 +99,9 @@ export default {
 		translator_mode_untranslated_messages: '未翻譯訊息: {number, number}',
 		translator_mode_extra_messages: '無效訊息編號: {number, number}',
 	},
-	// labels for various types of setting controls
-	// (shared by multiple settings)
 	control: {
+		// labels for various types of setting controls
+		// (shared by multiple settings)
 		color: {
 			label: '顔色',
 			adjustment: {
@@ -126,8 +132,8 @@ export default {
 			},
 		},
 	},
-	// dropdown options for various settings
 	option: {
+		// dropdown options for various settings
 		color: {
 			group: {
 				dynamic: '動態色彩',
@@ -216,8 +222,8 @@ export default {
 			owned: '擁有的',
 			none: '無',
 		},
-		terra_incognita_perspective_country: {
-			player: '玩家',
+		country: {
+			player: 'Player',
 		},
 		terra_incognita_style: {
 			flat: '平滑',
@@ -231,12 +237,20 @@ export default {
 			colonized: '殖民星系',
 			all: '全部星系',
 		},
+		system_map_label_position: {
+			top: 'Top',
+			bottom: 'Bottom',
+			right: 'Right',
+			left: 'Left',
+			orbit: 'Orbit',
+		},
 	},
-	// labels and tooltips for various settings
 	setting: {
+		// labels and tooltips for various settings
 		group: {
 			borders: '國家邊框',
 			unions: '聯邦邊框',
+			occupation: 'Occupation',
 			countryLabels: '國家圖示',
 			systemLabels: '星系圖示',
 			systemIcons: '銀河圖示',
@@ -246,7 +260,16 @@ export default {
 			misc: '其他',
 			advancedBorder: '進階邊框設定',
 			starscape: '星海背景（實驗）',
+			legend: 'Legend',
+			solarSystemMap: 'Solar System Maps',
 		},
+		mapMode: 'Map Mode',
+		mapModePointOfView: 'Point of View',
+		mapModePointOfView_tooltip: `<ul>
+			<li><strong>WARNING</strong>: changing this can reveal information you normally could not see. Avoid if you want a "pure" experience.</li>
+			<li>Tip: <strong>shift+click</strong> a country on the map to change to their Point of View.</li>
+		</ul>`,
+		mapModeSpecies: 'Species',
 		borderStroke: '國家邊框',
 		borderColor: '國家邊框顔色',
 		borderFillColor: '國家填充色',
@@ -256,8 +279,22 @@ export default {
 			<li>邊界是從100%不透明開始。</li>
 			<li>如果國家填充色的透明度越低，效果越好。</li>
 		</ul>`,
+		frontierBubbleThreshold: 'Frontier Bubble Threshold',
+		frontierBubbleThreshold_tooltip: `<ul>
+			<li>Frontier bubbles are drawn as if part of an adjacent sector.</li>
+			<li>Frontier bubbles are small clusters of hyperlane-connected sector-less systems.</li>
+			<li>This setting determines the maximum number of systems in a frontier bubble.</li>
+			<li>Leave blank or set to zero to disable.</li>
+		</ul>`,
+		sectorTypeBorderStyles: 'Distinct Sector Type Styles',
+		sectorTypeBorderStyles_tooltip:
+			'Adds separate style settings for Core and Frontier sector borders.',
 		sectorBorderStroke: '星域邊框',
 		sectorBorderColor: '星域邊框顔色',
+		sectorCoreBorderStroke: 'Core Sector Borders',
+		sectorCoreBorderColor: 'Core Sector Border Color',
+		sectorFrontierBorderStroke: 'Frontier Sector Borders',
+		sectorFrontierBorderColor: 'Frontier Sector Border Color',
 		unionBorderStroke: '聯邦邊框',
 		unionBorderColor: '聯邦邊框顔色',
 		unionMode: '聯邦模式',
@@ -268,6 +305,8 @@ export default {
 		unionLeaderSymbol: '聯邦領袖圖示',
 		unionLeaderSymbolSize: '聯邦領袖圖示大小',
 		unionLeaderUnderline: '聯邦領袖國名 底綫',
+		occupation: 'Occupation',
+		occupationColor: 'Occupation Color',
 		countryNames: '國名',
 		countryNamesType: '國名類型',
 		countryNamesMinSize: '名稱最小尺寸',
@@ -321,6 +360,8 @@ export default {
 			<li>啟用後，銀河系的整體邊界會是圓形的，並且星系之間不會有漏洞。</li>
 			<li>如果星系是「星爆」星系，則會使用特殊的螺旋形狀而不是圓形。</li>
 		</ul>`,
+		borderGap: 'Border Gap',
+		borderGap_tooltip: 'Adds blank space between country borders',
 		hyperlaneSensitiveBorders: '超空間邊框敏感',
 		hyperlaneSensitiveBorders_tooltip: `<ul>
 			<li>啟用後，邊框將緊貼超空間航道。</li>
@@ -363,6 +404,24 @@ export default {
 		starScapeStars: '群星',
 		starScapeStarsColor: '群星顔色',
 		starScapeStarsCount: '群星數量',
+		legend: 'Legend',
+		legendFontSize: 'Font Size',
+		legendBorderStroke: 'Border',
+		legendBorderColor: 'Border Color',
+		legendBackgroundColor: 'Background Color',
+		systemMapOrbitStroke: 'Orbit Lines',
+		systemMapOrbitColor: 'Orbit Lines Color',
+		systemMapPlanetScale: 'Planet Scale',
+		systemMapLabelPlanetsFont: 'Planet Name Font',
+		systemMapLabelPlanetsFontSize: 'Planet Name Font Size',
+		systemMapLabelPlanetsPosition: 'Planet Name Position',
+		systemMapLabelPlanetsFallbackPosition: 'Planet Name Fallback Position',
+		systemMapLabelColoniesEnabled: 'Colony Names Enabled',
+		systemMapLabelStarsEnabled: 'Star Names Enabled',
+		systemMapLabelPlanetsEnabled: 'Planet Names Enabled',
+		systemMapLabelMoonsEnabled: 'Moon Names Enabled',
+		systemMapLabelAsteroidsEnabled: 'Asteroid Names Enabled',
+		systemMapHyperlanesEnabled: 'Hyperlane Connections Enabled',
 		appLocale: '群星地圖語言',
 		appLocale_tooltip: '如果你想幫助我們翻譯，加入Discord (鏈接在面板上面) ！',
 		appStellarisLanguage: '群星語言',
@@ -377,5 +436,64 @@ export default {
 			<li>顯示有關遺失和相關訊息的警告。</li>
 			<li>如果重新載入應用程序，您需要選擇該檔案。</li>
 		</ul>`,
+	},
+	map_mode: {
+		common: {
+			selected_country: 'Selected Country',
+		},
+		default: {
+			name: 'Empires',
+		},
+		unions: {
+			name: 'Unions',
+		},
+		wars: {
+			name: 'Wars',
+			tooltip_label: 'War Status',
+			hostile: 'Hostile',
+			ally: 'Ally in Active War',
+			at_war: 'At War (Uninvolved)',
+			at_peace: 'At Peace',
+		},
+		population: {
+			name_total: 'Total Population',
+			name_by_country: 'Population by Country',
+			name_species: 'Species Population',
+			tooltip_label: 'Population',
+			total: 'Total Population',
+			country: 'Population (Colored by Country)',
+			free_species: 'Free {species}',
+			enslaved_species: 'Enslaved {species}',
+			other_species: 'Other Species',
+		},
+		fleet_power: {
+			name_allied_and_hostile: 'Allied and Hostile Fleet Power',
+			tooltip_label: 'Fleet Power',
+			own_fleet: 'Own Fleet',
+			own_station: 'Own Station',
+			allied_fleet: 'Allied Fleet',
+			allied_station: 'Allied Station',
+			hostile_fleet: 'Hostile Fleet',
+			hostile_station: 'Hostile Station',
+		},
+		trade_routes: {
+			name: 'Trade Routes',
+			tooltip_label: 'Trade Value',
+			collected: 'Collected Value',
+			pass_through: 'Passed Through Value',
+			pirated: 'Pirated Value',
+		},
+		authority: {
+			name: 'Authority',
+			tooltip_label: 'Authority',
+		},
+		relations: {
+			name: 'Relations',
+			tooltip_label: 'Relations',
+		},
+	},
+	legend: {
+		fully_occupied: 'Fully Occupied',
+		partially_occupied: 'Partially Occupied',
 	},
 };
