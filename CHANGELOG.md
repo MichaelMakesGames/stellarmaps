@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.1](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.12.0...stellarmaps-v0.12.1) (2024-09-18)
+
+### Features
+
+- **data:** load modded colors on top of vanilla definitions ([52208f2](https://github.com/MichaelMakesGames/stellarmaps/commit/52208f225feb17df214af0ebca4db512f4bea6b0))
+- **ui:** add Finnish translation from Tarkkaillaan ([a6ce02a](https://github.com/MichaelMakesGames/stellarmaps/commit/a6ce02a4fc5c2af4142d35a2150b5b619e5c17aa))
+- **ui:** update Japanese translation from karokaro ([320ee5a](https://github.com/MichaelMakesGames/stellarmaps/commit/320ee5ac771f1314d558f27f3c32c01339b265d1))
+
 ## [0.12.0](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.11.1...stellarmaps-v0.12.0) (2024-09-11)
 
 ### Features
