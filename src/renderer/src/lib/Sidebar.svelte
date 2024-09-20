@@ -2,20 +2,21 @@
 	import {
 		Accordion,
 		AccordionItem,
-		ListBox,
-		ListBoxItem,
 		getModalStore,
 		getToastStore,
+		ListBox,
+		ListBoxItem,
 		localStorageStore,
 		popup,
 	} from '@skeletonlabs/skeleton';
+
 	import { t } from '../intl';
 	import ApplyChangesButton from './ApplyChangesButton.svelte';
-	import { gameStatePromise, gameStateSchema } from './GameState';
-	import SettingControl from './SettingControl/index.svelte';
 	import debug from './debug';
+	import { gameStatePromise, gameStateSchema } from './GameState';
 	import HeroiconTrashMini from './icons/HeroiconTrashMini.svelte';
 	import { localizeText } from './map/data/locUtils';
+	import SettingControl from './SettingControl/index.svelte';
 	import {
 		applyMapSettings,
 		asUnknownSettingConfig,
@@ -26,9 +27,9 @@
 		mapSettings,
 		mapSettingsConfig,
 		presetMapSettings,
+		type SavedMapSettings,
 		settingsAreDifferent,
 		validateAndResetMapSettings,
-		type SavedMapSettings,
 	} from './settings';
 	import { speciesOptions } from './settings/options/speciesOptions';
 	import type { StellarisSaveMetadata } from './stellarMapsApi';
@@ -231,7 +232,7 @@
 		class="p-4"
 		on:submit|preventDefault={() => {
 			loadedSave = selectedSave;
-			if (selectedSave) {
+			if (selectedSave != null) {
 				loadSave(selectedSave.path);
 			}
 		}}
@@ -273,9 +274,9 @@
 		<button
 			type="submit"
 			class="variant-filled-primary btn w-full"
-			disabled={!selectedSave}
-			class:variant-filled-primary={selectedSave && selectedSave !== loadedSave}
-			class:variant-filled-surface={!selectedSave || selectedSave === loadedSave}
+			disabled={selectedSave == null}
+			class:variant-filled-primary={selectedSave != null && selectedSave !== loadedSave}
+			class:variant-filled-surface={selectedSave == null || selectedSave === loadedSave}
 		>
 			{$t('side_bar.load_save_button')}
 		</button>
@@ -336,6 +337,7 @@
 											body: $t('confirmation.delete_setting_profile', { name: saved.name }),
 											buttonTextConfirm: 'Delete',
 											response: (response) => {
+												// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions -- this is a boolean, but TS thinks any
 												if (response) {
 													customSavedSettings.update((prev) =>
 														prev.filter((other) => !(other.name === saved.name)),

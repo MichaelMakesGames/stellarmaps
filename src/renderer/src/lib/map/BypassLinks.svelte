@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { mapSettings } from '../settings';
-	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
+	import Glow from './Glow.svelte';
 	import { getStrokeAttributes, getStrokeColorAttributes } from './mapUtils';
 	export let data: MapData;
 	export let colors: Record<string, string>;

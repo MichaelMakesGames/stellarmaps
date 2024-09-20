@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { select } from 'd3-selection';
 	import { zoom, zoomIdentity } from 'd3-zoom';
+
 	import { t } from '../../../intl';
 	import type { GalacticObject, GameState, Planet } from '../../GameState';
-	import { mapSettings, type MapSettings } from '../../settings';
+	import { type MapSettings, mapSettings } from '../../settings';
 	import { isDefined } from '../../utils';
 	import { localizeText } from '../data/locUtils';
 	import Glow from '../Glow.svelte';
@@ -21,7 +22,7 @@
 	let g: SVGGElement;
 	let zoomHandler = zoom()
 		.on('zoom', (e) => {
-			if (g) g.setAttribute('transform', e.transform.toString());
+			g.setAttribute('transform', e.transform.toString());
 		})
 		.filter(function filter(event: MouseEvent) {
 			// click and drag for middle button only
@@ -29,13 +30,11 @@
 			// this is the default implementation
 			return (!event.ctrlKey || event.type === 'wheel') && !event.button;
 		});
-	$: if (svg && !exportMode && !previewMode) {
+	$: if (!exportMode && !previewMode) {
 		select(svg).call(zoomHandler as any);
 	}
 	function resetZoom() {
-		if (svg) {
-			select(svg).call(zoomHandler.transform as any, zoomIdentity);
-		}
+		select(svg).call(zoomHandler.transform as any, zoomIdentity);
 	}
 
 	$: planets = system.planet
@@ -518,7 +517,7 @@
 			{#if isStar(planet)}
 				<Glow enabled filterId="starGlow" let:filter>
 					<circle
-						fill={isBlackHole(planet) && filter ? '#FFFFFF' : getPlanetColor(planet)}
+						fill={isBlackHole(planet) && filter !== '' ? '#FFFFFF' : getPlanetColor(planet)}
 						r={getPlanetRadius(planet, $mapSettings)}
 						cx={-planet.coordinate.x}
 						cy={planet.coordinate.y}

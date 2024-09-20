@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { fly } from 'svelte/transition';
+
 	import { t } from '../../intl';
 	import HeroiconTrashMini from '../icons/HeroiconTrashMini.svelte';
 	import {

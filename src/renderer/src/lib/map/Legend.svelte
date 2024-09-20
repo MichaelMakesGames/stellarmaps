@@ -29,7 +29,7 @@
 		borderWidth * 2;
 </script>
 
-{#if data?.legend.items.length && $mapSettings.legend}
+{#if (data?.legend.items.length ?? 0) > 0 && $mapSettings.legend}
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -38,7 +38,7 @@
 		height="{height}px"
 	>
 		<defs>
-			{#if colors}
+			{#if colors && data}
 				<OccupationPatternDefs {colors} {data} />
 			{/if}
 			<Icons />

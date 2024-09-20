@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	import { onDestroy, onMount } from 'svelte';
-	import { locale, t, type MessageID } from '../../intl';
+
+	import { locale, type MessageID, t } from '../../intl';
 	import type { GalacticObject, GameState, LocalizedText } from '../GameState';
 	import HeroiconUserMicro from '../icons/HeroiconUserMicro.svelte';
 	import { mapSettings } from '../settings';
@@ -44,7 +45,7 @@
 				top: arrowData?.y != null ? `${arrowData.y}px` : '',
 				right: '',
 				bottom: '',
-				...(staticSide ? { [staticSide]: '-5px' } : {}),
+				...(staticSide != null ? { [staticSide]: '-5px' } : {}),
 			});
 		});
 	}
@@ -56,9 +57,9 @@
 	onDestroy(() => cleanup?.());
 
 	$: planets = system.colonies
-		?.map((planetId) => gameState?.planets.planet[planetId])
+		.map((planetId) => gameState?.planets.planet[planetId])
 		.filter(isDefined)
-		.sort((a, b) => (b?.num_sapient_pops ?? 0) - (a?.num_sapient_pops ?? 0));
+		.sort((a, b) => (b.num_sapient_pops ?? 0) - (a.num_sapient_pops ?? 0));
 
 	async function localizeValueLabel(
 		message: MessageID | LocalizedText,
@@ -143,7 +144,7 @@
 			{/each}
 		</ul>
 	{/if}
-	{#if planets?.length}
+	{#if planets.length}
 		<strong class="mt-2 block">{$t('map.tooltip.colonies')}</strong>
 		<ul class="ps-4">
 			{#each planets as planet}

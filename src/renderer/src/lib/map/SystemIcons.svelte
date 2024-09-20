@@ -1,10 +1,12 @@
 <script lang="ts">
 	import * as d3Shape from 'd3-shape';
+	import type { PickByValue } from 'utility-types';
+
 	import {
-		mapSettings,
-		mapSettingsConfig,
 		type IconMapSettings,
 		type MapSettings,
+		mapSettings,
+		mapSettingsConfig,
 		type SettingConfigIcon,
 	} from '../settings';
 	import { mapModes } from './data/mapModes';
@@ -16,7 +18,7 @@
 	export let colors: Record<string, string>;
 
 	interface IconSettingMetadata {
-		systemProperty?: keyof ProcessedSystem;
+		systemProperty?: keyof PickByValue<ProcessedSystem, boolean>;
 		mustKnowOwner?: boolean;
 	}
 	const metadata: Record<IconMapSettings, IconSettingMetadata> = {

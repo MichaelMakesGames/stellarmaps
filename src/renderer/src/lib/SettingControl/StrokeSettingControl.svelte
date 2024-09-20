@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Accordion, AccordionItem, popup } from '@skeletonlabs/skeleton';
 	import { fade } from 'svelte/transition';
+
 	import { t } from '../../intl';
 	import HeroiconInfoMini from '../icons/HeroiconInfoMini.svelte';
 	import type { SettingConfigStroke, StrokeSetting } from '../settings';

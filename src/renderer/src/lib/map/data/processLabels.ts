@@ -169,10 +169,14 @@ export default function processLabels(
 							}
 							return {
 								point: inverseX(pointFromGeoJSON(point)),
-								emblemWidth: emblemWidth != null ? emblemWidth * SCALE : null,
-								emblemHeight: emblemWidth != null ? emblemWidth * emblemAspectRatio * SCALE : null,
-								textWidth: textWidth != null ? textWidth * SCALE : null,
-								textHeight: textWidth != null ? textWidth * textAspectRatio * SCALE : null,
+								emblemWidth: emblemWidth != null && emblemWidth > 0 ? emblemWidth * SCALE : null,
+								emblemHeight:
+									emblemWidth != null && emblemWidth > 0
+										? emblemWidth * emblemAspectRatio * SCALE
+										: null,
+								textWidth: textWidth != null && textWidth > 0 ? textWidth * SCALE : null,
+								textHeight:
+									textWidth != null && textWidth > 0 ? textWidth * textAspectRatio * SCALE : null,
 							};
 						})
 				: [];

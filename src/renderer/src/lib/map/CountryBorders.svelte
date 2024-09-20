@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { match } from 'ts-pattern';
+
 	import { mapSettings } from '../settings';
-	import Glow from './Glow.svelte';
 	import type { SectorBorderPath } from './data/processBorders';
 	import type { MapData } from './data/processMapData';
+	import Glow from './Glow.svelte';
 	import {
 		getFillColorAttributes,
 		getStrokeAttributes,

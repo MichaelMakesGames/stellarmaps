@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+
 	import { t } from '../../intl';
 	import {
 		colorDynamicOptions,
@@ -71,7 +72,7 @@
 				{$t('control.color.adjustment.header')}
 				<div class="relative inline-block">
 					<span class="variant-filled-secondary badge-icon absolute left-0 top-[-14px]">
-						{value.colorAdjustments?.length ?? 0}
+						{value.colorAdjustments.length}
 					</span>
 				</div>
 			</svelte:fragment>

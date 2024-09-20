@@ -1,11 +1,13 @@
 <script>
 	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+
 	import { t, translatorModeExtraMessageIDs, translatorModeUntranslatedMessageIDs } from '../intl';
 	import SettingControl from './SettingControl/index.svelte';
 	import { appSettings, appSettingsConfig, asUnknownSettingConfig } from './settings';
 	import { selectTranslatorModeFile, translatorModeFilePath } from './translatorMode';
 
-	const _props = $$props; // this suppresses warning about unknown prop 'parent'
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- this suppresses warning about unknown prop 'parent'
+	const _props = $$props;
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -38,7 +40,7 @@
 			{:else}
 				<small>{$t('app_settings.translator_mode_no_file')}</small>
 			{/if}
-			{#if $translatorModeFilePath && $translatorModeUntranslatedMessageIDs.length > 0}
+			{#if $translatorModeFilePath != null && $translatorModeUntranslatedMessageIDs.length > 0}
 				<strong class="block text-warning-400">
 					{$t('app_settings.translator_mode_untranslated_messages', {
 						number: $translatorModeUntranslatedMessageIDs.length,

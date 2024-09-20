@@ -5,11 +5,6 @@
 
 	export let data: MapData;
 	export let colors: Record<string, string>;
-
-	$: fullOccupiers = data.occupationBorders.filter((b) => !b.partial).map((b) => b.occupier);
-	$: partialOccupiers = new Set(
-		data.occupationBorders.filter((b) => b.partial).map((b) => b.occupier),
-	);
 </script>
 
 <pattern

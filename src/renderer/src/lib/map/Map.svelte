@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { afterUpdate, createEventDispatcher } from 'svelte';
+
 	import debug from '../debug';
 	import { mapSettings } from '../settings';
 	import BypassLinks from './BypassLinks.svelte';
@@ -32,6 +33,7 @@
 </script>
 
 <svg {id} xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- this is safe, since the content isn't truly dynamic -->
 	{@html fontFace}
 	<defs>
 		{#if data}

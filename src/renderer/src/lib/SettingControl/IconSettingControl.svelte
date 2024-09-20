@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Accordion, AccordionItem } from '@skeletonlabs/skeleton';
+
 	import { t } from '../../intl';
 	import {
 		ICON_POSITIONS,

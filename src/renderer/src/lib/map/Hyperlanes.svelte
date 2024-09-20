@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { isColorDynamic, mapSettings } from '../settings';
-	import Glow from './Glow.svelte';
 	import type { MapData } from './data/processMapData';
+	import Glow from './Glow.svelte';
 	import { getStrokeAttributes, getStrokeColorAttributes } from './mapUtils';
 
 	export let data: MapData;

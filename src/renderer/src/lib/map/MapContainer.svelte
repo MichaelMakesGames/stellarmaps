@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { select } from 'd3-selection';
-	import { ZoomTransform, zoom, zoomIdentity } from 'd3-zoom';
+	import { zoom, zoomIdentity, ZoomTransform } from 'd3-zoom';
 	import { onDestroy } from 'svelte';
 	import { get } from 'svelte/store';
 	import { fade } from 'svelte/transition';
+
 	import { t } from '../../intl';
 	import orbitronPath from '../../static/Orbitron-VariableFont_wght.ttf';
-	import { gameStatePromise, type GalacticObject, type GameState } from '../GameState';
+	import resizeObserver from '../actions/resizeObserver';
 	import { ADDITIONAL_COLORS } from '../colors';
 	import convertBlobToDataUrl from '../convertBlobToDataUrl';
 	import convertSvgToPng from '../convertSvgToPng';
 	import debug from '../debug';
+	import { type GalacticObject, type GameState, gameStatePromise } from '../GameState';
 	import HeroiconArrowsPointingOut from '../icons/HeroiconArrowsPointingOut.svelte';
 	import {
 		loadStellarisData,
@@ -26,11 +28,11 @@
 	} from '../settings';
 	import stellarMapsApi from '../stellarMapsApi';
 	import { debounce, timeItAsync, toastError } from '../utils';
+	import { mapModes } from './data/mapModes';
+	import processMapData from './data/processMapData';
 	import Legend from './Legend.svelte';
 	import Map from './Map.svelte';
 	import MapTooltip from './MapTooltip.svelte';
-	import { mapModes } from './data/mapModes';
-	import processMapData from './data/processMapData';
 	import { getBackgroundColor } from './mapUtils';
 	import SolarSystemMap from './solarSystemMap/SolarSystemMap.svelte';
 	import processStarScape from './starScape/renderStarScape';
@@ -140,7 +142,7 @@
 	}
 	map.$on('map-updated', () => renderMap());
 
-	let container: HTMLDivElement;
+	let container: HTMLDivElement | undefined;
 	let outputWidth = 0;
 	let outputHeight = 0;
 
@@ -151,7 +153,7 @@
 			resizing = false;
 		});
 	}, 250);
-	const resizeObserver = new ResizeObserver(() => {
+	const resizeCallback = () => {
 		tooltip = null;
 		resizing = true;
 		pngDataUrl = '';
@@ -163,14 +165,9 @@
 		lastRenderedTransformStarScapePngDataUrl = '';
 		lastRenderedTransformStarScape = null;
 		onResizeEnd();
-	});
-	$: if (container) {
-		resizeObserver.observe(container);
-	} else {
-		resizeObserver.disconnect();
-	}
+	};
 
-	let svg: SVGElement;
+	let svg: SVGElement | undefined;
 	let transform: ZoomTransform | null = null;
 	let lastRenderedTransform: ZoomTransform | null = null;
 	let lastRenderedTransformPngDataUrl = '';
@@ -209,9 +206,8 @@
 
 	let pngDataUrlPromise = Promise.resolve('');
 	async function renderMap(onlyRenderZoomed = false) {
-		if (!container) return;
-		outputWidth = container.clientWidth;
-		outputHeight = container.clientHeight;
+		outputWidth = container?.clientWidth ?? 0;
+		outputHeight = container?.clientHeight ?? 0;
 
 		let newPngDataUrlRequestId = (Math.random() * 1000000).toFixed(0);
 		pngDataUrlRequestId = newPngDataUrlRequestId;
@@ -305,7 +301,8 @@
 	}
 
 	const renderOnTransformChange = debounce(() => renderMap(true), 500);
-	$: if (transform || transform == null) {
+	// always true, just triggering reactivity
+	$: if (typeof transform === 'object') {
 		renderOnTransformChange();
 	}
 
@@ -337,25 +334,25 @@
 				viewBoxWidth *= outputWidth / outputHeight;
 			}
 			const svgPoint: [number, number] = [
-				((transform || zoomIdentity).invertX(e.offsetX) * viewBoxWidth) / outputWidth -
+				((transform ?? zoomIdentity).invertX(e.offsetX) * viewBoxWidth) / outputWidth -
 					viewBoxWidth / 2,
-				((transform || zoomIdentity).invertY(e.offsetY) * viewBoxHeight) / outputHeight -
+				((transform ?? zoomIdentity).invertY(e.offsetY) * viewBoxHeight) / outputHeight -
 					viewBoxHeight / 2,
 			];
 			const system = dataOrNull.findClosestSystem(-svgPoint[0], svgPoint[1]);
 			if (system) {
 				const countryId = dataOrNull.systemIdToCountry[system.id] ?? null;
 				const settings = get(mapSettings);
-				const processedSystem = dataOrNull?.systems.find((s) => s.id === system.id);
+				const processedSystem = dataOrNull.systems.find((s) => s.id === system.id);
 				if (processedSystem == null) {
 					tooltip = null;
 				} else {
 					const systemPoint: [number, number] = [processedSystem.x, processedSystem.y];
 					const tooltipPoint: [number, number] = [
-						(transform || zoomIdentity).applyX(
+						(transform ?? zoomIdentity).applyX(
 							((systemPoint[0] + viewBoxWidth / 2) * outputWidth) / viewBoxWidth,
 						),
-						(transform || zoomIdentity).applyY(
+						(transform ?? zoomIdentity).applyY(
 							((systemPoint[1] + viewBoxHeight / 2) * outputHeight) / viewBoxHeight,
 						),
 					];
@@ -392,7 +389,8 @@
 	function closeSystemMap() {
 		openedSystem = undefined;
 	}
-	$: if (gameStateOrNull || !gameStateOrNull) {
+	// always true, just triggering reactivity
+	$: if (typeof gameStateOrNull === 'object') {
 		closeSystemMap();
 	}
 
@@ -419,7 +417,12 @@
 	}
 </script>
 
-<div class="relative h-full w-full" style:background={bg} bind:this={container}>
+<div
+	class="relative h-full w-full"
+	style:background={bg}
+	bind:this={container}
+	use:resizeObserver={resizeCallback}
+>
 	{#if dataOrNull && colorsOrNull && openedSystem == null}
 		<div class="absolute left-3 top-3">
 			<Legend data={dataOrNull} colors={colorsOrNull}></Legend>
@@ -510,7 +513,8 @@
 			}}
 			on:click={onMapClick}
 			class:hidden={openedSystem != null}
-			class:cursor-pointer={(mapModes[$mapSettings.mapMode]?.hasPov && tooltip?.countryId) ||
+			class:cursor-pointer={(mapModes[$mapSettings.mapMode]?.hasPov &&
+				tooltip?.countryId != null) ??
 				(tooltip != null && !tooltip.hidden)}
 			class="h-full w-full"
 		>

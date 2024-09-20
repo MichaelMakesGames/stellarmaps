@@ -1,17 +1,18 @@
 <script lang="ts">
-	import { RangeSlider, SlideToggle, popup } from '@skeletonlabs/skeleton';
+	import { popup, RangeSlider, SlideToggle } from '@skeletonlabs/skeleton';
 	import { onDestroy } from 'svelte';
 	import type { FormEventHandler } from 'svelte/elements';
 	import { get, type Readable, type Writable } from 'svelte/store';
 	import { slide } from 'svelte/transition';
+
 	import { t } from '../../intl';
 	import HeroiconInfoMini from '../icons/HeroiconInfoMini.svelte';
 	import {
 		asKnownSettingId,
 		emptyOptions,
-		validateSetting,
 		type SelectOption,
 		type UnknownSettingConfig,
+		validateSetting,
 	} from '../settings';
 	import { isDefined } from '../utils';
 	import ColorSettingControl from './ColorSettingControl.svelte';
@@ -53,7 +54,9 @@
 	$: hidden = config.hideIf?.($settings as any);
 
 	const dynamicOptions: Readable<SelectOption[]> =
-		config.type === 'select' && config.dynamicOptions ? config.dynamicOptions : emptyOptions;
+		config.type === 'select' && config.dynamicOptions != null
+			? config.dynamicOptions
+			: emptyOptions;
 
 	$: options = config.type === 'select' ? [...config.options, ...$dynamicOptions] : [];
 	$: groups = Array.from(new Set(options.map((option) => option.group).filter(isDefined)));
@@ -91,6 +94,7 @@
 					class="card variant-filled-secondary z-10 max-w-96 p-2 text-sm"
 					data-popup="{config.id}-tooltip"
 				>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- this is safe, all tooltip text is provided by the app -->
 					{@html $t(config.tooltip, richTextHandlers)}
 					<div class="variant-filled-secondary arrow" />
 				</div>
@@ -146,7 +150,7 @@
 		{:else if config.type === 'toggle'}
 			<div>
 				<SlideToggle name={config.id} bind:checked={value} active="bg-primary-500">
-					{value ? $t('generic.enabled') : $t('generic.disabled')}
+					{value === true ? $t('generic.enabled') : $t('generic.disabled')}
 				</SlideToggle>
 			</div>
 		{:else if config.type === 'color'}

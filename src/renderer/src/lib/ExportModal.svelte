@@ -1,26 +1,28 @@
 <script lang="ts">
 	import {
-		RangeSlider,
-		SlideToggle,
 		getModalStore,
 		getToastStore,
 		localStorageStore,
+		RangeSlider,
+		SlideToggle,
 	} from '@skeletonlabs/skeleton';
 	import { onDestroy } from 'svelte';
+
 	import { t } from '../intl';
-	import type { GalacticObject, GameState } from './GameState';
 	import convertBlobToDataUrl from './convertBlobToDataUrl';
 	import convertSvgToPng from './convertSvgToPng';
-	import Legend from './map/Legend.svelte';
+	import type { GalacticObject, GameState } from './GameState';
 	import type { MapData } from './map/data/processMapData';
+	import Legend from './map/Legend.svelte';
 	import { getBackgroundColor, getFillColorAttributes, resolveColor } from './map/mapUtils';
 	import SolarSystemMap from './map/solarSystemMap/SolarSystemMap.svelte';
 	import processStarScape from './map/starScape/renderStarScape';
-	import { mapSettings, type MapSettings } from './settings';
+	import { type MapSettings, mapSettings } from './settings';
 	import stellarMapsApi from './stellarMapsApi';
 	import { toastError } from './utils';
 
-	const _props = $$props; // this suppresses warning about unknown prop 'parent'
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars -- this suppresses warning about unknown prop 'parent'
+	const _props = $$props;
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 	const galaxyMapSvg: SVGElement = $modalStore[0]?.meta?.svg;
@@ -52,7 +54,7 @@
 	});
 	onDestroy(() => {
 		solarSystemMap?.$destroy();
-		legend?.$destroy();
+		legend.$destroy();
 	});
 
 	const defaultExportSettings = {
@@ -140,7 +142,7 @@
 
 	async function exportPng() {
 		const backgroundImageUrl =
-			openedSystem || !hasBackgroundImage($mapSettings)
+			openedSystem != null || !hasBackgroundImage($mapSettings)
 				? undefined
 				: await processStarScape(
 						gameState,
@@ -190,7 +192,7 @@
 			),
 			filters: [{ extensions: ['png'], name: 'Image' }],
 		});
-		if (savePath && galaxyMapSvg) {
+		if (savePath != null) {
 			await stellarMapsApi.fs.writeBinaryFile(savePath, new Uint8Array(buffer)).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
@@ -272,7 +274,7 @@
 				.catch(() => ''),
 			filters: [{ extensions: ['svg'], name: 'Image' }],
 		});
-		if (savePath && svgToExport) {
+		if (savePath != null) {
 			await stellarMapsApi.fs.writeFile(savePath, svgString).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',

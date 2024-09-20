@@ -1,24 +1,26 @@
 <script>
+	import './app.postcss';
+
 	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';
 	import {
 		AppBar,
 		AppShell,
-		Modal,
-		Toast,
 		getModalStore,
 		initializeStores,
+		Modal,
 		storePopup,
+		Toast,
 	} from '@skeletonlabs/skeleton';
-	import './app.postcss';
+
 	import { t } from './intl';
 	import AppSettingsModal from './lib/AppSettingsModal.svelte';
 	import ExportModal from './lib/ExportModal.svelte';
-	import Sidebar from './lib/Sidebar.svelte';
-	import VersionInfo from './lib/VersionInfo.svelte';
 	import Discord from './lib/icons/Discord.svelte';
 	import GitHub from './lib/icons/GitHub.svelte';
 	import HeroiconCog6ToothSolid from './lib/icons/HeroiconCog6ToothSolid.svelte';
 	import MapContainer from './lib/map/MapContainer.svelte';
+	import Sidebar from './lib/Sidebar.svelte';
+	import VersionInfo from './lib/VersionInfo.svelte';
 
 	initializeStores();
 	storePopup.set({ computePosition, autoUpdate, offset, shift, flip, arrow });

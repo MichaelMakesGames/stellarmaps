@@ -9,21 +9,21 @@
 {#each data.labels.filter((label) => label.isKnown || !$mapSettings.terraIncognita) as label}
 	{#each label.labelPoints as { point, emblemWidth, emblemHeight, textWidth, textHeight }}
 		{#if $debug}<circle cx={point[0]} cy={point[1]} r={3} fill="#F0F" />{/if}
-		{#if $debug && emblemWidth && emblemHeight}
+		{#if $debug && emblemWidth != null && emblemHeight != null}
 			<rect
 				stroke-width={1}
 				stroke="#F0F"
 				x={point[0] - emblemWidth / 2}
-				y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
+				y={point[1] - (textHeight != null ? emblemHeight : emblemHeight / 2)}
 				width={emblemWidth}
 				height={emblemHeight}
 				fill="transparent"
 			/>
 		{/if}
-		{#if emblemWidth && emblemHeight && label.emblemKey && data.emblems[label.emblemKey]}
+		{#if emblemWidth != null && emblemHeight != null && label.emblemKey != null && data.emblems[label.emblemKey]}
 			<image
 				x={point[0] - emblemWidth / 2}
-				y={point[1] - (textHeight ? emblemHeight : emblemHeight / 2)}
+				y={point[1] - (textHeight != null ? emblemHeight : emblemHeight / 2)}
 				width={emblemWidth}
 				height={emblemHeight}
 				xlink:href={data.emblems[label.emblemKey]}
@@ -31,7 +31,7 @@
 			{#if label.isUnionLeader && $mapSettings.unionLeaderSymbol !== 'none'}
 				<text
 					transform="translate({point[0]},{point[1] -
-						(textHeight ? emblemHeight : emblemHeight / 2)})"
+						(textHeight != null ? emblemHeight : emblemHeight / 2)})"
 					fill="white"
 					text-anchor="middle"
 					dominant-baseline="bottom"
@@ -41,21 +41,21 @@
 				</text>
 			{/if}
 		{/if}
-		{#if $debug && textWidth && textHeight}
+		{#if $debug && textWidth != null && textHeight != null}
 			<rect
 				stroke-width={1}
 				stroke="#F0F"
 				x={point[0] - textWidth / 2}
-				y={point[1] - (emblemHeight ? 0 : textHeight / 2)}
+				y={point[1] - (emblemHeight != null ? 0 : textHeight / 2)}
 				width={textWidth}
 				height={textHeight}
 				fill="transparent"
 			/>
 		{/if}
-		{#if textWidth && textHeight && label.primaryName}
+		{#if textWidth != null && textHeight != null && label.primaryName}
 			<text
 				x={point[0]}
-				y={point[1] + (emblemHeight ? textHeight / 2 : 0)}
+				y={point[1] + (emblemHeight != null ? textHeight / 2 : 0)}
 				text-anchor="middle"
 				dominant-baseline="middle"
 				font-size={textHeight}
@@ -71,11 +71,11 @@
 				{label.primaryName}
 			</text>
 		{/if}
-		{#if textWidth && textHeight && label.secondaryName}
+		{#if textWidth != null && textHeight != null && label.secondaryName}
 			<text
 				x={point[0]}
 				y={point[1] +
-					(emblemHeight ? textHeight / 2 : 0) +
+					(emblemHeight != null ? textHeight / 2 : 0) +
 					textHeight * ($lastProcessedMapSettings.countryNamesSecondaryRelativeSize ?? 1) * 1.25}
 				text-anchor="middle"
 				dominant-baseline="middle"
