@@ -7,6 +7,11 @@ export const iconOptions: SelectOption[] = [
 		id: 'icon-triangle-flat',
 		name: 'option.icon.triangle_flat',
 	},
+	{
+		group: 'option.icon.group.basic_shape',
+		id: 'icon-triangle-narrow',
+		name: 'option.icon.triangle_narrow',
+	},
 	{ group: 'option.icon.group.basic_shape', id: 'icon-diamond', name: 'option.icon.diamond' },
 	{ group: 'option.icon.group.basic_shape', id: 'icon-square', name: 'option.icon.square' },
 	{ group: 'option.icon.group.basic_shape', id: 'icon-pentagon', name: 'option.icon.pentagon' },

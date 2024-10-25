@@ -29,6 +29,30 @@ const defaultAppSettings: AppSettings = {
 
 export const appSettings = localStorageStore('appSettings', defaultAppSettings);
 export const appStellarisLanguage = derived(appSettings, (value) => value.appStellarisLanguage);
+export const appStellarisLanguageCode = derived(
+	appStellarisLanguage,
+	(value) =>
+		({
+			l_english: 'en-US',
+			l_braz_por: 'pt-BR',
+			l_german: 'de-DE',
+			l_french: 'fr-FR',
+			l_spanish: 'es-ES',
+			l_polish: 'pl-PL',
+			l_russian: 'ru-RU',
+			l_simp_chinese: 'zh-CN',
+			l_japanese: 'ja-JP',
+			l_korean: 'ko-KR',
+		})[value] ?? 'en-US',
+);
+export const appStellarisLanguageOrdinals = derived(
+	appStellarisLanguage,
+	(value): Record<string, string> =>
+		({
+			l_english: { one: 'st', two: 'nd', few: 'rd', other: 'th' },
+			// TODO? implement other languages
+		})[value] ?? {},
+);
 
 function loadSettings() {
 	return getAppSettingsPath()

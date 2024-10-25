@@ -1,7 +1,33 @@
+import { romanize } from 'romans';
 import { get } from 'svelte/store';
 
 import type { LocalizedText } from '../../GameState';
 import { stellarisDataPromiseStore } from '../../loadStellarisData';
+import { appStellarisLanguageCode, appStellarisLanguageOrdinals } from '../../settings';
+import { isDefined } from '../../utils';
+
+const formatOrdinals = (n: number) => {
+	const enOrdinalRules = new Intl.PluralRules(get(appStellarisLanguageCode), { type: 'ordinal' });
+	const rule = enOrdinalRules.select(n);
+	const suffix = get(appStellarisLanguageOrdinals)[rule] ?? '';
+	return `${new Intl.NumberFormat(get(appStellarisLanguageCode)).format(n)}${suffix}`;
+};
+
+const numFormatters = {
+	CARD: (n: number) => new Intl.NumberFormat(get(appStellarisLanguageCode)).format(n),
+	C: (n: number) =>
+		new Intl.NumberFormat(get(appStellarisLanguageCode), { minimumIntegerDigits: 1 }).format(n),
+	CC: (n: number) =>
+		new Intl.NumberFormat(get(appStellarisLanguageCode), { minimumIntegerDigits: 2 }).format(n),
+	CCC: (n: number) =>
+		new Intl.NumberFormat(get(appStellarisLanguageCode), { minimumIntegerDigits: 3 }).format(n),
+	CC0: (n: number) =>
+		new Intl.NumberFormat(get(appStellarisLanguageCode), { minimumIntegerDigits: 2 }).format(n - 1),
+	ORD: formatOrdinals,
+	ORD0: (n: number) => formatOrdinals(n - 1),
+	R: (n: number) => romanize(n),
+	HEX: (n: number) => n.toString(16),
+};
 
 export function localizeText(text: LocalizedText) {
 	return get(stellarisDataPromiseStore).then(({ loc }) => localizeTextSync(text, loc));
@@ -12,7 +38,36 @@ export function localizeTextSync(
 	loc: Record<string, string>,
 ): string {
 	if (text == null) return 'NULL';
-	if (text.key === '%ADJECTIVE%') {
+	if (text.key === '%ACRONYM%') {
+		const base = text.variables?.find((v) => v.key === 'base')?.value;
+		return base
+			? localizeTextSync(base, loc)
+					.split(' ')
+					.filter((s) => s.length > 0)
+					// first char of each word + last char of final word (cause that's how acronyms work in Stellaris *shrug*)
+					.flatMap((s, i, a) => (i < a.length - 1 ? [s[0]] : [s[0], s[s.length - 1]]))
+					.filter(isDefined)
+					.join('')
+					.toLocaleUpperCase(get(appStellarisLanguageCode))
+			: '';
+	} else if (text.key === '%SEQ%') {
+		const fmt = text.variables?.find((v) => v.key === 'fmt')?.value;
+		const num = text.variables?.find((v) => v.key === 'num')?.value;
+		if (fmt == null || num == null) {
+			console.warn('localization failed', text);
+			return 'LOCALIZATION FAILED';
+		}
+		return localizeTextSync(
+			{
+				key: fmt.key,
+				variables: Object.entries(numFormatters).map(([key, formatter]) => ({
+					key,
+					value: { key: formatter(parseInt(num.key)) },
+				})),
+			},
+			loc,
+		);
+	} else if (text.key === '%ADJECTIVE%') {
 		try {
 			const var0 = text.variables?.[0];
 			const var1 = text.variables?.[1];

@@ -1,17 +1,25 @@
 <script lang="ts">
 	import { select } from 'd3-selection';
 	import { zoom, zoomIdentity } from 'd3-zoom';
+	import { match } from 'ts-pattern';
 
 	import { t } from '../../../intl';
 	import type { GalacticObject, GameState, Planet } from '../../GameState';
 	import { type MapSettings, mapSettings } from '../../settings';
 	import { isDefined } from '../../utils';
 	import { localizeText } from '../data/locUtils';
+	import type { MapData } from '../data/processMapData';
 	import Glow from '../Glow.svelte';
-	import { getStrokeAttributes, getStrokeColorAttributes } from '../mapUtils';
+	import Icons from '../Icons.svelte';
+	import {
+		getFillColorAttributes,
+		getStrokeAttributes,
+		getStrokeColorAttributes,
+	} from '../mapUtils';
 
 	export let system: GalacticObject;
 	export let gameState: GameState;
+	export let mapData: MapData;
 	export let colors: Record<string, string>;
 	export let id: string;
 	export let exportMode = false;
@@ -36,6 +44,63 @@
 	function resetZoom() {
 		select(svg).call(zoomHandler.transform as any, zoomIdentity);
 	}
+
+	$: fleets = system.fleet_presence
+		.map((fleetId) => {
+			const fleet = gameState.fleet[fleetId];
+			const country = Object.values(gameState.country).find((country) =>
+				country.fleets_manager?.owned_fleets.some((f) => f.fleet === fleetId),
+			);
+			const countryBorder = mapData.borders.find((b) => b.countryId === country?.id);
+			if (!fleet || !country) return null;
+			return {
+				id: fleet.id,
+				name: fleet.name,
+				owner: country.id,
+				primaryColor: countryBorder?.primaryColor ?? 'black',
+				secondaryColor: countryBorder?.secondaryColor ?? 'black',
+				isMobile: Boolean(fleet.mobile),
+				isMilitary: fleet.military_power > 0,
+				rotation: fleet.mobile
+					? (-fleet.movement_manager.formation.angle / Math.PI) * 180 + 180
+					: 0,
+				coordinate: {
+					x: -fleet.movement_manager.coordinate.x,
+					y: fleet.movement_manager.coordinate.y,
+				},
+			};
+		})
+		.filter(isDefined);
+
+	function getFleetIconSetting(fleet: (typeof fleets)[number], settings: MapSettings) {
+		return match(fleet)
+			.with({ isMobile: true, isMilitary: false }, () => settings.systemMapCivilianFleetIcon)
+			.with({ isMobile: false, isMilitary: false }, () => settings.systemMapCivilianStationIcon)
+			.with({ isMobile: true, isMilitary: true }, () => settings.systemMapMilitaryFleetIcon)
+			.with({ isMobile: false, isMilitary: true }, () => settings.systemMapMilitaryStationIcon)
+			.exhaustive();
+	}
+
+	$: ships = system.fleet_presence
+		.flatMap((fleetId) => {
+			const fleet = gameState.fleet[fleetId];
+			const country = Object.values(gameState.country).find((country) =>
+				country.fleets_manager?.owned_fleets.some((f) => f.fleet === fleetId),
+			);
+			const countryBorder = mapData.borders.find((b) => b.countryId === country?.id);
+			if (!fleet || !country) return [];
+			return fleet.ships.map((shipId) => {
+				const ship = gameState.ships[shipId];
+				if (!ship) return null;
+				return {
+					...ship,
+					owner: country.id,
+					primaryColor: countryBorder?.primaryColor ?? 'black',
+					secondaryColor: countryBorder?.secondaryColor ?? 'black',
+				};
+			});
+		})
+		.filter(isDefined);
 
 	$: planets = system.planet
 		.map((planetId) => gameState.planets.planet[planetId])
@@ -455,6 +520,7 @@
 		>
 			<feGaussianBlur in="SourceGraphic" stdDeviation="10" />
 		</filter>
+		<Icons />
 	</defs>
 	<g bind:this={g}>
 		{#if $mapSettings.systemMapOrbitStroke.enabled}
@@ -563,6 +629,82 @@
 					{/await}
 				</textPath>
 			</text>
+		{/each}
+		{#each ships as ship (ship.id)}
+			<!-- ships are WIP; "disabled" for now by setting opacity="0" -->
+			<path
+				d="M 0 1 L 0.5 -1 L -0.5 -1 Z"
+				transform="translate({-ship.coordinate.x} {ship.coordinate.y}) rotate({(-ship.rotation /
+					Math.PI) *
+					180})"
+				opacity="0"
+				{...getFillColorAttributes({
+					colors,
+					countryColors: ship,
+					mapSettings: $mapSettings,
+					colorStack: [
+						{
+							...$mapSettings.borderColor,
+							colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.35 }],
+						},
+					],
+				})}
+			/>
+		{/each}
+		{#each fleets as fleet (fleet.id)}
+			{@const icon = getFleetIconSetting(fleet, $mapSettings)}
+			{#if icon.enabled}
+				<use
+					href="#{icon.icon}"
+					x={-icon.size / 2}
+					y={-icon.size / 2}
+					transform="translate({fleet.coordinate.x} {fleet.coordinate.y}) rotate({fleet.rotation})"
+					width={icon.size}
+					height={icon.size}
+					{...getFillColorAttributes({
+						mapSettings: $mapSettings,
+						colors,
+						countryColors: fleet,
+						colorStack: [icon.color],
+					})}
+					stroke-width="10"
+					{...getStrokeColorAttributes({
+						mapSettings: $mapSettings,
+						colors,
+						colorStack: [$mapSettings.backgroundColor],
+					})}
+				/>
+				{#if $mapSettings.systemMapLabelFleetsEnabled}
+					{@const fontSize = $mapSettings.systemMapLabelFleetsFontSize}
+					<text
+						x={fleet.coordinate.x}
+						y={fleet.coordinate.y}
+						text-anchor={match($mapSettings.systemMapLabelFleetsPosition)
+							.with('right', () => 'start')
+							.with('left', () => 'end')
+							.otherwise(() => 'middle')}
+						dominant-baseline={match($mapSettings.systemMapLabelFleetsPosition)
+							.with('top', () => 'auto')
+							.with('bottom', () => 'hanging')
+							.otherwise(() => 'middle')}
+						transform={match($mapSettings.systemMapLabelFleetsPosition)
+							.with('right', () => `translate(${icon.size / 2} 0)`)
+							.with('left', () => `translate(${-icon.size / 2} 0)`)
+							.with('top', () => `translate(0 ${-icon.size / 2})`)
+							.with('bottom', () => `translate(0 ${icon.size / 2})`)
+							.otherwise(() => '')}
+						font-size={fontSize}
+						fill="white"
+						font-family={$mapSettings.systemMapLabelPlanetsFont}
+					>
+						{#await localizeText(fleet.name)}
+							{$t('generic.loading')}
+						{:then name}
+							{name}
+						{/await}
+					</text>
+				{/if}
+			{/if}
 		{/each}
 		{#if $mapSettings.systemMapHyperlanesEnabled}
 			{#each systemConnections as connection}

@@ -1,6 +1,8 @@
 import { dialog, fs, invoke, path } from '@tauri-apps/api';
+import { get } from 'svelte/store';
 
 import type { StellarMapsAPI } from '../../../shared/StellarMapsApi';
+import debug from './debug';
 import { gameStateFilter } from './GameState';
 
 let stellarMapsApi: StellarMapsAPI = (window as any).api; // this is from electron preload
@@ -17,7 +19,10 @@ if (stellarMapsApi == null) {
 				.sort((a, b) => b[0].modified - a[0].modified);
 		},
 		loadSave(path) {
-			return invoke('get_stellaris_save_cmd', { path, filter: gameStateFilter });
+			return invoke('get_stellaris_save_cmd', {
+				path,
+				filter: get(debug) ? true : gameStateFilter,
+			});
 		},
 		loadFonts() {
 			return invoke('get_fonts_cmd');

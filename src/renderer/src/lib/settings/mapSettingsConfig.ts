@@ -769,6 +769,48 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'systemMapHyperlanesEnabled',
 				type: 'toggle',
 			},
+			{
+				id: 'systemMapCivilianFleetIcon',
+				type: 'icon',
+				noAdvanced: true,
+			},
+			{
+				id: 'systemMapCivilianStationIcon',
+				type: 'icon',
+				noAdvanced: true,
+			},
+			{
+				id: 'systemMapMilitaryFleetIcon',
+				type: 'icon',
+				noAdvanced: true,
+			},
+			{
+				id: 'systemMapMilitaryStationIcon',
+				type: 'icon',
+				noAdvanced: true,
+			},
+			{
+				id: 'systemMapLabelFleetsEnabled',
+				type: 'toggle',
+			},
+			{
+				id: 'systemMapLabelFleetsFontSize',
+				hideIf: (settings) => !settings.systemMapLabelFleetsEnabled,
+				type: 'number',
+				min: 0,
+				step: 0.5,
+			},
+			{
+				id: 'systemMapLabelFleetsPosition',
+				hideIf: (settings) => !settings.systemMapLabelFleetsEnabled,
+				type: 'select',
+				options: [
+					{ id: 'top', name: 'option.system_map_label_position.top' },
+					{ id: 'bottom', name: 'option.system_map_label_position.bottom' },
+					{ id: 'left', name: 'option.system_map_label_position.left' },
+					{ id: 'right', name: 'option.system_map_label_position.right' },
+				],
+			},
 		],
 	},
 ];

@@ -37,8 +37,9 @@
 				target: solarSystemMapTarget,
 				props: {
 					id: 'exportSystemMap',
-					colors: colors,
-					gameState: gameState,
+					colors,
+					mapData,
+					gameState,
 					system: openedSystem,
 					exportMode: true,
 				},
@@ -453,6 +454,7 @@
 				{#if openedSystem}
 					<SolarSystemMap
 						system={openedSystem}
+						{mapData}
 						{colors}
 						{gameState}
 						id="systemMapPreview"

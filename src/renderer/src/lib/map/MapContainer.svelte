@@ -489,10 +489,11 @@
 				</div>
 			</div>
 		{/await}
-		{#if openedSystem && gameStateOrNull && colorsOrNull}
+		{#if openedSystem && gameStateOrNull && colorsOrNull && dataOrNull}
 			<SolarSystemMap
 				id="systemMap"
 				gameState={gameStateOrNull}
+				mapData={dataOrNull}
 				system={openedSystem}
 				colors={colorsOrNull}
 				onSystemSelected={(system) => {

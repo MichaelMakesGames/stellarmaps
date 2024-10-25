@@ -72,6 +72,7 @@ export interface SettingConfigStroke<Settings, ID> extends SettingConfigBase<Set
 export interface SettingConfigIcon<Settings, ID> extends SettingConfigBase<Settings, ID> {
 	type: 'icon';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<IconSetting>;
+	noAdvanced?: boolean;
 }
 
 export type UnknownSettingConfig =

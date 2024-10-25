@@ -21,7 +21,7 @@
 		systemProperty?: keyof PickByValue<ProcessedSystem, boolean>;
 		mustKnowOwner?: boolean;
 	}
-	const metadata: Record<IconMapSettings, IconSettingMetadata> = {
+	const metadata: Partial<Record<IconMapSettings, IconSettingMetadata>> = {
 		countryCapitalIcon: { systemProperty: 'isCountryCapital', mustKnowOwner: true },
 		sectorCapitalIcon: { systemProperty: 'isSectorCapital', mustKnowOwner: true },
 		populatedSystemIcon: { systemProperty: 'isColonized', mustKnowOwner: true },
@@ -41,10 +41,11 @@
 			)
 			.filter((config) => mapSettings[config.id].enabled)
 			.filter((config) => {
-				const systemProperty = metadata[config.id].systemProperty;
+				const meta = metadata[config.id];
+				if (!meta) return false;
+				const systemProperty = meta.systemProperty;
 				if (systemProperty != null && !system[systemProperty]) return false;
-				if (metadata[config.id].mustKnowOwner && mapSettings.terraIncognita && !system.ownerIsKnown)
-					return false;
+				if (meta.mustKnowOwner && mapSettings.terraIncognita && !system.ownerIsKnown) return false;
 				return true;
 			})
 			.sort((a, b) => mapSettings[b.id].priority - mapSettings[a.id].priority);

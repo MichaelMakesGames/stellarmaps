@@ -12,6 +12,7 @@ import type processSystemOwnership from './processSystemOwnership';
 
 export interface ProcessedSystem extends MapModeCountryInfo {
 	id: number;
+	countryId?: number;
 	isColonized: boolean;
 	isSectorCapital: boolean;
 	isCountryCapital: boolean;
@@ -102,6 +103,7 @@ export default function processSystems(
 
 		return {
 			id: system.id,
+			countryId,
 			...mapModeInfo,
 			isColonized,
 			isSectorCapital,

@@ -3,6 +3,7 @@
 	import { onDestroy, onMount } from 'svelte';
 
 	import { locale, type MessageID, t } from '../../intl';
+	import debug from '../debug';
 	import type { GalacticObject, GameState, LocalizedText } from '../GameState';
 	import HeroiconUserMicro from '../icons/HeroiconUserMicro.svelte';
 	import { mapSettings } from '../settings';
@@ -91,9 +92,13 @@
 		{#await localizeText(system.name)}
 			{$t('generic.loading')}
 		{:then name}
-			{name} {system.id}
+			{name}
 		{/await}
 	</strong>
+	{#if $debug}
+		<div>System ID: {system.id}</div>
+		<div>Country ID: {processedSystem?.countryId}</div>
+	{/if}
 	{#if processedSystem?.mapModeCountryLabel}
 		<div class="flex flex-row justify-between gap-1 text-sm">
 			<span>

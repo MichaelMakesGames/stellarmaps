@@ -10,6 +10,7 @@ export type NumberMapSettings =
 	| 'borderFillFade'
 	| 'claimVoidBorderThreshold'
 	| 'legendFontSize'
+	| 'systemMapLabelFleetsFontSize'
 	| 'systemMapLabelPlanetsFontSize'
 	| 'systemNamesFontSize'
 	| 'terraIncognitaBrightness'
@@ -38,6 +39,7 @@ export type StringMapSettings =
 	| 'systemMapLabelPlanetsFont'
 	| 'systemMapLabelPlanetsPosition'
 	| 'systemMapLabelPlanetsFallbackPosition'
+	| 'systemMapLabelFleetsPosition'
 	| 'systemNames'
 	| 'systemNamesFont'
 	| 'terraIncognitaPerspectiveCountry'
@@ -62,12 +64,13 @@ export type BooleanMapSettings =
 	| 'starScapeDust'
 	| 'starScapeNebula'
 	| 'starScapeStars'
-	| 'systemMapLabelColoniesEnabled'
-	| 'systemMapLabelStarsEnabled'
-	| 'systemMapLabelPlanetsEnabled'
-	| 'systemMapLabelMoonsEnabled'
-	| 'systemMapLabelAsteroidsEnabled'
 	| 'systemMapHyperlanesEnabled'
+	| 'systemMapLabelAsteroidsEnabled'
+	| 'systemMapLabelColoniesEnabled'
+	| 'systemMapLabelFleetsEnabled'
+	| 'systemMapLabelMoonsEnabled'
+	| 'systemMapLabelPlanetsEnabled'
+	| 'systemMapLabelStarsEnabled'
 	| 'terraIncognita'
 	| 'unionLeaderUnderline'
 	| 'unionMode';
@@ -114,13 +117,17 @@ export type StrokeMapSettings =
 
 export type IconMapSettings =
 	| 'countryCapitalIcon'
-	| 'sectorCapitalIcon'
-	| 'populatedSystemIcon'
-	| 'unpopulatedSystemIcon'
-	| 'wormholeIcon'
 	| 'gatewayIcon'
 	| 'lGateIcon'
-	| 'shroudTunnelIcon';
+	| 'populatedSystemIcon'
+	| 'sectorCapitalIcon'
+	| 'shroudTunnelIcon'
+	| 'systemMapCivilianFleetIcon'
+	| 'systemMapCivilianStationIcon'
+	| 'systemMapMilitaryFleetIcon'
+	| 'systemMapMilitaryStationIcon'
+	| 'unpopulatedSystemIcon'
+	| 'wormholeIcon';
 
 export type MapSettings = Record<NumberMapSettings, number> &
 	Record<NumberOptionalMapSettings, number | null> &
@@ -451,6 +458,41 @@ export const defaultMapSettings: MapSettings = {
 	systemMapLabelMoonsEnabled: false,
 	systemMapLabelAsteroidsEnabled: false,
 	systemMapHyperlanesEnabled: true,
+	systemMapCivilianFleetIcon: {
+		enabled: false,
+		icon: 'icon-triangle-narrow',
+		size: 2,
+		position: 'center',
+		priority: 0,
+		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }] },
+	},
+	systemMapCivilianStationIcon: {
+		enabled: false,
+		icon: 'icon-diamond',
+		size: 2,
+		position: 'center',
+		priority: 0,
+		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }] },
+	},
+	systemMapMilitaryFleetIcon: {
+		enabled: false,
+		icon: 'icon-triangle-narrow',
+		size: 5,
+		position: 'center',
+		priority: 0,
+		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }] },
+	},
+	systemMapMilitaryStationIcon: {
+		enabled: false,
+		icon: 'icon-diamond',
+		size: 5,
+		position: 'center',
+		priority: 0,
+		color: { color: 'border', colorAdjustments: [{ type: 'MIN_CONTRAST', value: 0.25 }] },
+	},
+	systemMapLabelFleetsEnabled: true,
+	systemMapLabelFleetsFontSize: 3,
+	systemMapLabelFleetsPosition: 'right',
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

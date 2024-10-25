@@ -97,6 +97,7 @@
 		"platform-paths": "^1.2.2",
 		"polylabel": "^1.1.0",
 		"rambda": "^9.2.0",
+		"romans": "^2.0.16",
 		"steam-path": "^1.0.2",
 		"tauri-plugin-fs-watch-api": "github:tauri-apps/tauri-plugin-fs-watch#v1",
 		"topojson-client": "^3.1.0",

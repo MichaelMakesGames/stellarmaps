@@ -9,11 +9,15 @@
 		}`;
 	}
 
+	function pointsToSvgPath(points: string[]) {
+		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`)).join(' ')} z`;
+	}
+
 	function makeRegularPolygonPath(n: number, { flatTop }: { flatTop: boolean }) {
 		const points = R.range(0, n).map((i) =>
 			pointOnCircle(i / n - 0.25 - (flatTop ? 0.5 / n : 0), 90),
 		);
-		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`)).join(' ')} z`;
+		return pointsToSvgPath(points);
 	}
 
 	function makeStarPath(n: number) {
@@ -21,7 +25,7 @@
 			pointOnCircle(i / n - 0.25, 90),
 			pointOnCircle((i * 2 + 1) / (n * 2) - 0.25, 30),
 		]);
-		return `${points.map((p, i) => (i === 0 ? `M${p}` : `L${p}`)).join(' ')} z`;
+		return pointsToSvgPath(points);
 	}
 </script>
 
@@ -31,6 +35,16 @@
 
 <symbol id="icon-triangle-flat" {viewBox}>
 	<path d={makeRegularPolygonPath(3, { flatTop: true })} />
+</symbol>
+
+<symbol id="icon-triangle-narrow" {viewBox}>
+	<path
+		d={pointsToSvgPath([
+			pointOnCircle(-0.25, 90),
+			pointOnCircle(-0.65, 90),
+			pointOnCircle(-0.85, 90),
+		])}
+	/>
 </symbol>
 
 <symbol id="icon-diamond" {viewBox}>

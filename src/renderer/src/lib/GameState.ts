@@ -250,6 +250,8 @@ export type Starbase = WithId<z.infer<typeof starbaseSchema>>;
 
 const shipSchema = z.object({
 	fleet: z.number(),
+	coordinate: z.object({ x: z.number(), y: z.number() }),
+	rotation: z.number(),
 });
 
 /**
@@ -258,8 +260,15 @@ const shipSchema = z.object({
 export type Ship = WithId<z.infer<typeof shipSchema>>;
 
 const fleetSchema = z.object({
+	name: localizedTextSchema,
 	station: z.boolean().optional(),
 	military_power: z.number(),
+	mobile: z.boolean().optional(),
+	ships: z.array(z.number()),
+	movement_manager: z.object({
+		coordinate: z.object({ x: z.number(), y: z.number() }),
+		formation: z.object({ angle: z.number() }),
+	}),
 });
 
 /**
