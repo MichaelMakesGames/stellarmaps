@@ -27,7 +27,9 @@ export type NumberOptionalMapSettings =
 	| 'claimVoidMaxSize'
 	| 'frontierBubbleThreshold'
 	| 'starScapeStarsCount'
-	| 'systemMapPlanetScale';
+	| 'systemMapMoonScale'
+	| 'systemMapPlanetScale'
+	| 'systemMapStarScale';
 
 export type StringMapSettings =
 	| 'countryNamesFont'
@@ -448,7 +450,9 @@ export const defaultMapSettings: MapSettings = {
 		smoothing: false,
 		width: 0.5,
 	},
+	systemMapStarScale: 2,
 	systemMapPlanetScale: 1,
+	systemMapMoonScale: 0.5,
 	systemMapLabelPlanetsFont: 'Orbitron',
 	systemMapLabelPlanetsFontSize: 10,
 	systemMapLabelPlanetsPosition: 'right',

@@ -365,9 +365,9 @@
 	function getPlanetRadius(planet: Planet, settings: MapSettings) {
 		return Math.sqrt(
 			planet.planet_size *
-				(settings.systemMapPlanetScale ?? 1) *
-				(isStar(planet) ? 2 : 1) *
-				(isMoon(planet) ? 0.5 : 1),
+				(!isMoon(planet) && !isStar(planet) ? settings.systemMapPlanetScale ?? 1 : 1) *
+				(isStar(planet) ? settings.systemMapStarScale ?? 1 : 1) *
+				(isMoon(planet) ? settings.systemMapMoonScale ?? 1 : 1),
 		);
 	}
 

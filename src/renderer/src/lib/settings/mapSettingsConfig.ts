@@ -730,7 +730,21 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				hideIf: (settings) => !settings.systemMapOrbitStroke.enabled,
 			},
 			{
+				id: 'systemMapStarScale',
+				type: 'number',
+				optional: true,
+				min: 0,
+				step: 0.1,
+			},
+			{
 				id: 'systemMapPlanetScale',
+				type: 'number',
+				optional: true,
+				min: 0,
+				step: 0.1,
+			},
+			{
+				id: 'systemMapMoonScale',
 				type: 'number',
 				optional: true,
 				min: 0,
