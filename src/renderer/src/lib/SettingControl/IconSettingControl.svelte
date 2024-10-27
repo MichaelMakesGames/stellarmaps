@@ -127,7 +127,11 @@
 		{/if}
 		<ColorSettingControl
 			bind:value={color}
-			config={{ id: asAny(`${config.id}-color`), type: 'color' }}
+			config={{
+				id: asAny(`${config.id}-color`),
+				type: 'color',
+				allowedDynamicColors: config.allowedDynamicColors,
+			}}
 		/>
 	</div>
 {/if}

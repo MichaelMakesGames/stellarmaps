@@ -58,7 +58,7 @@ export interface SettingConfigColor<Settings, ID> extends SettingConfigBase<Sett
 	type: 'color';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<ColorSetting>;
 	allowedAdjustments?: ColorSettingAdjustmentType[];
-	allowedDynamicColors?: ('primary' | 'secondary' | 'border')[];
+	allowedDynamicColors: ('primary' | 'secondary' | 'border' | 'planet' | 'planet_complement')[];
 }
 
 export interface SettingConfigStroke<Settings, ID> extends SettingConfigBase<Settings, ID> {
@@ -73,6 +73,7 @@ export interface SettingConfigIcon<Settings, ID> extends SettingConfigBase<Setti
 	type: 'icon';
 	requiresReprocessing?: boolean | RequiresReprocessingFunc<IconSetting>;
 	noAdvanced?: boolean;
+	allowedDynamicColors: SettingConfigColor<Settings, ID>['allowedDynamicColors'];
 }
 
 export type UnknownSettingConfig =

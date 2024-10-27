@@ -144,6 +144,8 @@ export default {
 			primary: 'Primary',
 			secondary: 'Secondary',
 			border: 'Border',
+			planet: 'Planet',
+			planet_complement: "Planet's Complement",
 		},
 		color_adjustment: {
 			LIGHTEN: 'Lighten',
@@ -416,6 +418,7 @@ export default {
 		systemMapOrbitStroke: 'Orbit Lines',
 		systemMapOrbitColor: 'Orbit Lines Color',
 		systemMapPlanetScale: 'Planet Scale',
+		systemMapPlanetRingColor: 'Planet Ring Color',
 		systemMapLabelPlanetsFont: 'Planet Name Font',
 		systemMapLabelPlanetsFontSize: 'Planet Name Font Size',
 		systemMapLabelPlanetsPosition: 'Planet Name Position',

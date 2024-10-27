@@ -24,7 +24,7 @@
 				.filter(
 					// don't show dynamic colors group if no dynamic colors are allowed
 					(group) =>
-						!(group === 'option.color.group.dynamic' && config.allowedDynamicColors?.length === 0),
+						!(group === 'option.color.group.dynamic' && config.allowedDynamicColors.length === 0),
 				),
 		),
 	);
@@ -32,7 +32,6 @@
 
 	function filterAllowedOption(option: SelectOption) {
 		if (option.group !== 'option.color.group.dynamic') return true;
-		if (config.allowedDynamicColors == null) return true;
 		return (config.allowedDynamicColors as string[]).includes(option.id);
 	}
 </script>

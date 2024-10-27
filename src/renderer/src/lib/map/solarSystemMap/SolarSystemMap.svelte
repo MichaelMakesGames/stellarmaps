@@ -15,6 +15,7 @@
 		getFillColorAttributes,
 		getStrokeAttributes,
 		getStrokeColorAttributes,
+		multiplyOpacity,
 	} from '../mapUtils';
 
 	export let system: GalacticObject;
@@ -493,6 +494,27 @@
 		if (planet.coordinate.x > 0) return angle + 180;
 		return angle;
 	}
+
+	const PLANET_RING_PATTERN = (
+		[
+			[0.3, 0],
+			[0.05, 0.05],
+			[0.3, 0.15],
+			[0.1, 0.5],
+			[0.1, 1],
+			[0.02, 0.5],
+			[0.1, 1],
+			[0.1, 0.5],
+			[0.05, 0],
+			[0.2, 0.3],
+			[0.02, 0],
+			[0.05, 0.5],
+		] as [number, number][]
+	).map(([width, opacity], index, array) => {
+		const radiusMultiplier =
+			array.slice(0, index).reduce((total, [curWidth]) => total + curWidth, 0) + 1 + width / 2;
+		return { width, opacity, radiusMultiplier };
+	});
 </script>
 
 <svg
@@ -591,9 +613,10 @@
 					/>
 				</Glow>
 			{:else}
+				{@const radius = getPlanetRadius(planet, $mapSettings)}
 				<circle
 					fill={getPlanetColor(planet)}
-					r={getPlanetRadius(planet, $mapSettings)}
+					r={radius}
 					cx={-planet.coordinate.x}
 					cy={planet.coordinate.y}
 				/>
@@ -604,6 +627,23 @@
 					fill="#000000"
 					opacity={0.5}
 				/>
+				{#if planet.has_ring}
+					{#each PLANET_RING_PATTERN as ring}
+						<circle
+							cx={-planet.coordinate.x}
+							cy={planet.coordinate.y}
+							fill="none"
+							r={radius * ring.radiusMultiplier}
+							stroke-width={radius * ring.width}
+							{...getStrokeColorAttributes({
+								mapSettings: $mapSettings,
+								colors,
+								colorStack: [multiplyOpacity($mapSettings.systemMapPlanetRingColor, ring.opacity)],
+								planetColor: getPlanetColor(planet),
+							})}
+						/>
+					{/each}
+				{/if}
 			{/if}
 		{/each}
 		{#each planets.filter((p) => isPlanetLabeled(p, $mapSettings)) as planet (planet.id)}

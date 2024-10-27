@@ -96,6 +96,7 @@ export type ColorMapSettings =
 	| 'starScapeNebulaAccentColor'
 	| 'starScapeNebulaColor'
 	| 'starScapeStarsColor'
+	| 'systemMapPlanetRingColor'
 	| 'unionBorderColor'
 	| 'unownedHyperlaneColor'
 	| 'unownedHyperRelayColor'
@@ -493,6 +494,10 @@ export const defaultMapSettings: MapSettings = {
 	systemMapLabelFleetsEnabled: true,
 	systemMapLabelFleetsFontSize: 3,
 	systemMapLabelFleetsPosition: 'right',
+	systemMapPlanetRingColor: {
+		color: 'planet',
+		colorAdjustments: [{ type: 'OPACITY', value: 0.75 }],
+	},
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

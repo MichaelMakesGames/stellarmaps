@@ -4,8 +4,17 @@ import { fontOptions } from './options/fontOptions';
 import { glyphOptions } from './options/glyphOptions';
 import { speciesOptions } from './options/speciesOptions';
 import { unionOptions } from './options/unionOptions';
-import { type MapSettingConfigGroup } from './SettingConfig';
+import { type MapSettingConfigGroup, type SettingConfigColor } from './SettingConfig';
 import { isColorDynamic } from './utils';
+
+const COUNTRY_SCOPED_DYNAMIC_COLORS: SettingConfigColor<
+	unknown,
+	unknown
+>['allowedDynamicColors'][number][] = ['primary', 'secondary', 'border'];
+const PLANET_SCOPED_DYNAMIC_COLORS: SettingConfigColor<
+	unknown,
+	unknown
+>['allowedDynamicColors'][number][] = ['planet', 'planet_complement'];
 
 export const mapSettingsConfig: MapSettingConfigGroup[] = [
 	{
@@ -54,13 +63,14 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 			{
 				id: 'borderColor',
 				type: 'color',
-				allowedDynamicColors: ['primary', 'secondary'],
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS.filter((c) => c !== 'border'),
 				hideIf: (settings) => !settings.borderStroke.enabled,
 			},
 			{
 				id: 'borderFillColor',
 				type: 'color',
 				hideIf: (settings) => !settings.borderStroke.enabled,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'borderFillFade',
@@ -80,6 +90,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'sectorBorderColor',
 				type: 'color',
 				hideIf: (settings) => !settings.sectorBorderStroke.enabled,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'frontierBubbleThreshold',
@@ -107,6 +118,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				type: 'color',
 				hideIf: (settings) =>
 					!settings.sectorTypeBorderStyles || !settings.sectorBorderStroke.enabled,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'sectorFrontierBorderStroke',
@@ -119,6 +131,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				type: 'color',
 				hideIf: (settings) =>
 					!settings.sectorTypeBorderStyles || !settings.sectorBorderStroke.enabled,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 		],
 	},
@@ -162,6 +175,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 					![settings.unionFederations, settings.unionHegemonies, settings.unionSubjects].includes(
 						'joinedBorders',
 					),
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'unionFederationsColor',
@@ -208,6 +222,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'occupationColor',
 				type: 'color',
 				hideIf: (settings) => !settings.occupation,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 		],
 	},
@@ -356,40 +371,48 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'countryCapitalIcon',
 				type: 'icon',
 				requiresReprocessing: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'sectorCapitalIcon',
 				type: 'icon',
 				requiresReprocessing: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'populatedSystemIcon',
 				type: 'icon',
 				requiresReprocessing: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'unpopulatedSystemIcon',
 				type: 'icon',
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'wormholeIcon',
 				type: 'icon',
 				requiresReprocessing: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'gatewayIcon',
 				type: 'icon',
 				requiresReprocessing: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'lGateIcon',
 				type: 'icon',
 				requiresReprocessing: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'shroudTunnelIcon',
 				type: 'icon',
 				requiresReprocessing: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 		],
 	},
@@ -406,6 +429,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'hyperlaneColor',
 				type: 'color',
 				hideIf: (settings) => !settings.hyperlaneStroke.enabled,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'unownedHyperlaneColor',
@@ -424,6 +448,7 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'hyperRelayColor',
 				type: 'color',
 				hideIf: (settings) => !settings.hyperRelayStroke.enabled,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'unownedHyperRelayColor',
@@ -712,6 +737,11 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				step: 0.1,
 			},
 			{
+				id: 'systemMapPlanetRingColor',
+				type: 'color',
+				allowedDynamicColors: PLANET_SCOPED_DYNAMIC_COLORS,
+			},
+			{
 				id: 'systemMapLabelPlanetsFont',
 				type: 'select',
 				options: [{ id: 'Orbitron', literalName: 'Orbitron' }],
@@ -773,21 +803,25 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				id: 'systemMapCivilianFleetIcon',
 				type: 'icon',
 				noAdvanced: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'systemMapCivilianStationIcon',
 				type: 'icon',
 				noAdvanced: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'systemMapMilitaryFleetIcon',
 				type: 'icon',
 				noAdvanced: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'systemMapMilitaryStationIcon',
 				type: 'icon',
 				noAdvanced: true,
+				allowedDynamicColors: COUNTRY_SCOPED_DYNAMIC_COLORS,
 			},
 			{
 				id: 'systemMapLabelFleetsEnabled',

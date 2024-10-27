@@ -1,4 +1,4 @@
-import { lab } from 'd3-color';
+import { hsl, lab } from 'd3-color';
 import { interpolateRgb } from 'd3-interpolate';
 import type { SVGAttributes } from 'svelte/elements';
 
@@ -14,12 +14,14 @@ export function resolveColor({
 	mapSettings,
 	colors,
 	countryColors: countryColorsOption,
+	planetColor,
 	colorStack,
 	resolveToOpaqueColor,
 }: {
 	mapSettings: MapSettings;
 	colors: Record<string, string>;
 	countryColors?: null | CountryColors | (CountryColors | null | undefined)[];
+	planetColor?: string;
 	colorStack: ColorSetting[];
 	resolveToOpaqueColor?: boolean;
 }): string {
@@ -49,6 +51,13 @@ export function resolveColor({
 			colorStack: [mapSettings.borderColor, ...backgroundSettingStack],
 			resolveToOpaqueColor,
 		});
+	} else if (colorString === 'planet') {
+		colorString = planetColor ?? 'rgb(0, 0, 0)';
+	} else if (colorString === 'planet_complement') {
+		colorString = planetColor ?? 'rgb(0, 0, 0)';
+		const color = hsl(colorString);
+		color.h = color.h > 180 ? color.h - 180 : color.h + 180;
+		colorString = color.formatRgb();
 	} else {
 		if (colorString === 'primary') colorString = countryColors.primaryColor;
 		if (colorString === 'secondary') colorString = countryColors.secondaryColor;
@@ -200,4 +209,25 @@ export function getBackgroundColor(
 		colors: colors,
 		colorStack: [mapSettings.backgroundColor],
 	});
+}
+
+export function multiplyOpacity(colorSetting: ColorSetting, value: number): ColorSetting {
+	const opacityAdjustment = colorSetting.colorAdjustments.find(
+		(adjustment) => adjustment.type === 'OPACITY',
+	);
+	if (opacityAdjustment) {
+		return {
+			...colorSetting,
+			colorAdjustments: colorSetting.colorAdjustments.map((adjustment) =>
+				adjustment === opacityAdjustment
+					? { type: 'OPACITY', value: opacityAdjustment.value * value }
+					: adjustment,
+			),
+		};
+	} else {
+		return {
+			...colorSetting,
+			colorAdjustments: [...colorSetting.colorAdjustments, { type: 'OPACITY', value }],
+		};
+	}
 }
