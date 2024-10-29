@@ -417,6 +417,9 @@ export default {
 		legendBackgroundColor: 'Background Color',
 		systemMapOrbitStroke: 'Orbit Lines',
 		systemMapOrbitColor: 'Orbit Lines Color',
+		systemMapOrbitDistanceExponent: 'Exponential Orbit Scale',
+		systemMapOrbitDistanceExponent_tooltip:
+			'Exponentially scales the distances between between objects and the things they orbit, so, for example, the outer planets are spaced further apart from each than the inner planets.',
 		systemMapStarScale: 'Star Scale',
 		systemMapPlanetScale: 'Planet Scale',
 		systemMapMoonScale: 'Moon Scale',

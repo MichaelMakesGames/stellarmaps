@@ -12,6 +12,7 @@ export type NumberMapSettings =
 	| 'legendFontSize'
 	| 'systemMapLabelFleetsFontSize'
 	| 'systemMapLabelPlanetsFontSize'
+	| 'systemMapOrbitDistanceExponent'
 	| 'systemNamesFontSize'
 	| 'terraIncognitaBrightness'
 	| 'unionLeaderSymbolSize'
@@ -502,6 +503,7 @@ export const defaultMapSettings: MapSettings = {
 		color: 'planet',
 		colorAdjustments: [{ type: 'OPACITY', value: 0.75 }],
 	},
+	systemMapOrbitDistanceExponent: 1,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);

@@ -730,6 +730,13 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				hideIf: (settings) => !settings.systemMapOrbitStroke.enabled,
 			},
 			{
+				id: 'systemMapOrbitDistanceExponent',
+				type: 'number',
+				min: 1,
+				step: 0.1,
+				tooltip: 'setting.systemMapOrbitDistanceExponent_tooltip',
+			},
+			{
 				id: 'systemMapStarScale',
 				type: 'number',
 				optional: true,

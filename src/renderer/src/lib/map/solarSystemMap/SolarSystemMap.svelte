@@ -384,10 +384,9 @@
 		);
 	}
 
-	function getPlanetLabelPathAttributes(planet: Planet, settings: MapSettings) {
+	function getPlanetLabelPathAttributes(planet: Planet, planets: Planet[], settings: MapSettings) {
 		const r = getPlanetRadius(planet, settings);
-		let x = -planet.coordinate.x;
-		let y = planet.coordinate.y;
+		let { x, y } = getPlanetCoordinate(planet, planets, settings);
 		let position = settings.systemMapLabelPlanetsPosition;
 		if (position === 'orbit' && !planet.orbit) {
 			position = settings.systemMapLabelPlanetsFallbackPosition;
@@ -412,9 +411,11 @@
 				return { d: `M ${x} ${y} h 1000`, pathLength: 1 };
 			}
 			case 'orbit': {
-				const cx = -(planets.find((p) => p.id === planet.moon_of)?.coordinate.x ?? 0);
-				const cy = planets.find((p) => p.id === planet.moon_of)?.coordinate.y ?? 0;
-				const orbitRadius = planet.orbit;
+				const primaryBody = getPrimaryBodies(planet, planets)[0];
+				const { x: cx, y: cy } = primaryBody
+					? getPlanetCoordinate(primaryBody, planets, settings)
+					: { x: 0, y: 0 };
+				const orbitRadius = getPlanetOrbitDistance(planet, planets, settings);
 				if (cy > y) {
 					return {
 						d: `M ${x} ${y} A ${orbitRadius} ${orbitRadius} 0 0 1 ${cx + (cx - x)} ${cy + (cy - y)}`,
@@ -495,6 +496,104 @@
 		return angle;
 	}
 
+	function getScaledDistance(unscaledDistance: number, settings: MapSettings) {
+		const exponent = settings.systemMapOrbitDistanceExponent;
+		return (unscaledDistance ** exponent / 400 ** exponent) * 400;
+	}
+
+	function getScaledCoordinate(
+		coordinate: { x: number; y: number },
+		relativeTo: { x: number; y: number; r: number }[],
+		settings: MapSettings,
+	): { x: number; y: number } {
+		const unscaledDistance = Math.hypot(
+			coordinate.x - (relativeTo[0]?.x ?? 0),
+			coordinate.y - (relativeTo[0]?.y ?? 0),
+		);
+		const scaledDistance =
+			(relativeTo[0]?.r ?? 0) +
+			getScaledDistance(unscaledDistance - (relativeTo[0]?.r ?? 0), settings);
+		const theta = Math.atan2(
+			coordinate.y - (relativeTo[0]?.y ?? 0),
+			coordinate.x - (relativeTo[0]?.x ?? 0),
+		);
+		const scaledRelativeTo = relativeTo[0]
+			? getScaledCoordinate(relativeTo[0], relativeTo.slice(1), settings)
+			: { x: 0, y: 0 };
+		const x = scaledRelativeTo.x + Math.cos(theta) * scaledDistance;
+		const y = scaledRelativeTo.y + Math.sin(theta) * scaledDistance;
+		return { x, y };
+	}
+
+	function flipX<T extends { x: number; y: number }>(coordinate: T): T {
+		return { ...coordinate, x: -coordinate.x };
+	}
+
+	function getPrimaryBodies(planet: Planet, planets: Planet[]) {
+		const primaryBodies: Planet[] = [];
+		let done = false;
+		let planetToCheck: Planet = planet;
+		while (!done) {
+			let primaryBody = planets.find((p) => p.id === planetToCheck.moon_of);
+			if (!primaryBody && !(planetToCheck.coordinate.x === 0 && planetToCheck.coordinate.y === 0)) {
+				primaryBody = planets.find((p) => p.coordinate.x === 0 && p.coordinate.y === 0);
+			}
+			if (primaryBody) {
+				primaryBodies.push(primaryBody);
+				planetToCheck = primaryBody;
+			} else {
+				done = true;
+			}
+		}
+		return primaryBodies;
+	}
+
+	function getPlanetCoordinate(planet: Planet, planets: Planet[], settings: MapSettings) {
+		return getScaledCoordinate(
+			flipX(planet.coordinate),
+			getPrimaryBodies(planet, planets).map((p) => ({
+				...flipX(p.coordinate),
+				r: getPlanetRadius(p, settings),
+			})),
+			settings,
+		);
+	}
+
+	function getPlanetOrbitDistance(planet: Planet, planets: Planet[], settings: MapSettings) {
+		const primary = getPrimaryBodies(planet, planets)[0];
+		const primaryR = primary ? getPlanetRadius(primary, settings) : 0;
+		const unscaledDistance = Math.hypot(
+			planet.coordinate.x - (primary?.coordinate.x ?? 0),
+			planet.coordinate.y - (primary?.coordinate.y ?? 0),
+		);
+		const scaledDistance = primaryR + getScaledDistance(unscaledDistance - primaryR, settings);
+		return scaledDistance;
+	}
+
+	function getFleetCoordinate(
+		fleet: (typeof fleets)[number],
+		planets: Planet[],
+		settings: MapSettings,
+	) {
+		const closestPlanet = planets.toSorted(
+			(a, b) =>
+				(-a.coordinate.x - fleet.coordinate.x) ** 2 +
+				(a.coordinate.y - fleet.coordinate.y) ** 2 -
+				(-b.coordinate.x - fleet.coordinate.x) ** 2 -
+				(b.coordinate.y - fleet.coordinate.y) ** 2,
+		)[0];
+		return getScaledCoordinate(
+			fleet.coordinate,
+			closestPlanet
+				? [closestPlanet, ...getPrimaryBodies(closestPlanet, planets)].map((p) => ({
+						...flipX(p.coordinate),
+						r: getPlanetRadius(p, settings),
+					}))
+				: [],
+			settings,
+		);
+	}
+
 	const PLANET_RING_PATTERN = (
 		[
 			[0.3, 0],
@@ -540,7 +639,10 @@
 			width="1100%"
 			height="1100%"
 		>
-			<feGaussianBlur in="SourceGraphic" stdDeviation="10" />
+			<feGaussianBlur
+				in="SourceGraphic"
+				stdDeviation={10 / $mapSettings.systemMapOrbitDistanceExponent}
+			/>
 		</filter>
 		<Icons />
 	</defs>
@@ -548,10 +650,14 @@
 		{#if $mapSettings.systemMapOrbitStroke.enabled}
 			{#each planets.filter((p) => !isAsteroid(p) && p.orbit > 0) as planet (planet.id)}
 				<Glow enabled={$mapSettings.systemMapOrbitStroke.glow}>
+					{@const primary = getPrimaryBodies(planet, planets)[0]}
+					{@const primaryCoordinate = primary
+						? getPlanetCoordinate(primary, planets, $mapSettings)
+						: { x: 0, y: 0 }}
 					<circle
-						cx={-(planets.find((p) => p.id === planet.moon_of)?.coordinate.x ?? 0)}
-						cy={planets.find((p) => p.id === planet.moon_of)?.coordinate.y ?? 0}
-						r={planet.orbit}
+						cx={primaryCoordinate.x}
+						cy={primaryCoordinate.y}
+						r={getPlanetOrbitDistance(planet, planets, $mapSettings)}
 						fill="none"
 						{...getStrokeAttributes($mapSettings.systemMapOrbitStroke)}
 						{...getStrokeColorAttributes({
@@ -565,73 +671,72 @@
 		{/if}
 
 		{#each system.asteroid_belts as belt}
+			{@const centralStar = planets.find((p) => p.coordinate.x === 0 && p.coordinate.y === 0)}
+			{@const centralStarR = centralStar ? getPlanetRadius(centralStar, $mapSettings) : 0}
+			{@const beltDistance =
+				getScaledDistance(belt.inner_radius - centralStarR, $mapSettings) + centralStarR}
 			<circle
 				fill="none"
 				stroke={getBeltColor(belt.type)}
-				stroke-width="2"
+				stroke-width={2 / $mapSettings.systemMapOrbitDistanceExponent}
 				stroke-opacity={0.2}
-				r={belt.inner_radius}
+				r={beltDistance}
 			/>
 			<circle
 				fill="none"
 				stroke={getBeltColor(belt.type)}
-				stroke-width="4"
+				stroke-width={4 / $mapSettings.systemMapOrbitDistanceExponent}
 				stroke-opacity={0.05}
-				r={belt.inner_radius + 5}
+				r={beltDistance + 5 / $mapSettings.systemMapOrbitDistanceExponent}
 			/>
 			<circle
 				fill="none"
 				stroke={getBeltColor(belt.type)}
-				stroke-width="4"
+				stroke-width={4 / $mapSettings.systemMapOrbitDistanceExponent}
 				stroke-opacity={0.05}
-				r={belt.inner_radius - 5}
+				r={beltDistance - 5 / $mapSettings.systemMapOrbitDistanceExponent}
 			/>
 			<circle
 				fill="none"
 				stroke={getBeltColor(belt.type)}
-				stroke-width="1"
+				stroke-width={1 / $mapSettings.systemMapOrbitDistanceExponent}
 				stroke-opacity={0.1}
-				r={belt.inner_radius + 10}
+				r={beltDistance + 10 / $mapSettings.systemMapOrbitDistanceExponent}
 			/>
 			<circle
 				fill="none"
 				stroke={getBeltColor(belt.type)}
-				stroke-width="1"
+				stroke-width={1 / $mapSettings.systemMapOrbitDistanceExponent}
 				stroke-opacity={0.1}
-				r={belt.inner_radius - 10}
+				r={beltDistance - 10 / $mapSettings.systemMapOrbitDistanceExponent}
 			/>
 		{/each}
 		{#each planets as planet (planet.id)}
+			{@const coordinate = getPlanetCoordinate(planet, planets, $mapSettings)}
 			{#if isStar(planet)}
 				<Glow enabled filterId="starGlow" let:filter>
 					<circle
 						fill={isBlackHole(planet) && filter !== '' ? '#FFFFFF' : getPlanetColor(planet)}
 						r={getPlanetRadius(planet, $mapSettings)}
-						cx={-planet.coordinate.x}
-						cy={planet.coordinate.y}
+						cx={coordinate.x}
+						cy={coordinate.y}
 						{filter}
 					/>
 				</Glow>
 			{:else}
 				{@const radius = getPlanetRadius(planet, $mapSettings)}
-				<circle
-					fill={getPlanetColor(planet)}
-					r={radius}
-					cx={-planet.coordinate.x}
-					cy={planet.coordinate.y}
-				/>
+				<circle fill={getPlanetColor(planet)} r={radius} cx={coordinate.x} cy={coordinate.y} />
 				<path
 					d={getShadowPath(planet, $mapSettings)}
-					transform=" translate({-planet.coordinate.x} {planet.coordinate
-						.y}) rotate({getShadowRotation(planet)})"
+					transform=" translate({coordinate.x} {coordinate.y}) rotate({getShadowRotation(planet)})"
 					fill="#000000"
 					opacity={0.5}
 				/>
 				{#if planet.has_ring}
 					{#each PLANET_RING_PATTERN as ring}
 						<circle
-							cx={-planet.coordinate.x}
-							cy={planet.coordinate.y}
+							cx={coordinate.x}
+							cy={coordinate.y}
 							fill="none"
 							r={radius * ring.radiusMultiplier}
 							stroke-width={radius * ring.width}
@@ -650,7 +755,7 @@
 			<defs>
 				<path
 					id="planetLabelPath{planet.id}"
-					{...getPlanetLabelPathAttributes(planet, $mapSettings)}
+					{...getPlanetLabelPathAttributes(planet, planets, $mapSettings)}
 				/>
 			</defs>
 			<text
@@ -693,12 +798,13 @@
 		{/each}
 		{#each fleets as fleet (fleet.id)}
 			{@const icon = getFleetIconSetting(fleet, $mapSettings)}
+			{@const coordinate = getFleetCoordinate(fleet, planets, $mapSettings)}
 			{#if icon.enabled}
 				<use
 					href="#{icon.icon}"
 					x={-icon.size / 2}
 					y={-icon.size / 2}
-					transform="translate({fleet.coordinate.x} {fleet.coordinate.y}) rotate({fleet.rotation})"
+					transform="translate({coordinate.x} {coordinate.y}) rotate({fleet.rotation})"
 					width={icon.size}
 					height={icon.size}
 					{...getFillColorAttributes({
@@ -717,8 +823,8 @@
 				{#if $mapSettings.systemMapLabelFleetsEnabled}
 					{@const fontSize = $mapSettings.systemMapLabelFleetsFontSize}
 					<text
-						x={fleet.coordinate.x}
-						y={fleet.coordinate.y}
+						x={coordinate.x}
+						y={coordinate.y}
 						text-anchor={match($mapSettings.systemMapLabelFleetsPosition)
 							.with('right', () => 'start')
 							.with('left', () => 'end')
