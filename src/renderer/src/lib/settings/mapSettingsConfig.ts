@@ -762,6 +762,15 @@ export const mapSettingsConfig: MapSettingConfigGroup[] = [
 				type: 'color',
 				allowedDynamicColors: PLANET_SCOPED_DYNAMIC_COLORS,
 			},
+			{ id: 'systemMapPlanetShadowSelf', type: 'toggle' },
+			{ id: 'systemMapPlanetShadowPlanetarySystem', type: 'toggle' },
+			{ id: 'systemMapPlanetShadowRings', type: 'toggle' },
+			{
+				id: 'systemMapPlanetShadowOverlap',
+				type: 'toggle',
+				hideIf: (settings) =>
+					!settings.systemMapPlanetShadowSelf || !settings.systemMapPlanetShadowPlanetarySystem,
+			},
 			{
 				id: 'systemMapLabelPlanetsFont',
 				type: 'select',

@@ -74,6 +74,10 @@ export type BooleanMapSettings =
 	| 'systemMapLabelMoonsEnabled'
 	| 'systemMapLabelPlanetsEnabled'
 	| 'systemMapLabelStarsEnabled'
+	| 'systemMapPlanetShadowSelf'
+	| 'systemMapPlanetShadowPlanetarySystem'
+	| 'systemMapPlanetShadowRings'
+	| 'systemMapPlanetShadowOverlap'
 	| 'terraIncognita'
 	| 'unionLeaderUnderline'
 	| 'unionMode';
@@ -504,6 +508,10 @@ export const defaultMapSettings: MapSettings = {
 		colorAdjustments: [{ type: 'OPACITY', value: 0.75 }],
 	},
 	systemMapOrbitDistanceExponent: 1,
+	systemMapPlanetShadowSelf: true,
+	systemMapPlanetShadowPlanetarySystem: true,
+	systemMapPlanetShadowRings: true,
+	systemMapPlanetShadowOverlap: false,
 };
 
 export const mapSettings = localStorageStore('mapSettings', defaultMapSettings);
