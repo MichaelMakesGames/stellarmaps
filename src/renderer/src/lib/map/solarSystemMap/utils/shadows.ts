@@ -73,13 +73,6 @@ export function getPathKitShadowPath(
 
 	const combined = PathKit.MakeFromOp(shadow, shadowed, PathKit.PathOp.INTERSECT);
 	const svgString = combined.toSVGString();
-	if (planet.has_ring) {
-		console.log({
-			svgString,
-			combinedEqShadow: combined.equals(shadow),
-			combinedEqShadowed: combined.equals(shadowed),
-		});
-	}
 	shadow.delete();
 	shadowed.delete();
 	combined.delete();
