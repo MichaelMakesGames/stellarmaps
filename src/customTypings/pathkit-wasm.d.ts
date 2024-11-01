@@ -1,7 +1,7 @@
 // only the types used are implemented
 // see https://skia.org/docs/user/modules/pathkit/#api for more
 declare module 'pathkit-wasm/bin/pathkit' {
-	function PathKitInit(): Promise<PathKit>;
+	function PathKitInit(options?: { locateFile: (file: string) => string }): Promise<PathKit>;
 
 	export interface PathKit {
 		NewPath(): SkPath;
