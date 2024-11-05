@@ -96,7 +96,7 @@ export default function processVoronoi(
 	function findClosestSystem(x: number, y: number): GalacticObject | null {
 		const index = delaunay.find(x, y);
 		const systemId = voronoiIndexToSystem[index];
-		return systemId == null ? null : gameState.galactic_object[systemId] ?? null;
+		return systemId == null ? null : (gameState.galactic_object[systemId] ?? null);
 	}
 	return {
 		findClosestSystem,

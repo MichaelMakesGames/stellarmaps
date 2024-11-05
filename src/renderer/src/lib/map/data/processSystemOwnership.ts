@@ -32,7 +32,7 @@ export default function processSystemOwnership(
 	const unionLeaderToSystemIds: Record<string, Set<number>> = {};
 	const unionLeaderToUnionMembers: Record<number, Set<number>> = {};
 	const unionLeaderToSectors: Record<number, Set<number>> = {};
-	const ownedSystemPoints: turf.Point[] = [];
+	const ownedSystemPoints: GeoJSON.Point[] = [];
 	const systemIdToCountry: Record<string, number> = {};
 	const systemIdToUnionLeader: Record<string, number> = {};
 	const fullOccupiedOccupierToSystemIds: Record<string, Set<number>> = {};

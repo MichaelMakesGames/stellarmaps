@@ -231,7 +231,7 @@ export default async function processMapData(
 
 export type MapData = Awaited<ReturnType<typeof processMapData>>;
 
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 const cachedMemo: Map<Function, Function> = new Map();
 function cached<Args extends unknown[], ReturnValue>(
 	fn: (...args: Args) => ReturnValue,

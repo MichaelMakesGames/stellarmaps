@@ -6,6 +6,7 @@ import debug from './debug';
 import { gameStateFilter } from './GameState';
 
 let stellarMapsApi: StellarMapsAPI = (window as any).api; // this is from electron preload
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 if (stellarMapsApi == null) {
 	// we're in tauri
 	stellarMapsApi = {

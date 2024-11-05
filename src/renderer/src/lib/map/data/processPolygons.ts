@@ -234,7 +234,7 @@ function getVoidPolygons(topology: Topology<Objects>) {
 }
 
 function addPolygonToGeojsonMapping(
-	polygon: turf.Feature<turf.Polygon>,
+	polygon: GeoJSON.Feature<GeoJSON.Polygon>,
 	mapping: Record<number, PolygonalFeature>,
 	id: number | null | undefined,
 ) {

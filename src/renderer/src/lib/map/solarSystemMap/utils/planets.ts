@@ -31,9 +31,9 @@ export function isMoon(planet: Planet) {
 export function getPlanetRadius(planet: Planet, settings: MapSettings) {
 	return Math.sqrt(
 		planet.planet_size *
-			(!isMoon(planet) && !isStar(planet) ? settings.systemMapPlanetScale ?? 1 : 1) *
-			(isStar(planet) ? settings.systemMapStarScale ?? 1 : 1) *
-			(isMoon(planet) ? settings.systemMapMoonScale ?? 1 : 1),
+			(!isMoon(planet) && !isStar(planet) ? (settings.systemMapPlanetScale ?? 1) : 1) *
+			(isStar(planet) ? (settings.systemMapStarScale ?? 1) : 1) *
+			(isMoon(planet) ? (settings.systemMapMoonScale ?? 1) : 1),
 	);
 }
 

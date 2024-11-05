@@ -369,7 +369,7 @@ export const mapModes: Record<string, MapMode> = {
 			scale: 0.25,
 			getValues(gameState, system, povCountry, _species, owner) {
 				const ownedByPov = owner != null && owner.id === povCountry?.id;
-				const collectedValue = !ownedByPov ? 0 : system.trade_hub.collected ?? 0;
+				const collectedValue = !ownedByPov ? 0 : (system.trade_hub.collected ?? 0);
 				const incomingValue = !ownedByPov
 					? undefined
 					: system.trade_hub.sources?.reduce(
@@ -605,7 +605,8 @@ export function getCountryMapModeInfo(
 			return {
 				primaryColor: match.primaryColor,
 				secondaryColor: match.secondaryColor ?? match.primaryColor,
-				mapModeCountryLabel: match.showInLegend === 'always' ? match.label ?? undefined : undefined,
+				mapModeCountryLabel:
+					match.showInLegend === 'always' ? (match.label ?? undefined) : undefined,
 			};
 		} else {
 			return defaultCountryMapModeInfo;
@@ -642,7 +643,6 @@ function areCountriesHostile(
 		return true;
 	if (country1?.overlord === id2 || country2?.overlord === id1) return false;
 	if (relationTo1?.truce != null || relationTo2?.truce != null) return false;
-	// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 	if (relationTo1?.hostile || relationTo2?.hostile) return true;
 	if (
 		country1 &&

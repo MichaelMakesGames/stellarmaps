@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import './app.postcss';
 
 	import { arrow, autoUpdate, computePosition, flip, offset, shift } from '@floating-ui/dom';

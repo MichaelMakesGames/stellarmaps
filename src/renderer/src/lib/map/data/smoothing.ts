@@ -7,9 +7,9 @@ import {
 } from './utils';
 
 export function getSmoothedPosition(
-	position: turf.Position,
+	position: GeoJSON.Position,
 	geoJSON: PolygonalFeatureCollection | PolygonalFeature,
-): turf.Position {
+): GeoJSON.Position {
 	const ROUND = 2;
 	const allPositionArrays = getAllPositionArrays(geoJSON);
 	const positionArray = allPositionArrays.find((array) =>
@@ -27,20 +27,20 @@ export function getSmoothedPosition(
 		);
 
 		const nextIndex = (positionIndex + 1) % positionArray.length;
-		const next = positionArray[nextIndex] as turf.Position;
+		const next = positionArray[nextIndex] as GeoJSON.Position;
 		const nextDx = next[0] - position[0];
 		const nextDy = next[1] - position[1];
 
 		const prevIndex = (positionIndex + positionArray.length - 1) % positionArray.length;
-		const prev = positionArray[prevIndex] as turf.Position;
+		const prev = positionArray[prevIndex] as GeoJSON.Position;
 		const prevDx = prev[0] - position[0];
 		const prevDy = prev[1] - position[1];
 
-		const smoothedSegment: [turf.Position, turf.Position] = [
+		const smoothedSegment: [GeoJSON.Position, GeoJSON.Position] = [
 			[position[0] + prevDx * 0.25, position[1] + prevDy * 0.25],
 			[position[0] + nextDx * 0.25, position[1] + nextDy * 0.25],
 		];
-		const smoothedSegmentMidpoint: turf.Position = [
+		const smoothedSegmentMidpoint: GeoJSON.Position = [
 			(smoothedSegment[0][0] + smoothedSegment[1][0]) / 2,
 			(smoothedSegment[0][1] + smoothedSegment[1][1]) / 2,
 		];
@@ -51,31 +51,31 @@ export function getSmoothedPosition(
 	}
 }
 
-function isFeatureCollection(geojson: turf.AllGeoJSON): geojson is turf.FeatureCollection {
+function isFeatureCollection(geojson: turf.AllGeoJSON): geojson is GeoJSON.FeatureCollection {
 	return geojson.type === 'FeatureCollection';
 }
-function isFeature(geojson: turf.AllGeoJSON): geojson is turf.Feature {
+function isFeature(geojson: turf.AllGeoJSON): geojson is GeoJSON.Feature {
 	return geojson.type === 'Feature';
 }
-function isGeometryCollection(geojson: turf.AllGeoJSON): geojson is turf.GeometryCollection {
+function isGeometryCollection(geojson: turf.AllGeoJSON): geojson is GeoJSON.GeometryCollection {
 	return geojson.type === 'GeometryCollection';
 }
-function isPoint(geojson: turf.AllGeoJSON): geojson is turf.Point {
+function isPoint(geojson: turf.AllGeoJSON): geojson is GeoJSON.Point {
 	return geojson.type === 'Point';
 }
-function isMultiPoint(geojson: turf.AllGeoJSON): geojson is turf.MultiPoint {
+function isMultiPoint(geojson: turf.AllGeoJSON): geojson is GeoJSON.MultiPoint {
 	return geojson.type === 'MultiPoint';
 }
-function isLineString(geojson: turf.AllGeoJSON): geojson is turf.LineString {
+function isLineString(geojson: turf.AllGeoJSON): geojson is GeoJSON.LineString {
 	return geojson.type === 'LineString';
 }
-function isMultiLineString(geojson: turf.AllGeoJSON): geojson is turf.MultiLineString {
+function isMultiLineString(geojson: turf.AllGeoJSON): geojson is GeoJSON.MultiLineString {
 	return geojson.type === 'MultiLineString';
 }
-function isPolygon(geojson: turf.AllGeoJSON): geojson is turf.Polygon {
+function isPolygon(geojson: turf.AllGeoJSON): geojson is GeoJSON.Polygon {
 	return geojson.type === 'Polygon';
 }
-function isMultiPolygon(geojson: turf.AllGeoJSON): geojson is turf.MultiPolygon {
+function isMultiPolygon(geojson: turf.AllGeoJSON): geojson is GeoJSON.MultiPolygon {
 	return geojson.type === 'MultiPolygon';
 }
 export function smoothGeojson<T extends turf.AllGeoJSON>(geojson: T, iterations: number): T {
@@ -125,10 +125,10 @@ export function smoothGeojson<T extends turf.AllGeoJSON>(geojson: T, iterations:
 }
 
 function smoothPositionArray(
-	positionArray: turf.Position[],
+	positionArray: GeoJSON.Position[],
 	iterations: number,
 	loops: boolean,
-): turf.Position[] {
+): GeoJSON.Position[] {
 	let copy = positionArray.slice();
 	for (let i = 0; i < iterations; i++) {
 		copy = smoothPositionArrayIteration(copy, loops);
@@ -137,9 +137,9 @@ function smoothPositionArray(
 }
 
 function smoothPositionArrayIteration(
-	positionArray: turf.Position[],
+	positionArray: GeoJSON.Position[],
 	loops: boolean,
-): turf.Position[] {
+): GeoJSON.Position[] {
 	const smoothed = positionArray.flatMap((position, index) => {
 		const isFirst = index === 0;
 		const isLast = index === positionArray.length - 1;
@@ -147,22 +147,22 @@ function smoothPositionArrayIteration(
 			return [position];
 		} else {
 			const nextIndex = (index + (loops && isLast ? 2 : 1)) % positionArray.length;
-			const next = positionArray[nextIndex] as turf.Position;
+			const next = positionArray[nextIndex] as GeoJSON.Position;
 			const nextDx = next[0] - position[0];
 			const nextDy = next[1] - position[1];
 
 			const prevIndex =
 				(index + positionArray.length - (loops && isFirst ? 2 : 1)) % positionArray.length;
-			const prev = positionArray[prevIndex] as turf.Position;
+			const prev = positionArray[prevIndex] as GeoJSON.Position;
 			const prevDx = prev[0] - position[0];
 			const prevDy = prev[1] - position[1];
 
-			const smoothedSegment: turf.Position[] = [
+			const smoothedSegment: GeoJSON.Position[] = [
 				[position[0] + prevDx * 0.25, position[1] + prevDy * 0.25],
 				[position[0] + nextDx * 0.25, position[1] + nextDy * 0.25],
 			];
 			if (index === positionArray.length - 1) {
-				return [smoothedSegment[0] as turf.Position];
+				return [smoothedSegment[0] as GeoJSON.Position];
 			} else {
 				return smoothedSegment;
 			}

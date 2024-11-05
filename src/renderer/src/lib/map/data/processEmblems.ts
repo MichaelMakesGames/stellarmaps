@@ -22,9 +22,7 @@ export async function processEmblems(countries: Country[]) {
 						c.flag.icon.file,
 					);
 				}
-				const promise = emblems[key];
-				if (promise != null) promises.push(promise);
-				if (promise != null && c.flag.icon.file === 'flag_07.dds') promise.then(console.log);
+				promises.push(emblems[key]);
 			}
 		}
 	});

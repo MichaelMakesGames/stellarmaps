@@ -3,7 +3,9 @@ import { isBlackHole } from './planets';
 
 export function getPlanetColor(planet: Planet, colors: Record<string, string>): string | undefined {
 	let pc = planet.planet_class;
-	if (pc.includes('_station')) [(pc = pc.substring(0, pc.indexOf('_station')))];
+	if (pc.includes('_station')) {
+		pc = pc.substring(0, pc.indexOf('_station'));
+	}
 	switch (pc) {
 		// standard habitable
 		case 'pc_desert':

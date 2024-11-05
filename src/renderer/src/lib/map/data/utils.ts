@@ -6,9 +6,9 @@ import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
 import type { BorderCircle } from './processCircularGalaxyBorder';
 
-export type PolygonalGeometry = turf.Polygon | turf.MultiPolygon;
-export type PolygonalFeature = turf.Feature<PolygonalGeometry>;
-export type PolygonalFeatureCollection = turf.FeatureCollection<PolygonalGeometry>;
+export type PolygonalGeometry = GeoJSON.Polygon | GeoJSON.MultiPolygon;
+export type PolygonalFeature = GeoJSON.Feature<PolygonalGeometry>;
+export type PolygonalFeatureCollection = GeoJSON.FeatureCollection<PolygonalGeometry>;
 
 export const SCALE = 100;
 
@@ -16,7 +16,7 @@ export function pointToGeoJSON([x, y]: [number, number]): [number, number] {
 	return [x / SCALE, y / SCALE];
 }
 
-export function pointFromGeoJSON(point: turf.Position): [number, number] {
+export function pointFromGeoJSON(point: GeoJSON.Position): [number, number] {
 	return [point[0] * SCALE, point[1] * SCALE];
 }
 
@@ -54,7 +54,7 @@ export function getUnionLeaderId(
 	) {
 		return settings.unionFederationsColor === 'leader'
 			? overlordFederation.leader
-			: overlordFederation.members[0] ?? countryId;
+			: (overlordFederation.members[0] ?? countryId);
 	} else if (
 		federation &&
 		((isIncludedValue(settings.unionFederations) && isNonHegemonyFederation) ||
@@ -62,7 +62,7 @@ export function getUnionLeaderId(
 	) {
 		return settings.unionFederationsColor === 'leader'
 			? federation.leader
-			: federation.members[0] ?? countryId;
+			: (federation.members[0] ?? countryId);
 	} else if (isIncludedValue(settings.unionSubjects) && overlord && overlordId != null) {
 		return overlordId;
 	} else {
@@ -122,7 +122,7 @@ export function multiPolygonToPath(
 		.join(' ');
 }
 
-export function segmentToPath(segment: turf.Position[], smooth: boolean): string {
+export function segmentToPath(segment: GeoJSON.Position[], smooth: boolean): string {
 	const points = segment.map(pointFromGeoJSON);
 	const pathContext = pathRound(3);
 	const curve = smooth ? curveBasis(pathContext) : curveLinear(pathContext);
@@ -136,28 +136,28 @@ export function segmentToPath(segment: turf.Position[], smooth: boolean): string
 
 export function getPolygons(
 	geojson: PolygonalFeatureCollection | PolygonalFeature | null,
-): turf.Feature<turf.Polygon>[] {
+): GeoJSON.Feature<GeoJSON.Polygon>[] {
 	if (geojson == null) return [];
 	const features = geojson.type === 'FeatureCollection' ? geojson.features : [geojson];
 	return features.flatMap((feature) => {
 		if (!['Polygon', 'MultiPolygon'].includes(feature.geometry.type)) {
 			return [];
 		} else if (feature.geometry.type === 'Polygon') {
-			return [feature as turf.Feature<turf.Polygon>];
+			return [feature as GeoJSON.Feature<GeoJSON.Polygon>];
 		} else {
 			return feature.geometry.coordinates.map((coords) => turf.polygon(coords));
 		}
 	});
 }
 
-export function positionToString(p: turf.Position): string {
+export function positionToString(p: GeoJSON.Position): string {
 	return `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
 }
 
 export function getAllPositionArrays(geoJSON: PolygonalFeatureCollection | PolygonalFeature) {
 	const features = geoJSON.type === 'FeatureCollection' ? geoJSON.features : [geoJSON];
 	const allPositionArrays = features
-		.map<turf.Position[][]>((f) => {
+		.map<GeoJSON.Position[][]>((f) => {
 			const geometry = f.geometry;
 			if (geometry.type === 'Polygon') {
 				return geometry.coordinates;
@@ -283,7 +283,7 @@ export function applyGalaxyBoundary(
 	externalBorder: PolygonalFeature | null,
 ) {
 	if (externalBorder != null) {
-		return turf.intersect(geojson, externalBorder);
+		return turf.intersect(turf.featureCollection([geojson, externalBorder]));
 	}
 	return geojson;
 }
@@ -318,14 +318,16 @@ export function makeBorderCircleGeojson(
 			units: 'degrees',
 			steps: 1,
 		});
-		geojson = turf.union(geojson, hyperlaneBuffer);
+		if (hyperlaneBuffer) {
+			geojson = turf.union(turf.featureCollection([geojson, hyperlaneBuffer]));
+		}
 	}
 
 	return geojson;
 }
 
 export function getSharedDistancePercent(
-	polygon: turf.Feature<turf.Polygon>,
+	polygon: GeoJSON.Feature<GeoJSON.Polygon>,
 	sharedPositionStrings: Set<string>,
 ) {
 	let sharedDistance = 0;

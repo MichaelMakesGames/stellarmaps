@@ -53,7 +53,10 @@ export default function processLabels(
 					if (!memberGeojson || !border.geojson) return [memberId, null];
 					// the member geojson hasn't had fragments removed
 					// intersect with the union leader geojson from border so that labels are drawn for those polygons
-					return [memberId, turf.intersect(memberGeojson, border.geojson)];
+					return [
+						memberId,
+						turf.intersect(turf.featureCollection([memberGeojson, border.geojson])),
+					] as [number, PolygonalFeature | null];
 				}),
 			);
 	const labels = idGeojsonPairs.map(([countryId, geojson]) => {
@@ -115,7 +118,7 @@ export default function processLabels(
 								}),
 							]).geometry;
 						})
-						.map<[turf.Polygon, turf.Position]>((polygon) => [
+						.map<[GeoJSON.Polygon, GeoJSON.Position]>((polygon) => [
 							polygon,
 							aspectRatioSensitivePolylabel(polygon.coordinates, 0.01, searchAspectRatio),
 						])
@@ -203,8 +206,8 @@ function findLargestContainedRect({
 	iterations,
 	xBuffer = 0,
 }: {
-	polygon: turf.Polygon;
-	relativePoint: turf.Position;
+	polygon: GeoJSON.Polygon;
+	relativePoint: GeoJSON.Position;
 	relativePointType: 'top' | 'bottom' | 'middle';
 	ratio: number;
 	iterations: number;
@@ -240,18 +243,18 @@ function findLargestContainedRect({
 }
 
 function makeRect(
-	relativePoint: turf.Position,
+	relativePoint: GeoJSON.Position,
 	relativePointType: 'top' | 'bottom' | 'middle',
 	width: number,
 	height: number,
-): turf.Polygon {
+): GeoJSON.Polygon {
 	const dx = width / 2;
 	const dy = height / 2;
-	const center: turf.Position = [relativePoint[0], relativePoint[1]];
+	const center: GeoJSON.Position = [relativePoint[0], relativePoint[1]];
 	if (relativePointType === 'top') center[1] += dy;
 	if (relativePointType === 'bottom') center[1] -= dy;
 	// clockwise: [0,0],[0,1],[1,1],[1,0],[0,0]
-	const points = [
+	const points: GeoJSON.Position[] = [
 		[center[0] - dx, center[1] - dy],
 		[center[0] - dx, center[1] + dy],
 		[center[0] + dx, center[1] + dy],
@@ -262,21 +265,21 @@ function makeRect(
 }
 
 function aspectRatioSensitivePolylabel(
-	polygon: turf.Position[][],
+	polygon: GeoJSON.Position[][],
 	precision: number,
 	aspectRatio: number,
 ) {
 	const scaledPolygon = polygon.map((ring) =>
 		ring.map((point) => [point[0] * aspectRatio, point[1]]),
 	);
-	const scaledPoint = polylabel(scaledPolygon, precision) as unknown as turf.Position;
-	const point: turf.Position = [scaledPoint[0] / aspectRatio, scaledPoint[1]];
+	const scaledPoint = polylabel(scaledPolygon, precision) as unknown as GeoJSON.Position;
+	const point: GeoJSON.Position = [scaledPoint[0] / aspectRatio, scaledPoint[1]];
 	return point;
 }
 
 // The booleanContains function from turf doesn't seem to work with concave polygons
 // This is stricter and simplified a bit since we know the inner shape is a rectangle
-function contains(polygon: turf.Polygon, rect: turf.Polygon) {
+function contains(polygon: GeoJSON.Polygon, rect: GeoJSON.Polygon) {
 	const [r1, r2, r3, r4] = rect.coordinates[0] ?? [];
 	if (r1 == null || r2 == null || r3 == null || r4 == null) {
 		throw new Error('rect has too few points!');
