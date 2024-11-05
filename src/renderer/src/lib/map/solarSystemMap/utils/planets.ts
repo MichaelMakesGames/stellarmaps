@@ -1,3 +1,5 @@
+import { scalePow } from 'd3-scale';
+
 import type { Planet } from '../../../GameState';
 import type { MapSettings } from '../../../settings';
 
@@ -86,4 +88,31 @@ export const PLANET_RING_PATTERN = (
 	const radiusMultiplier =
 		array.slice(0, index).reduce((total, [curWidth]) => total + curWidth, 0) + 1 + width / 2;
 	return { width, opacity, radiusMultiplier };
+});
+
+function getStarGradientSteps({
+	startOffset,
+	startOpacity,
+	numSteps,
+	exponent,
+}: {
+	startOffset: number;
+	startOpacity: number;
+	numSteps: number;
+	exponent: number;
+}): { offset: string; 'stop-opacity': number }[] {
+	const results: ReturnType<typeof getStarGradientSteps> = [];
+	const scale = scalePow([0, 100 - startOffset], [startOpacity, 0]).exponent(exponent);
+	for (let i = 0; i <= numSteps; i++) {
+		const offset = startOffset + (i / numSteps) * (100 - startOffset);
+		results.push({ offset: `${offset}%`, 'stop-opacity': scale(offset - startOffset) });
+	}
+	console.log(results);
+	return results;
+}
+export const STAR_GRADIENT_STEPS = getStarGradientSteps({
+	startOffset: 25,
+	startOpacity: 0.32,
+	numSteps: 32,
+	exponent: 0.25,
 });

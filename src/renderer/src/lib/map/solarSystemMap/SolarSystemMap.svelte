@@ -37,6 +37,7 @@
 		isPlanetarySystemPrimaryBody,
 		isStar,
 		PLANET_RING_PATTERN,
+		STAR_GRADIENT_STEPS,
 	} from './utils/planets';
 	import { getPathKitShadowPath } from './utils/shadows';
 
@@ -178,19 +179,6 @@
 		<filter id="glow" filterUnits="objectBoundingBox" x="-50%" y="-50%" width="200%" height="200%">
 			<feGaussianBlur in="SourceGraphic" stdDeviation="2" />
 		</filter>
-		<filter
-			id="starGlow"
-			filterUnits="objectBoundingBox"
-			x="-500%"
-			y="-500%"
-			width="1100%"
-			height="1100%"
-		>
-			<feGaussianBlur
-				in="SourceGraphic"
-				stdDeviation={10 / $mapSettings.systemMapOrbitDistanceExponent}
-			/>
-		</filter>
 		<Icons />
 	</defs>
 	<g bind:this={g}>
@@ -261,15 +249,25 @@
 		{#each planets as planet (planet.id)}
 			{@const coordinate = getPlanetCoordinate(planet, planets, $mapSettings)}
 			{#if isStar(planet)}
-				<Glow enabled filterId="starGlow" let:filter>
-					<circle
-						fill={filter !== '' ? getStarGlowColor(planet, colors) : getPlanetColor(planet, colors)}
-						r={getPlanetRadius(planet, $mapSettings)}
-						cx={coordinate.x}
-						cy={coordinate.y}
-						{filter}
-					/>
-				</Glow>
+				<defs>
+					<radialGradient id="star-gradient-{planet.id}">
+						{#each STAR_GRADIENT_STEPS as step}
+							<stop stop-color={getStarGlowColor(planet, colors)} {...step} />
+						{/each}
+					</radialGradient>
+				</defs>
+				<circle
+					fill="url(#star-gradient-{planet.id})"
+					r={getPlanetRadius(planet, $mapSettings) * 4}
+					cx={coordinate.x}
+					cy={coordinate.y}
+				/>
+				<circle
+					fill={getPlanetColor(planet, colors)}
+					r={getPlanetRadius(planet, $mapSettings)}
+					cx={coordinate.x}
+					cy={coordinate.y}
+				/>
 			{:else}
 				{@const radius = getPlanetRadius(planet, $mapSettings)}
 				<circle
