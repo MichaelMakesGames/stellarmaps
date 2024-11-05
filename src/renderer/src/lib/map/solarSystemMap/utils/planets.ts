@@ -30,6 +30,15 @@ export function isMoon(planet: Planet) {
 	return Boolean(planet.is_moon);
 }
 
+/**
+ * Finds Stellaris "planets" that aren't actually planets (or moons/stars)
+ * @param planet
+ * @returns
+ */
+export function isFakePlanet(planet: Planet) {
+	return planet.planet_class === 'pc_gpm_res'; // Guill's Planet Modifiers "Resource Site"
+}
+
 export function getPlanetRadius(planet: Planet, settings: MapSettings) {
 	return Math.sqrt(
 		planet.planet_size *

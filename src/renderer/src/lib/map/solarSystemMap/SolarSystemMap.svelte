@@ -34,6 +34,7 @@
 		getPlanetRadius,
 		getPrimaryBodies,
 		isAsteroid,
+		isFakePlanet,
 		isPlanetarySystemPrimaryBody,
 		isStar,
 		PLANET_RING_PATTERN,
@@ -128,7 +129,8 @@
 
 	$: planets = system.planet
 		.map((planetId) => gameState.planets.planet[planetId])
-		.filter(isDefined);
+		.filter(isDefined)
+		.filter((planet) => !isFakePlanet(planet));
 
 	$: systemConnections = system.hyperlane
 		.map((h) => {
