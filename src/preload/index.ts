@@ -29,9 +29,9 @@ const api: StellarMapsAPI = {
 			platformPaths.home().then((home) => `${home}/.config/games.michaelmakes.stellarmaps`),
 	},
 	fs: {
-		writeFile: (path, content) => fs.writeFile(path, content, { encoding: 'utf-8' }),
-		writeBinaryFile: (path, content) => fs.writeFile(path, new DataView(content)),
-		createDir: (path, options) =>
+		writeTextFile: (path, content) => fs.writeFile(path, content, { encoding: 'utf-8' }),
+		writeFile: (path, content) => fs.writeFile(path, content),
+		mkdir: (path, options) =>
 			fs.mkdir(path, options.recursive ? options : undefined).then(() => {}),
 		exists: (path) =>
 			fs

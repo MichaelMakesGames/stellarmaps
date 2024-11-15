@@ -1,4 +1,7 @@
-import { dialog, fs, invoke, path } from '@tauri-apps/api';
+import { path } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
+import * as dialog from '@tauri-apps/plugin-dialog';
+import * as fs from '@tauri-apps/plugin-fs';
 import { get } from 'svelte/store';
 
 import type { StellarMapsAPI } from '../../../shared/StellarMapsApi';

@@ -1,10 +1,11 @@
 import type { ToastStore } from '@skeletonlabs/skeleton';
-import { dialog, path } from '@tauri-apps/api';
+import { path } from '@tauri-apps/api';
 import type { UnlistenFn } from '@tauri-apps/api/event';
-import { readTextFile } from '@tauri-apps/api/fs';
+import * as dialog from '@tauri-apps/plugin-dialog';
+import { readTextFile } from '@tauri-apps/plugin-fs';
+import { watch, type WatchEvent } from '@tauri-apps/plugin-fs';
 import type { ObjectExpression } from 'acorn';
 import { writable } from 'svelte/store';
-import { type DebouncedEvent, watch } from 'tauri-plugin-fs-watch-api';
 
 import { locale, translatorModeMessages } from '../intl';
 import { debounce, toastError } from './utils';
@@ -97,13 +98,11 @@ export async function selectTranslatorModeFile(toastStore: ToastStore) {
 			});
 		}, 50);
 
-		const callback = (e?: DebouncedEvent) => {
-			if (e == null || e.some((e) => e.path === filePath)) readFileAndExtractMessages();
+		const callback = (e?: WatchEvent) => {
+			if (e == null || e.paths.some((p) => p === filePath)) readFileAndExtractMessages();
 		};
 
-		unwatch = await watch(await path.dirname(filePath), callback, {
-			recursive: true,
-		});
+		unwatch = await watch(filePath, callback);
 
 		callback();
 	}

@@ -23,9 +23,12 @@ base64 = "0.21.7"
 image_dds = { version = "0.4.0", default-features = false, features = ["ddsfile", "image", "decode"] }
 ddsfile = "0.5.2"
 logos = "0.14.0"
-tauri = { version = "1.6", features = [ "fs-read-file", "fs-exists", "fs-create-dir", "dialog-open", "dialog-save", "fs-write-file", "os-all", "path-all", "shell-open"] }
-tauri-plugin-fs-watch = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
+tauri = { version = "2", features = [] }
 rayon = "1.10.0"
+tauri-plugin-shell = "2"
+tauri-plugin-fs = { version = "2", features = ["watch"] }
+tauri-plugin-dialog = "2"
+dirs = "5.0.1"
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
@@ -37,4 +40,4 @@ custom-protocol = ["tauri/custom-protocol"]
 assert-json-diff = "2.0.2"
 
 [build-dependencies]
-tauri-build = { version = "1.5.1", features = [] }
+tauri-build = { version = "2", features = [] }

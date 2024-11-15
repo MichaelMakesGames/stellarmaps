@@ -116,7 +116,6 @@ function getStarGradientSteps({
 		const offset = startOffset + (i / numSteps) * (100 - startOffset);
 		results.push({ offset: `${offset}%`, 'stop-opacity': scale(offset - startOffset) });
 	}
-	console.log(results);
 	return results;
 }
 export const STAR_GRADIENT_STEPS = getStarGradientSteps({

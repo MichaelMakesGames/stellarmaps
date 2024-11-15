@@ -4,6 +4,7 @@
 use anyhow;
 use base64::prelude::*;
 use ddsfile::Dds;
+use dirs;
 use font_kit::source::SystemSource;
 use image_dds;
 use rayon::prelude::*;
@@ -26,7 +27,9 @@ mod parser;
 
 fn main() {
 	tauri::Builder::default()
-		.plugin(tauri_plugin_fs_watch::init())
+		.plugin(tauri_plugin_dialog::init())
+		.plugin(tauri_plugin_fs::init())
+		.plugin(tauri_plugin_shell::init())
 		.invoke_handler(tauri::generate_handler![
 			get_stellaris_colors_cmd,
 			get_stellaris_loc_cmd,
@@ -118,16 +121,17 @@ fn get_stellaris_install_dir() -> anyhow::Result<PathBuf> {
 fn get_stellaris_user_data_dir() -> PathBuf {
 	match env::consts::OS {
 		"linux" => {
-			let home_dir = env::var("HOME").unwrap();
-			return Path::new(home_dir.as_str()).join(".local/share/Paradox Interactive/Stellaris");
+			return dirs::home_dir()
+				.unwrap()
+				.join(".local/share/Paradox Interactive/Stellaris");
 		}
 		"macos" => {
-			return tauri::api::path::document_dir()
+			return dirs::document_dir()
 				.unwrap()
 				.join("Paradox Interactive/Stellaris");
 		}
 		"windows" => {
-			return tauri::api::path::document_dir()
+			return dirs::document_dir()
 				.unwrap()
 				.join("Paradox Interactive\\Stellaris");
 		}

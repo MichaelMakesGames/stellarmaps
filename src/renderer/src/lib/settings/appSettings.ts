@@ -17,7 +17,7 @@ async function createAppConfigDirIfNeeded() {
 	const path = await stellarMapsApi.path.appConfigDir();
 	const exists: boolean = await stellarMapsApi.fs.exists(path);
 	if (!exists) {
-		await stellarMapsApi.fs.createDir(path, { recursive: true });
+		await stellarMapsApi.fs.mkdir(path, { recursive: true });
 	}
 }
 
@@ -77,7 +77,7 @@ function loadSettings() {
 				// write to file
 				createAppConfigDirIfNeeded()
 					.then(getAppSettingsPath)
-					.then((path) => stellarMapsApi.fs.writeFile(path, JSON.stringify(settings)));
+					.then((path) => stellarMapsApi.fs.writeTextFile(path, JSON.stringify(settings)));
 				// toggle translator mode
 				if (settings.appTranslatorMode) {
 					enableTranslatorMode();

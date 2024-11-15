@@ -1,29 +1,26 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
-  "description": "main permissions",
-  "context": "local",
+  "description": "Capability for the main window",
   "windows": [
     "main"
   ],
   "permissions": [
-    "path:default",
-    "event:default",
-    "window:default",
-    "app:default",
-    "image:default",
-    "resources:default",
-    "menu:default",
-    "tray:default",
-    "shell:allow-open",
+    "core:default",
+    "shell:default",
+    "fs:default",
+    "dialog:default",
+    "fs:allow-read-file",
+    "fs:allow-read-text-file",
     "fs:allow-write-file",
     "fs:allow-write-text-file",
-    {
-      "identifier": "fs:scope"
-    },
+    "fs:allow-mkdir",
+    "fs:allow-exists",
+    "fs:allow-watch",
+    "fs:allow-unwatch",
+    "shell:allow-open",
     "dialog:allow-open",
-    "dialog:allow-save",
-    "webview:allow-internal-toggle-devtools"
+    "dialog:allow-save"
   ],
   "platforms": [
     "linux",
