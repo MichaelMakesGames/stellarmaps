@@ -27,7 +27,5 @@
 		"editor.defaultFormatter": "rust-lang.rust-analyzer"
 	},
 	"eslint.run": "onType",
-	"editor.codeActionsOnSave": {
-		"source.organizeImports": "explicit"
-	}
+	"editor.codeActionsOnSave": {}
 }
