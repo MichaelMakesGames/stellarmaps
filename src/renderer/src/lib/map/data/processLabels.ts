@@ -3,6 +3,7 @@ import polylabel from 'polylabel';
 
 import type { GameState } from '../../GameState';
 import type { MapSettings } from '../../settings';
+import { removeColorAndIconCodes } from './locUtils';
 import type processBorders from './processBorders';
 import type processSystemOwnership from './processSystemOwnership';
 import type processTerraIncognita from './processTerraIncognita';
@@ -61,7 +62,9 @@ export default function processLabels(
 			);
 	const labels = idGeojsonPairs.map(([countryId, geojson]) => {
 		const countryName = countryNames[countryId] ?? '';
-		const playerName = gameState.player.find((player) => player.country === countryId)?.name ?? '';
+		const playerName = removeColorAndIconCodes(
+			gameState.player.find((player) => player.country === countryId)?.name ?? '',
+		);
 		let primaryName = '';
 		let secondaryName = '';
 		switch (settings.countryNamesType) {

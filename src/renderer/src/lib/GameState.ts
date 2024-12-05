@@ -130,7 +130,7 @@ const bypassSchema = z.object({
 export type Bypass = WithId<z.infer<typeof bypassSchema>>;
 
 const megastructureSchema = z.object({
-	type: z.string(),
+	type: z.string().optional(),
 });
 
 /**

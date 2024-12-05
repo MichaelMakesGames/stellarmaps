@@ -100,7 +100,7 @@ export function localizeTextSync(
 		}
 	}
 	let value = loc[text.key];
-	if (value == null) return removeColorCodes(text.key);
+	if (value == null) return removeColorAndIconCodes(text.key);
 	if (text.variables) {
 		text.variables.forEach((variable) => {
 			const localizedVariable = localizeTextSync(variable.value, loc);
@@ -110,9 +110,9 @@ export function localizeTextSync(
 				.replace(`<${variable.key}>`, localizedVariable);
 		});
 	}
-	return removeColorCodes(value);
+	return removeColorAndIconCodes(value);
 }
 
-function removeColorCodes(text: string): string {
-	return text.replace(/[\u0011§]./g, ''); // eslint-disable-line no-control-regex
+export function removeColorAndIconCodes(text: string): string {
+	return text.replace(/[\u0011§].?/g, '').replace(/\u0013\w*/g, ''); // eslint-disable-line no-control-regex
 }

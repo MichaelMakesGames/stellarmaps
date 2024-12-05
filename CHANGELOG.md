@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.3](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.12.2...stellarmaps-v0.12.3) (2024-11-30)
+
+### Bug Fixes
+
+- gracefully handle megastructures missing `type` ([2ef039c](https://github.com/MichaelMakesGames/stellarmaps/commit/2ef039cfd0223358f0ec8506c17c0a1415dd37cd))
+- handle color and icon codes in player names ([289ffc8](https://github.com/MichaelMakesGames/stellarmaps/commit/289ffc8f9c5a5dba2070001979bfe560743118be))
+
 ## [0.12.2](https://github.com/MichaelMakesGames/stellarmaps/compare/stellarmaps-v0.12.1...stellarmaps-v0.12.2) (2024-09-18)
 
 ### Bug Fixes
