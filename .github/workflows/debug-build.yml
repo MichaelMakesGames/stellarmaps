@@ -62,9 +62,9 @@ jobs:
         with:
           includeDebug: true
           includeRelease: false
+          args: ${{ matrix.args }}
 
       - uses: actions/upload-artifact@v4
         with:
           path: "${{ join(fromJSON(steps.build.outputs.artifactPaths), '\n') }}"
           name: 'stellarmaps-debug-${{ matrix.platform }}${{ matrix.args }}'
-          args: ${{ matrix.args }}
