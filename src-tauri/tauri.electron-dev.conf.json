@@ -10,7 +10,7 @@
 	},
 	"bundle": {
 		"resources": {
-			"../out/stellarmaps-linux-x64/": "electron/"
+			"../out/games.michaelmakes.stellarmaps-electron-linux-x64/": "electron/"
 		}
 	}
 }
