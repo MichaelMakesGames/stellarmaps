@@ -10,12 +10,15 @@
     "shell:default",
     "fs:default",
     "dialog:default",
-    "fs:allow-read-file",
-    "fs:allow-read-text-file",
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [{ "path": "$APPCONFIG/settings.json" }]
+    },
     "fs:allow-write-file",
-    "fs:allow-write-text-file",
-    "fs:allow-mkdir",
-    "fs:allow-exists",
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": [{ "path": "$APPCONFIG/settings.json" }]
+    },
     "fs:allow-watch",
     "fs:allow-unwatch",
     "shell:allow-open",

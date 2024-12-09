@@ -18,6 +18,8 @@ jobs:
             args: '--target x86_64-apple-darwin'
           - platform: 'ubuntu-22.04'
             args: ''
+          - platform: 'ubuntu-22.04'
+            args: '-c src-tauri/tauri.electron-build.conf.json'
           - platform: 'windows-latest'
             args: ''
 

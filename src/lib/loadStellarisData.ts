@@ -3,7 +3,7 @@ import { rgb } from 'd3-color';
 import { hsv } from 'd3-hsv';
 import { get, writable } from 'svelte/store';
 
-import { jsonify, tokenize } from '../../../shared/parseSave';
+import { jsonify, tokenize } from '../shared/parseSave';
 import { ADDITIONAL_COLORS } from './colors';
 import { appSettings } from './settings';
 import stellarMapsApi from './stellarMapsApi';

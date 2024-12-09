@@ -1,0 +1,15 @@
+{
+	"app": {
+		"windows": [{ "title": "StellarMaps", "visible": false }]
+	},
+	"build": {
+		"beforeBuildCommand": "npx electron-forge package",
+		"frontendDist": "electron-frontend",
+		"features": ["electron"]
+	},
+	"bundle": {
+		"resources": {
+			"../out/stellarmaps-linux-x64/": "electron/"
+		}
+	}
+}

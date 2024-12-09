@@ -18,8 +18,10 @@ use std::io::Read;
 use std::io::{self, BufRead, Cursor};
 use std::path::Path;
 use std::path::PathBuf;
-use std::time::UNIX_EPOCH;
+use std::time::{Instant, UNIX_EPOCH};
 use steamlocate::SteamDir;
+#[allow(unused)]
+use tauri::{Manager, path::BaseDirectory};
 use zip;
 
 mod lexer;
@@ -27,10 +29,58 @@ mod parser;
 
 fn main() {
 	tauri::Builder::default()
+		.setup(move |#[allow(unused)] app| {
+			#[cfg(feature = "electron")]
+			{
+				// start http
+				let invoke_http_origin = if tauri::is_dev() {
+					"http://localhost:1430"
+				} else {
+					"tauri://localhost"
+				};
+				let invoke_http = tauri_invoke_http::Invoke::new([invoke_http_origin]);
+				let port_re = Regex::new(r#"(?m)^const port = (.*);$"#).unwrap();
+				let invoke_http_port = port_re
+					.captures(&invoke_http.initialization_script())
+					.map(|c| c.extract::<1>().1[0].to_string())
+					.unwrap_or_default();
+				invoke_http.start(app.handle());
+				
+				// start electron app
+				if tauri::is_dev() {
+					// running the electron-forge start command directly here doesn't open the window for some reason
+					// instead, we write a bash script to a file that the dev start script is watching for
+					let command = format!(
+						"npx --package=@electron-forge/cli electron-forge start -- --__PORT__={} --__INVOKE_KEY__='{}' --__ORIGIN__='{}'",
+						invoke_http_port,
+						app.invoke_key(),
+						invoke_http_origin,
+					);
+					fs::write("/tmp/stellarmaps-electron-dev", command)?;
+				} else {
+					// non dev, run the electron app included in resources
+					let resource_path = app
+						.handle()
+						.path()
+						.resolve("electron/stellarmaps", BaseDirectory::Resource)?;
+					std::process::Command::new(resource_path)
+						.args([
+							format!("--__PORT__={}", invoke_http_port),
+							format!("--__INVOKE_KEY__={}", app.invoke_key()),
+							format!("--__ORIGIN__={}", invoke_http_origin)
+						])
+						.spawn()
+						.expect("electron frontend failed to start");
+				}
+			}
+
+			Ok(())
+		})
 		.plugin(tauri_plugin_dialog::init())
 		.plugin(tauri_plugin_fs::init())
 		.plugin(tauri_plugin_shell::init())
 		.invoke_handler(tauri::generate_handler![
+			electron_closed,
 			get_stellaris_colors_cmd,
 			get_stellaris_loc_cmd,
 			get_stellaris_install_dir_cmd,
@@ -99,6 +149,14 @@ async fn get_stellaris_install_dir_cmd() -> Result<String, String> {
 #[tauri::command]
 async fn reveal_file_cmd(path: String) {
 	let _ = opener::reveal(path);
+}
+
+#[tauri::command]
+fn electron_closed(
+	app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+	app_handle.exit(0);
+	Ok(())
 }
 
 fn get_steam_dir() -> anyhow::Result<PathBuf> {
@@ -240,8 +298,6 @@ fn get_files_matching_filter(
 }
 
 fn get_stellaris_save(path: String, filter: Value) -> anyhow::Result<Value> {
-	use std::time::Instant;
-
 	let now = Instant::now();
 	let file = fs::File::open(path)?;
 	let reader = io::BufReader::new(file);

@@ -58,12 +58,4 @@ Other interface icons from [Heroicons](https://heroicons.com), licensed under th
 
 ## Electron
 
-There is an Electron version available for local development. Some changes to the package.json are required. You can run `electron-on.sh` to make those changes, then run `npm run dev`. When you are finished, run `electron-off.sh` to revert the changes to package.json.
-
-This exists mostly for debugging in Chromium. The release builds all use Tauri. Currently, the Electron version lacks the following features:
-
-- loading data (localization, emblems, colors) from Stellaris mods
-- loading non-English Stellaris localization
-- translator mode
-- (temporarily) country emblems
-- production builds
+For Linux, there is a version of the app which uses Electron instead of WebkitGTK for the frontend. To run that version, run `npm run dev:electron`. This will not work for other operating systems.

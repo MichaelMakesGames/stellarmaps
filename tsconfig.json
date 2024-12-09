@@ -1,14 +1,8 @@
 {
-	"extends": "@electron-toolkit/tsconfig/tsconfig.json",
-	"include": [
-		"src/renderer/src/env.d.ts",
-		"src/renderer/src/**/*",
-		"src/renderer/src/**/*.svelte",
-		"src/preload/*.d.ts",
-		"src/shared/StellarMapsApi.ts",
-		"src/customTypings/**/*.d.ts"
-	],
+	"include": ["*.ts", "src/**/*", "src/**/*.svelte"],
 	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
 		"noUnusedParameters": false,
 		"noUnusedLocals": false,
 		"verbatimModuleSyntax": true,
@@ -18,7 +12,13 @@
 		"strict": true,
 		"allowJs": true,
 		"checkJs": true,
-		"lib": ["ESNext", "DOM", "DOM.Iterable"]
-	},
-	"references": [{ "path": "./tsconfig.node.json" }]
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"sourceMap": true,
+		"baseUrl": ".",
+		"outDir": "dist",
+		"moduleResolution": "node",
+		"resolveJsonModule": true
+	}
 }

@@ -2,7 +2,7 @@ import { hfs } from '@humanfs/node';
 import * as prettier from 'prettier';
 
 const langs = ['fi-FI', 'ja-JP', 'zh-TW'];
-let text = await hfs.text('./src/renderer/src/intl/en-US.ts');
+let text = await hfs.text('./src/intl/en-US.ts');
 let messages = {};
 eval(text.replace('export default', 'messages ='));
 const comments = text
@@ -18,7 +18,7 @@ const comments = text
 	})
 	.filter(Boolean);
 for (const lang of langs) {
-	const path = `./src/renderer/src/intl/${lang}.ts`;
+	const path = `./src/intl/${lang}.ts`;
 	const mergedMessages = structuredClone(messages);
 	const translationText = await hfs.text(path);
 	let translationMessages = {};

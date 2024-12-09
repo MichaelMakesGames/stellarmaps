@@ -1,25 +1,13 @@
 import { localStorageStore } from '@skeletonlabs/skeleton';
+import { BaseDirectory, readTextFile, writeTextFile } from '@tauri-apps/plugin-fs';
 import { derived, get } from 'svelte/store';
 
 import { isValidLocale, locale } from '../../intl';
-import stellarMapsApi from '../stellarMapsApi';
 import { disableTranslatorMode, enableTranslatorMode } from '../translatorMode';
 
 export type StringAppSettings = 'appLocale' | 'appStellarisLanguage';
 export type BooleanAppSettings = 'appTranslatorMode';
 export type AppSettings = Record<StringAppSettings, string> & Record<BooleanAppSettings, boolean>;
-
-async function getAppSettingsPath() {
-	return await stellarMapsApi.path.join(await stellarMapsApi.path.appConfigDir(), 'settings.json');
-}
-
-async function createAppConfigDirIfNeeded() {
-	const path = await stellarMapsApi.path.appConfigDir();
-	const exists: boolean = await stellarMapsApi.fs.exists(path);
-	if (!exists) {
-		await stellarMapsApi.fs.mkdir(path, { recursive: true });
-	}
-}
 
 const defaultAppSettings: AppSettings = {
 	appLocale: get(locale),
@@ -55,11 +43,10 @@ export const appStellarisLanguageOrdinals = derived(
 );
 
 function loadSettings() {
-	return getAppSettingsPath()
-		.then((path) => stellarMapsApi.fs.readTextFile(path))
+	return readTextFile('settings.json', { baseDir: BaseDirectory.AppConfig })
 		.then((contents) => JSON.parse(contents))
 		.catch((reason) => {
-			console.error(reason);
+			console.error('failed to load settings:', reason);
 			return defaultAppSettings;
 		})
 		.then((settings) => appSettings.set(settings))
@@ -75,9 +62,9 @@ function loadSettings() {
 				}
 
 				// write to file
-				createAppConfigDirIfNeeded()
-					.then(getAppSettingsPath)
-					.then((path) => stellarMapsApi.fs.writeTextFile(path, JSON.stringify(settings)));
+				writeTextFile('settings.json', JSON.stringify(settings), {
+					baseDir: BaseDirectory.AppConfig,
+				});
 				// toggle translator mode
 				if (settings.appTranslatorMode) {
 					enableTranslatorMode();

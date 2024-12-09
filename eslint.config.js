@@ -11,6 +11,7 @@ const extraFileExtensions = ['.svelte'];
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
+	{ ignores: ['.vite/**'] },
 	{ files: ['**/*.{ts}'] },
 	{ languageOptions: { globals: { ...globals.browser, ...globals.node } } },
 	pluginJs.configs.recommended,
@@ -28,7 +29,7 @@ export default [
 	// svelte
 	...eslintPluginSvelte.configs['flat/recommended'],
 	{
-		files: ['**/*.svelte'],
+		files: ['src/**/*.svelte'],
 		languageOptions: {
 			parserOptions: {
 				extraFileExtensions,
