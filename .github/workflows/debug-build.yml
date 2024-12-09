@@ -14,14 +14,19 @@ jobs:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
             args: '--target aarch64-apple-darwin'
+            name: 'stellarmaps-dev-macos-arm'
           - platform: 'macos-latest' # for Intel based macs.
             args: '--target x86_64-apple-darwin'
+            name: 'stellarmaps-dev-macos-intel'
           - platform: 'ubuntu-22.04'
             args: ''
+            name: 'stellarmaps-dev-linux-webkitgtk'
           - platform: 'ubuntu-22.04'
             args: '-c src-tauri/tauri.electron-build.conf.json'
+            name: 'stellarmaps-dev-linux-electron'
           - platform: 'windows-latest'
             args: ''
+            name: 'stellarmaps-dev-windows'
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -67,4 +72,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: "${{ join(fromJSON(steps.build.outputs.artifactPaths), '\n') }}"
-          name: 'stellarmaps-debug-${{ matrix.platform }}${{ matrix.args }}'
+          name: '${{ matrix.name }}'
