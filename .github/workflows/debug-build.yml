@@ -67,3 +67,4 @@ jobs:
         with:
           path: "${{ join(fromJSON(steps.build.outputs.artifactPaths), '\n') }}"
           name: 'stellarmaps-debug-${{ matrix.platform }}${{ matrix.args }}'
+          args: ${{ matrix.args }}

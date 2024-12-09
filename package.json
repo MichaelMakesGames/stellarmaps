@@ -102,5 +102,6 @@
 		"ts-pattern": "^5.5.0",
 		"zod": "^3.23.8"
 	},
-	"main": ".vite/build/stellarmaps.js"
+	"main": ".vite/build/stellarmaps.js",
+	"productName": "games.michaelmakes.stellarmaps-electron"
 }

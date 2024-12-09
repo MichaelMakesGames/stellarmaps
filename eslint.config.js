@@ -11,7 +11,6 @@ const extraFileExtensions = ['.svelte'];
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-	{ ignores: ['.vite/**'] },
 	{ files: ['**/*.{ts}'] },
 	{ languageOptions: { globals: { ...globals.browser, ...globals.node } } },
 	pluginJs.configs.recommended,
@@ -60,6 +59,7 @@ export default [
 		ignores: [
 			'.git/',
 			'.DS_Store/',
+			'.vite',
 			'node_modules/',
 			'src-tauri/',
 			'out/',

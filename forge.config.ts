@@ -22,7 +22,7 @@ const config: ForgeConfig = {
 			renderer: [
 				{
 					name: 'main_window',
-					config: 'vite.config.ts',
+					config: 'vite.electron-renderer.config.ts',
 				},
 			],
 		}),
