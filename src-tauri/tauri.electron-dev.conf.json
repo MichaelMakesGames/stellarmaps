@@ -3,8 +3,8 @@
 		"windows": [{ "title": "StellarMaps", "visible": false }]
 	},
 	"build": {
-		"beforeDevCommand": null,
-		"devUrl": null,
+		"beforeDevCommand": "python3 -m http.server 8000 --directory src-tauri/electron-frontend",
+		"devUrl": "http://localhost:8000",
 		"frontendDist": "electron-frontend",
 		"features": ["electron"]
 	},

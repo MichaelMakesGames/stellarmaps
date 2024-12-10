@@ -34,7 +34,7 @@ fn main() {
 			{
 				// start http
 				let invoke_http_origin = if tauri::is_dev() {
-					"http://localhost:1430"
+					"http://localhost:8000"
 				} else {
 					"tauri://localhost"
 				};
