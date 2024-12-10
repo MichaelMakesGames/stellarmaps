@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { app, BrowserWindow, ipcMain, nativeImage, session } from 'electron';
+import { app, BrowserWindow, ipcMain, nativeImage, session, shell } from 'electron';
 
 import icon from '../../resources/icon.png?inline';
 
@@ -41,6 +41,11 @@ const createWindow = () => {
 	}
 
 	ipcMain.handle('get-args', () => args);
+
+	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+		shell.openExternal(url);
+		return { action: 'deny' };
+	});
 
 	mainWindow.removeMenu();
 	mainWindow.maximize();
