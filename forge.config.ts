@@ -1,3 +1,5 @@
+import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 
@@ -25,6 +27,15 @@ const config: ForgeConfig = {
 					config: 'vite.electron-renderer.config.ts',
 				},
 			],
+		}),
+		new FusesPlugin({
+			version: FuseVersion.V1,
+			[FuseV1Options.RunAsNode]: false,
+			[FuseV1Options.EnableCookieEncryption]: true,
+			[FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+			[FuseV1Options.EnableNodeCliInspectArguments]: false,
+			[FuseV1Options.LoadBrowserProcessSpecificV8Snapshot]: true,
+			[FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
 		}),
 	],
 };
