@@ -62,7 +62,7 @@ fn main() {
 					let resource_path = app
 						.handle()
 						.path()
-						.resolve("electron/stellarmaps", BaseDirectory::Resource)?;
+						.resolve("electron/games.michaelmakes.stellarmaps-electron", BaseDirectory::Resource)?;
 					std::process::Command::new(resource_path)
 						.args([
 							format!("--__PORT__={}", invoke_http_port),
