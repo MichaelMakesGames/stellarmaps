@@ -6,25 +6,25 @@ const { contextBridge, ipcRenderer } = require('electron/renderer');
 let __PORT__ = null;
 let __INVOKE_KEY__ = null;
 const ready = ipcRenderer.invoke('get-args').then((args) => {
-	__PORT__ = args.__PORT__;
-	__INVOKE_KEY__ = args.__INVOKE_KEY__;
+	__PORT__ = args.PORT;
+	__INVOKE_KEY__ = args.INVOKE_KEY;
 });
-const __CALLBACKS__ = {};
+const CALLBACKS = {};
 const __TAURI_INTERNALS__ = {
 	metadata: { currentWindow: { label: 'main' } },
 	invoke(cmd, payload, options) {
 		return new Promise(async (resolve, reject) => {
 			const callback = window.crypto.getRandomValues(new Uint32Array(1))[0]?.toString() ?? '';
 			const error = window.crypto.getRandomValues(new Uint32Array(1))[0]?.toString() ?? '';
-			__CALLBACKS__[callback] = (data) => {
+			CALLBACKS[callback] = (data) => {
 				resolve(data);
-				delete __CALLBACKS__[callback];
-				delete __CALLBACKS__[error];
+				delete CALLBACKS[callback];
+				delete CALLBACKS[error];
 			};
-			__CALLBACKS__[error] = (data) => {
+			CALLBACKS[error] = (data) => {
 				reject(data);
-				delete __CALLBACKS__[callback];
-				delete __CALLBACKS__[error];
+				delete CALLBACKS[callback];
+				delete CALLBACKS[error];
 			};
 			await ready;
 			sendIpcMessage({ cmd, callback, error, payload, options });
@@ -103,12 +103,12 @@ function sendIpcMessage(message) {
 			}
 		})
 		.then(([cb, data]) => {
-			// tauri-electron: check __CALLBACKS__[cb] instead of window[`_${cb}`]
-			if (__CALLBACKS__[cb]) {
-				__CALLBACKS__[cb](data);
+			// tauri-electron: check CALLBACKS[cb] instead of window[`_${cb}`]
+			if (CALLBACKS[cb]) {
+				CALLBACKS[cb](data);
 			} else {
 				console.warn(
-					`[TAURI] Couldn't find callback id {cb} in __CALLBACKS__. This might happen when the app is reloaded while Rust is running an asynchronous operation.`,
+					`[TAURI] Couldn't find callback id {cb} in CALLBACKS. This might happen when the app is reloaded while Rust is running an asynchronous operation.`,
 				);
 			}
 		});

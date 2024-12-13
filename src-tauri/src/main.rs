@@ -51,7 +51,7 @@ fn main() {
 					// running the electron-forge start command directly here doesn't open the window for some reason
 					// instead, we write a bash script to a file that the dev start script is watching for
 					let command = format!(
-						"npx --package=@electron-forge/cli electron-forge start -- --__PORT__={} --__INVOKE_KEY__='{}' --__ORIGIN__='{}'",
+						"npx --package=@electron-forge/cli electron-forge start -- --PORT={} --INVOKE_KEY='{}' --ORIGIN='{}'",
 						invoke_http_port,
 						app.invoke_key(),
 						invoke_http_origin,
@@ -65,9 +65,9 @@ fn main() {
 						.resolve("electron/games.michaelmakes.stellarmaps-electron", BaseDirectory::Resource)?;
 					std::process::Command::new(resource_path)
 						.args([
-							format!("--__PORT__={}", invoke_http_port),
-							format!("--__INVOKE_KEY__={}", app.invoke_key()),
-							format!("--__ORIGIN__={}", invoke_http_origin)
+							format!("--PORT={}", invoke_http_port),
+							format!("--INVOKE_KEY={}", app.invoke_key()),
+							format!("--ORIGIN={}", invoke_http_origin)
 						])
 						.spawn()
 						.expect("electron frontend failed to start");

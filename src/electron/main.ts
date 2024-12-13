@@ -2,18 +2,30 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { app, BrowserWindow, ipcMain, nativeImage, session, shell } from 'electron';
+import { z } from 'zod';
 
 import icon from '../../resources/icon.png?inline';
 
-const { values: args } = parseArgs({
-	args: process.argv,
-	options: {
-		__PORT__: { type: 'string' },
-		__INVOKE_KEY__: { type: 'string' },
-		__ORIGIN__: { type: 'string' },
-	},
-	allowPositionals: true,
-});
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
+declare const MAIN_WINDOW_VITE_NAME: string;
+
+const args = z
+	.object({
+		PORT: z.coerce.number().int().min(1),
+		INVOKE_KEY: z.string(),
+		ORIGIN: z.string().url(),
+	})
+	.parse(
+		parseArgs({
+			args: process.argv,
+			options: {
+				PORT: { type: 'string' },
+				INVOKE_KEY: { type: 'string' },
+				ORIGIN: { type: 'string' },
+			},
+			allowPositionals: true,
+		}).values,
+	);
 
 const createWindow = () => {
 	// Create the browser window.
@@ -26,30 +38,38 @@ const createWindow = () => {
 		title: 'StellarMaps',
 		icon: nativeImage.createFromDataURL(icon),
 	});
+	mainWindow.removeMenu();
+	mainWindow.maximize();
 
-	// and load the index.html of the app.
-	// @ts-expect-error -- provided by @electron-forge/plugin-vite
-	// eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+	// load the index.html of the app.
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-		// @ts-expect-error -- provided by @electron-forge/plugin-vite
 		mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
 	} else {
 		mainWindow.loadFile(
-			// @ts-expect-error -- provided by @electron-forge/plugin-vite
 			path.join(import.meta.dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
 		);
 	}
 
-	ipcMain.handle('get-args', () => args);
-
+	// open _blank links in system default browser
 	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
 		shell.openExternal(url);
 		return { action: 'deny' };
 	});
 
-	mainWindow.removeMenu();
-	mainWindow.maximize();
-	if (process.env.NODE_ENV === 'development') {
+	// open dev tools on F12 / Ctrl+Shfit+I / Cmd+Opt+I
+	mainWindow.webContents.on('before-input-event', (_, input) => {
+		if (
+			input.type === 'keyDown' &&
+			(input.key === 'F12' ||
+				(input.control && input.shift && input.key === 'I') ||
+				(input.meta && input.alt && input.key === 'I'))
+		) {
+			mainWindow.webContents.toggleDevTools();
+		}
+	});
+
+	// open dev tools in dev mode
+	if (!app.isPackaged) {
 		mainWindow.webContents.openDevTools();
 	}
 };
@@ -58,34 +78,43 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-	createWindow();
-	// tauri invoke http validates the origin, which we fake here
+	// set up get-args ipc, which is used by preload script
+	ipcMain.handle('get-args', () => args);
+
+	// fake the origin for tauri invoke requests
 	session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-		details.requestHeaders['Origin'] = args.__ORIGIN__ ?? 'tauri://localhost';
+		details.requestHeaders['Origin'] = args.ORIGIN;
 		callback({ requestHeaders: details.requestHeaders });
 	});
+
+	// wildcard cors for tauri invoke requests
 	session.defaultSession.webRequest.onHeadersReceived(
-		{ urls: [`http://localhost:${args.__PORT__}/*`] },
+		{ urls: [`http://localhost:${args.PORT}/*`] },
 		(details, callback) => {
-			if (details.responseHeaders) {
-				details.responseHeaders['Access-Control-Allow-Origin'] = ['*'];
-			}
-			callback({ responseHeaders: details.responseHeaders });
+			callback({
+				responseHeaders: {
+					...details.responseHeaders,
+					'Access-Control-Allow-Origin': ['*'],
+				},
+			});
 		},
 	);
+
+	// finally, create the window
+	createWindow();
 });
 
 // when closed, send electron_closed command to tauri
 app.on('window-all-closed', async () => {
-	await fetch(`http://localhost:${args.__PORT__}/main/electron_closed`, {
+	await fetch(`http://localhost:${args.PORT}/main/electron_closed`, {
 		method: 'POST',
 		body: '{}',
 		headers: {
 			'Content-Type': 'application/json',
 			'Tauri-Callback': '12345',
 			'Tauri-Error': '12345',
-			'Tauri-Invoke-Key': args.__INVOKE_KEY__ ?? '',
-			Origin: args.__ORIGIN__ ?? 'tauri://localhost',
+			'Tauri-Invoke-Key': args.INVOKE_KEY,
+			Origin: args.ORIGIN,
 		},
 	});
 	app.quit();
