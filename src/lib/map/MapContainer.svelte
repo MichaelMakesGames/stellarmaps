@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+	import * as dialog from '@tauri-apps/plugin-dialog';
 	import { select } from 'd3-selection';
 	import { zoom, zoomIdentity, ZoomTransform } from 'd3-zoom';
 	import { onDestroy } from 'svelte';
@@ -26,7 +27,6 @@
 		lastProcessedMapSettings,
 		mapSettings,
 	} from '../settings';
-	import stellarMapsApi from '../stellarMapsApi';
 	import { debounce, timeItAsync, toastError } from '../utils';
 	import { mapModes } from './data/mapModes';
 	import processMapData from './data/processMapData';
@@ -55,7 +55,7 @@
 			action: {
 				label: $t('notification.failed_to_load_stellaris_data.action'),
 				response: () =>
-					stellarMapsApi.dialog
+					dialog
 						.open({
 							directory: true,
 							multiple: false,

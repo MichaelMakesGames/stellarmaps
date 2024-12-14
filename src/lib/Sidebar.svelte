@@ -9,6 +9,7 @@
 		localStorageStore,
 		popup,
 	} from '@skeletonlabs/skeleton';
+	import * as dialog from '@tauri-apps/plugin-dialog';
 
 	import { t } from '../intl';
 	import ApplyChangesButton from './ApplyChangesButton.svelte';
@@ -67,7 +68,7 @@
 	}
 
 	function manuallySelectSave() {
-		stellarMapsApi.dialog
+		dialog
 			.open({
 				directory: false,
 				multiple: false,

@@ -6,6 +6,9 @@
 		RangeSlider,
 		SlideToggle,
 	} from '@skeletonlabs/skeleton';
+	import * as path from '@tauri-apps/api/path';
+	import * as dialog from '@tauri-apps/plugin-dialog';
+	import * as fs from '@tauri-apps/plugin-fs';
 	import { onDestroy } from 'svelte';
 
 	import { t } from '../intl';
@@ -186,15 +189,12 @@
 				backgroundColor: getBackgroundColor(colors, $mapSettings),
 			},
 		).then((blob) => blob.arrayBuffer());
-		const savePath = await stellarMapsApi.dialog.save({
-			defaultPath: await stellarMapsApi.path.join(
-				await stellarMapsApi.path.pictureDir(),
-				'map.png',
-			),
+		const savePath = await dialog.save({
+			defaultPath: await path.join(await path.pictureDir(), 'map.png'),
 			filters: [{ extensions: ['png'], name: 'Image' }],
 		});
 		if (savePath != null) {
-			await stellarMapsApi.fs.writeFile(savePath, new Uint8Array(buffer)).then(() => {
+			await fs.writeFile(savePath, new Uint8Array(buffer)).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
 					message: $t('notification.export_success'),
@@ -269,14 +269,12 @@
 		svgToExport.removeChild(bgRect);
 		svgToExport.removeChild(legendContainer);
 
-		const savePath = await stellarMapsApi.dialog.save({
-			defaultPath: await stellarMapsApi.path
-				.join(await stellarMapsApi.path.pictureDir(), 'map.svg')
-				.catch(() => ''),
+		const savePath = await dialog.save({
+			defaultPath: await path.join(await path.pictureDir(), 'map.svg').catch(() => ''),
 			filters: [{ extensions: ['svg'], name: 'Image' }],
 		});
 		if (savePath != null) {
-			await stellarMapsApi.fs.writeTextFile(savePath, svgString).then(() => {
+			await fs.writeTextFile(savePath, svgString).then(() => {
 				toastStore.trigger({
 					background: 'variant-filled-success',
 					message: $t('notification.export_success'),
